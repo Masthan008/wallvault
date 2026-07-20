@@ -112,33 +112,41 @@ class WallpaperDetailScreen extends ConsumerWidget {
                         size: 20,
                       ),
                     ),
-                    onPressed: () async {
+                    onPressed: () {
                       if (user != null) {
                         final userRepo = ref.read(userRepositoryProvider);
                         final wallpaperRepo = ref.read(wallpaperRepositoryProvider);
                         final updatedFavorites = List<String>.from(user.favorites);
+                        final willBeSaved = !isSaved;
+
                         if (isSaved) {
                           updatedFavorites.remove(wallpaperId);
-                          await wallpaperRepo.decrementLikes(wallpaperId);
                         } else {
                           updatedFavorites.add(wallpaperId);
-                          await wallpaperRepo.incrementLikes(wallpaperId);
                         }
-                        await userRepo.updateUser(user.uid, {'favorites': updatedFavorites});
-                        ref.invalidate(userProfileProvider);
-                        ref.invalidate(savedWallpapersProvider);
-                        // Also invalidate wallpaper detail so the like count updates in UI
-                        ref.invalidate(wallpaperDetailProvider(wallpaperId));
-                        
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isSaved ? 'Removed from Saved' : 'Saved to collection',
-                              ),
+
+                        // Immediate feedback Toast
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              willBeSaved ? 'Saved to collection ❤️' : 'Removed from Saved',
                             ),
-                          );
-                        }
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+
+                        // Fire and forget asynchronous background updates
+                        Future.microtask(() async {
+                          if (isSaved) {
+                            await wallpaperRepo.decrementLikes(wallpaperId);
+                          } else {
+                            await wallpaperRepo.incrementLikes(wallpaperId);
+                          }
+                          await userRepo.updateUser(user.uid, {'favorites': updatedFavorites});
+                          ref.invalidate(userProfileProvider);
+                          ref.invalidate(savedWallpapersProvider);
+                          ref.invalidate(wallpaperDetailProvider(wallpaperId));
+                        });
                       }
                     },
                   ),

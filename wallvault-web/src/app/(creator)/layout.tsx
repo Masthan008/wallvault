@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { LayoutDashboard, CloudUpload, BarChart3, Wallet, Loader2, User } from 'lucide-react';
+import { LayoutDashboard, CloudUpload, Layers, BarChart3, Wallet, Loader2, User } from 'lucide-react';
 import { Sidebar } from '@/components/Sidebar';
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const creatorNavItems = [
   { label: 'Dashboard', href: '/creator/dashboard', icon: LayoutDashboard },
   { label: 'Upload Wallpaper', href: '/creator/upload', icon: CloudUpload },
+  { label: 'Bulk Upload (100)', href: '/creator/bulk-upload', icon: Layers },
   { label: 'Analytics', href: '/creator/analytics', icon: BarChart3 },
   { label: 'Payouts', href: '/creator/payouts', icon: Wallet },
   { label: 'Profile Settings', href: '/creator/profile', icon: User },

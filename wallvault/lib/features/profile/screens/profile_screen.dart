@@ -106,20 +106,24 @@ class ProfileScreen extends ConsumerWidget {
                       children: [
                         if (user.isCreator) ...[
                           _MiniStat(
-                              icon: '🔥',
+                              iconData: Icons.local_fire_department_rounded,
+                              iconColor: Colors.orangeAccent,
                               label: 'Streak',
                               targetValue: user.streak.current),
                           _MiniStat(
-                              icon: '⭐',
+                              iconData: Icons.star_rounded,
+                              iconColor: AppColors.accentGold,
                               label: 'XP',
                               targetValue: user.xp),
                           _MiniStat(
-                              icon: '🏅',
+                              iconData: Icons.military_tech_rounded,
+                              iconColor: AppColors.accentPurple,
                               label: 'Level',
                               targetValue: user.level),
                         ],
                         _MiniStat(
-                            icon: '📥',
+                            iconData: Icons.download_rounded,
+                            iconColor: AppColors.accentCyan,
                             label: 'Downloads',
                             targetValue: user.downloads.length),
                       ],
@@ -202,13 +206,16 @@ class ProfileScreen extends ConsumerWidget {
 }
 
 class _MiniStat extends StatefulWidget {
-  final String icon;
+  final IconData iconData;
+  final Color iconColor;
   final String label;
   final int targetValue;
-  const _MiniStat(
-      {required this.icon,
-      required this.label,
-      required this.targetValue});
+  const _MiniStat({
+    required this.iconData,
+    this.iconColor = AppColors.accentCyan,
+    required this.label,
+    required this.targetValue,
+  });
 
   @override
   State<_MiniStat> createState() => _MiniStatState();
@@ -243,7 +250,7 @@ class _MiniStatState extends State<_MiniStat>
     return Expanded(
       child: Column(
         children: [
-          Text(widget.icon, style: const TextStyle(fontSize: 20)),
+          Icon(widget.iconData, color: widget.iconColor, size: 22),
           const SizedBox(height: 4),
           AnimatedBuilder(
             animation: _animation,
