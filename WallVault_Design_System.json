@@ -1,0 +1,601 @@
+{
+    "project_name": "WallVault - CRED-Inspired Wallpaper App",
+    "design_philosophy": {
+        "inspiration": "CRED App - Premium, Dark, Motion-Heavy, Gamified",
+        "core_principles": [
+            "Dark-first design with deep blacks (#0A0A0F)",
+            "High contrast accent colors (Neon Purple, Electric Cyan, Gold)",
+            "Micro-interactions on every tap",
+            "Haptic feedback synchronization",
+            "Glassmorphism + Neumorphism hybrid",
+            "Scroll-driven animations",
+            "3D card transforms and parallax"
+        ]
+    },
+    "color_system": {
+        "backgrounds": {
+            "primary_dark": "#0A0A0F",
+            "secondary_dark": "#12121A",
+            "card_surface": "#1A1A24",
+            "elevated_surface": "#22222E"
+        },
+        "accents": {
+            "neon_purple": "#B829DD",
+            "electric_cyan": "#00D4FF",
+            "gold_premium": "#FFD700",
+            "success_green": "#00E676",
+            "error_red": "#FF1744",
+            "warning_orange": "#FF9100"
+        },
+        "text": {
+            "primary_white": "#FFFFFF",
+            "secondary_gray": "#8B8B9E",
+            "tertiary_muted": "#5A5A6E"
+        },
+        "gradients": {
+            "hero_glow": "linear-gradient(135deg, #B829DD 0%, #00D4FF 100%)",
+            "premium_card": "linear-gradient(180deg, #1A1A24 0%, #0A0A0F 100%)",
+            "success_pulse": "linear-gradient(90deg, #00E676 0%, #00D4FF 100%)",
+            "creator_badge": "linear-gradient(135deg, #FFD700 0%, #FF9100 100%)"
+        }
+    },
+    "typography": {
+        "font_family": "Inter / SF Pro Display / Montserrat",
+        "headings": {
+            "h1": {
+                "size": "32px",
+                "weight": "700",
+                "letter_spacing": "-0.5px"
+            },
+            "h2": {
+                "size": "24px",
+                "weight": "600",
+                "letter_spacing": "-0.3px"
+            },
+            "h3": {
+                "size": "20px",
+                "weight": "600",
+                "letter_spacing": "-0.2px"
+            },
+            "h4": {
+                "size": "16px",
+                "weight": "500",
+                "letter_spacing": "0px"
+            }
+        },
+        "body": {
+            "large": {
+                "size": "16px",
+                "weight": "400",
+                "line_height": "1.5"
+            },
+            "medium": {
+                "size": "14px",
+                "weight": "400",
+                "line_height": "1.4"
+            },
+            "small": {
+                "size": "12px",
+                "weight": "400",
+                "line_height": "1.3"
+            }
+        },
+        "special": {
+            "price_tag": {
+                "size": "18px",
+                "weight": "700",
+                "color": "#FFD700"
+            },
+            "creator_name": {
+                "size": "14px",
+                "weight": "600",
+                "color": "#00D4FF"
+            },
+            "download_count": {
+                "size": "12px",
+                "weight": "500",
+                "color": "#8B8B9E"
+            }
+        }
+    },
+    "animation_system": {
+        "easing": {
+            "spring": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+            "smooth": "cubic-bezier(0.4, 0, 0.2, 1)",
+            "dramatic": "cubic-bezier(0.87, 0, 0.13, 1)",
+            "bounce": "cubic-bezier(0.68, -0.55, 0.265, 1.55)"
+        },
+        "durations": {
+            "micro": "150ms",
+            "fast": "250ms",
+            "medium": "400ms",
+            "slow": "700ms",
+            "epic": "1200ms"
+        },
+        "effects": {
+            "page_transition": {
+                "type": "Shared Element Transition",
+                "description": "Wallpaper image scales from grid to fullscreen with hero animation",
+                "duration": "500ms",
+                "easing": "spring"
+            },
+            "card_hover": {
+                "type": "3D Tilt + Glow",
+                "description": "Card tilts based on touch position, neon glow follows finger",
+                "properties": {
+                    "rotateX": "±5deg",
+                    "rotateY": "±5deg",
+                    "glow_color": "accent_neon_purple at 20% opacity",
+                    "scale": "1.02"
+                }
+            },
+            "download_button": {
+                "type": "Morphing Button",
+                "description": "Button morphs from 'Download' text → circular progress → checkmark → confetti burst",
+                "stages": [
+                    "Tap: Button shrinks to circle, shows progress ring",
+                    "50%: Ring fills with gradient",
+                    "100%: Checkmark draws with SVG stroke animation",
+                    "Complete: Confetti particles burst from center"
+                ]
+            },
+            "scroll_reveal": {
+                "type": "Staggered Fade-Up",
+                "description": "Cards fade in and translate Y 30px with 50ms stagger",
+                "trigger": "IntersectionObserver at 10% visibility"
+            },
+            "parallax_header": {
+                "type": "Scroll-Linked Parallax",
+                "description": "Header image moves at 0.5x scroll speed, title moves at 1.2x",
+                "blur_on_scroll": "0px → 10px as user scrolls down"
+            },
+            "pull_to_refresh": {
+                "type": "Elastic Pull",
+                "description": "Wallpaper grid stretches elastically, releases with spring bounce",
+                "max_stretch": "80px",
+                "release_animation": "Grid snaps back with overshoot"
+            },
+            "tab_switch": {
+                "type": "Liquid Morph",
+                "description": "Active tab indicator morphs shape and slides between tabs like liquid",
+                "duration": "350ms"
+            },
+            "notification_toast": {
+                "type": "Slide + Glow",
+                "description": "Toast slides from top with neon border glow pulse",
+                "enter": "translateY(-100%) → translateY(0) + border glow pulse",
+                "exit": "translateY(0) → translateY(-100%) + opacity fade"
+            },
+            "premium_unlock": {
+                "type": "Cinematic Reveal",
+                "description": "Locked wallpaper reveals with curtain split + golden particles",
+                "stages": [
+                    "Dark overlay splits from center",
+                    "Golden light rays emanate from wallpaper",
+                    "Wallpaper scales from 0.8 → 1.0 with spring",
+                    "'Premium Unlocked' text types in with cursor"
+                ]
+            },
+            "creator_verification": {
+                "type": "Badge Pop + Sparkle",
+                "description": "Blue checkmark badge pops with scale bounce, sparkles orbit around it",
+                "duration": "600ms"
+            }
+        }
+    },
+    "component_library": {
+        "wallpaper_card": {
+            "dimensions": {
+                "width": "100%",
+                "aspect_ratio": "9/16 or 3/4"
+            },
+            "border_radius": "20px",
+            "shadow": "0 8px 32px rgba(0,0,0,0.4)",
+            "states": {
+                "default": "Subtle border glow on hover",
+                "premium": "Golden animated border, 'PRO' badge top-right",
+                "trending": "Fire emoji badge, pulsing red glow",
+                "new": "'NEW' ribbon with slide-in animation"
+            },
+            "overlay_info": {
+                "position": "Bottom gradient overlay",
+                "content": "Wallpaper name, creator avatar + name, download count, price (if paid)"
+            }
+        },
+        "action_button": {
+            "primary": {
+                "background": "gradient_neon_purple",
+                "border_radius": "16px",
+                "height": "56px",
+                "shadow": "0 4px 20px rgba(184, 41, 221, 0.3)",
+                "active_state": "Scale 0.95, shadow intensifies"
+            },
+            "secondary": {
+                "background": "transparent",
+                "border": "1px solid #8B8B9E",
+                "border_radius": "16px"
+            },
+            "floating_action": {
+                "shape": "Circular",
+                "size": "64px",
+                "background": "gradient",
+                "shadow": "0 8px 24px rgba(0, 212, 255, 0.3)",
+                "animation": "Idle subtle float (translateY ±3px, 2s loop)"
+            }
+        },
+        "bottom_sheet": {
+            "enter_animation": "Slide from bottom with spring, backdrop blurs",
+            "drag_to_dismiss": "Velocity-based dismiss with rubber band resistance",
+            "handle": "Pill-shaped drag indicator, pulsing on touch"
+        },
+        "search_bar": {
+            "collapsed": "Rounded pill, icon + placeholder",
+            "expanded": "Full width, glowing border, search suggestions dropdown with stagger",
+            "clear_button": "X morphs from search icon with rotation"
+        },
+        "creator_badge": {
+            "verified": "Blue checkmark with golden ring",
+            "top_creator": "Crown icon with rotating sparkle",
+            "new_creator": "Seedling icon with growth animation"
+        }
+    },
+    "screen_designs": {
+        "splash_screen": {
+            "duration": "2.5s",
+            "sequence": [
+                "0.0s: Black screen",
+                "0.3s: App logo (stylized 'W') draws with SVG stroke animation, neon purple glow",
+                "0.8s: Logo fills with gradient, subtle pulse",
+                "1.2s: Tagline 'Your Walls, Your Story' types in with cursor blink",
+                "1.8s: Particles burst from logo, screen fades to onboarding or home"
+            ]
+        },
+        "onboarding_flow": {
+            "style": "Full-screen immersive slides with parallax backgrounds",
+            "slides": [
+                {
+                    "title": "Discover Stunning Walls",
+                    "animation": "Wallpapers float in 3D space, user can tilt phone to parallax",
+                    "cta": "Swipe to explore →"
+                },
+                {
+                    "title": "Support Creators",
+                    "animation": "Coins rain animation, creator avatars pop in with stagger",
+                    "cta": "Next"
+                },
+                {
+                    "title": "Go Premium",
+                    "animation": "Golden lock unlocks with key turn animation, confetti",
+                    "cta": "Get Started"
+                }
+            ],
+            "page_indicator": "Animated dots that morph into line segments"
+        },
+        "home_screen": {
+            "layout": "Tab-based with custom animated indicator",
+            "tabs": [
+                "For You",
+                "Trending",
+                "Categories",
+                "Creators"
+            ],
+            "header": {
+                "type": "Collapsible",
+                "content": "Greeting + date, streak counter (gamification), search icon",
+                "animation": "Shrinks and blurs on scroll, tab bar pins to top"
+            },
+            "wallpaper_grid": {
+                "layout": "2-column masonry",
+                "gap": "12px",
+                "padding": "16px",
+                "scroll_animation": "Cards fade up with 50ms stagger, scale 0.95 → 1.0"
+            },
+            "featured_section": {
+                "type": "Horizontal scroll carousel",
+                "card_size": "280px width, full height",
+                "animation": "Snap scroll with 3D perspective tilt on edges",
+                "auto_scroll": "Every 5s with smooth transition"
+            },
+            "floating_actions": {
+                "upload_button": "Bottom-right FAB, pulsing glow for new creators",
+                "premium_banner": "Bottom sticky, slides up after 3 seconds on home"
+            }
+        },
+        "wallpaper_detail_screen": {
+            "enter_animation": "Shared element - image from grid scales to fullscreen",
+            "layout": {
+                "top": "Full-bleed wallpaper image with pinch-to-zoom",
+                "bottom_sheet": "Draggable info panel with: name, creator info, tags, resolution, price"
+            },
+            "actions": {
+                "download": "Morphing button with progress + confetti",
+                "apply": "Direct apply with system preview overlay",
+                "share": "Native share sheet with custom preview card",
+                "favorite": "Heart fills with particle burst, haptic tap",
+                "tip_creator": "Floating coin button, tap opens tip modal"
+            },
+            "preview_modes": {
+                "home_screen": "Wallpaper behind simulated app icons",
+                "lock_screen": "Wallpaper behind simulated clock + notifications",
+                "both": "Split view with divider"
+            },
+            "related_wallpapers": "Horizontal scroll at bottom, 'More from [Creator]' + 'Similar Style'"
+        },
+        "creator_upload_screen": {
+            "layout": "Step-by-step wizard with progress indicator",
+            "steps": [
+                {
+                    "step": 1,
+                    "title": "Select Wallpaper",
+                    "ui": "Image picker with drag-drop zone, preview with auto-crop guides",
+                    "animation": "Image drops in with bounce, grid lines animate in"
+                },
+                {
+                    "step": 2,
+                    "title": "Add Details",
+                    "fields": [
+                        "Wallpaper Name",
+                        "Category",
+                        "Tags (auto-suggest)",
+                        "Description"
+                    ],
+                    "animation": "Fields slide in from right with stagger"
+                },
+                {
+                    "step": 3,
+                    "title": "Set Pricing",
+                    "options": [
+                        "Free",
+                        "Paid - Set Amount"
+                    ],
+                    "paid_flow": {
+                        "price_input": "Animated number counter, currency symbol glows",
+                        "payout_method": "UPI ID input with validation animation, or Razorpay Connect onboarding",
+                        "preview": "Shows creator earnings after platform fee (70/20/10 split)"
+                    },
+                    "animation": "Toggle between free/paid morphs the card shape"
+                },
+                {
+                    "step": 4,
+                    "title": "Review & Submit",
+                    "preview": "Final card mockup with all details",
+                    "submit_button": "'Publish' with rocket launch animation on success"
+                }
+            ]
+        },
+        "creator_dashboard_screen": {
+            "layout": "Analytics-focused with chart cards",
+            "sections": [
+                {
+                    "title": "Earnings Overview",
+                    "content": "Total earnings card with animated number counter, daily/weekly/monthly toggle",
+                    "chart": "Line chart with gradient fill, animated draw-on-enter"
+                },
+                {
+                    "title": "Top Wallpapers",
+                    "content": "Ranked list with download bars that animate fill",
+                    "badge": "Trending indicator with fire animation"
+                },
+                {
+                    "title": "Payout Status",
+                    "content": "Progress bar to next payout threshold, recent payouts list",
+                    "action": "'Request Payout' button with golden glow"
+                },
+                {
+                    "title": "Creator Level",
+                    "content": "XP bar with level badge, next level rewards preview",
+                    "animation": "XP bar fills with particle trail on progress"
+                }
+            ]
+        },
+        "profile_screen": {
+            "header": "Large avatar with 3D tilt on touch, username with verified badge",
+            "stats": "Downloads, Favorites, Following creators - animated counters",
+            "sections": [
+                "My Downloads (with offline indicator)",
+                "My Favorites",
+                "My Uploads (if creator)",
+                "Subscription Status",
+                "Settings"
+            ],
+            "settings": {
+                "theme_toggle": "Dark/Light switch with sun/moon morph animation",
+                "notifications": "Toggle with elastic snap",
+                "logout": "Red button with shake animation on confirmation"
+            }
+        },
+        "login_signup_screen": {
+            "style": "Minimal, full-bleed background wallpaper that changes subtly",
+            "login": {
+                "fields": [
+                    "Email/Phone",
+                    "Password"
+                ],
+                "animation": "Fields float up on focus with glow border",
+                "submit": "Button with loading shimmer, success morphs to checkmark",
+                "biometric": "Face ID / Fingerprint icon with pulse animation"
+            },
+            "signup": {
+                "steps": [
+                    "Phone → OTP → Name → Password → Avatar"
+                ],
+                "otp": "6 boxes with auto-focus, numbers bounce in",
+                "avatar": "Grid of options with selection ring animation"
+            },
+            "social_login": {
+                "buttons": [
+                    "Google",
+                    "Apple",
+                    "Phone"
+                ],
+                "animation": "Buttons slide in from bottom with stagger"
+            }
+        }
+    },
+    "creator_web_portal": {
+        "url": "creators.wallvault.app",
+        "design": "Same dark theme, optimized for desktop + tablet",
+        "features": {
+            "dashboard": {
+                "layout": "Sidebar navigation + main content area",
+                "sidebar": "Collapsed/expanded with smooth width animation",
+                "widgets": [
+                    "Earnings graph (larger, interactive)",
+                    "Recent uploads grid",
+                    "Payout calendar",
+                    "Performance metrics cards"
+                ]
+            },
+            "upload_interface": {
+                "drag_drop": "Large drop zone with animated border, files bounce in on drop",
+                "batch_upload": "Multiple files with individual progress bars",
+                "ai_tag_suggestion": "Auto-generated tags appear with typing animation"
+            },
+            "analytics": {
+                "charts": "Recharts/D3 with hover tooltips, animated transitions",
+                "heatmap": "Download activity by day/hour with color intensity",
+                "comparison": "Side-by-side wallpaper performance"
+            },
+            "payout_management": {
+                "balance_card": "Large animated number, withdrawal button with golden glow",
+                "history": "Timeline view with status indicators",
+                "tax_docs": "Downloadable forms with preview"
+            }
+        }
+    },
+    "admin_web_dashboard": {
+        "url": "admin.wallvault.app",
+        "design": "Professional dark theme with data-density focus",
+        "layout": {
+            "sidebar": "Icon + label navigation, collapsible",
+            "top_bar": "Search, notifications bell with badge pulse, admin profile",
+            "breadcrumb": "Animated slide-in on navigation"
+        },
+        "modules": {
+            "overview": {
+                "kpi_cards": [
+                    "Total Users (animated counter)",
+                    "Total Wallpapers",
+                    "Active Subscriptions",
+                    "Monthly Revenue",
+                    "Pending Approvals (with alert pulse if > 0)",
+                    "Creator Payouts Due"
+                ],
+                "charts": [
+                    "Revenue over time (area chart)",
+                    "User growth (line chart)",
+                    "Wallpaper uploads by category (donut chart)",
+                    "Top creators (bar chart)"
+                ]
+            },
+            "wallpaper_management": {
+                "grid_view": "Thumbnail grid with status badges (pending/approved/rejected)",
+                "list_view": "Sortable table with quick actions",
+                "bulk_actions": "Select multiple, approve/reject with confirmation modal",
+                "preview_modal": "Fullscreen preview with metadata sidebar"
+            },
+            "creator_management": {
+                "pending_approvals": "Card list with approve/reject buttons, document preview",
+                "creator_profiles": "Detailed view with all uploads, earnings, payout history",
+                "verification_levels": "Badge system with requirements checklist",
+                "payout_requests": {
+                    "list": "Amount, creator, method, status",
+                    "action": "Process payout button → RazorpayX API integration",
+                    "bulk_payout": "Select multiple, process batch with progress"
+                }
+            },
+            "user_management": {
+                "search": "Real-time search with filters",
+                "user_detail": "Profile, downloads, subscriptions, activity log",
+                "ban/suspend": "Action with reason modal, confirmation shake"
+            },
+            "payment_analytics": {
+                "revenue_breakdown": "By source (subscriptions, wallpaper sales, tips)",
+                "payout_tracking": "Creator payouts vs platform revenue",
+                "refunds": "Dispute management interface",
+                "tax_reports": "Exportable reports by period"
+            },
+            "content_moderation": {
+                "flagged_content": "AI + user reported, priority queue",
+                "review_workflow": "Side-by-side original vs flagged, action buttons",
+                "moderation_log": "Audit trail with admin actions"
+            }
+        }
+    },
+    "interaction_patterns": {
+        "gestures": {
+            "swipe_wallpaper": "Horizontal swipe to next/prev with 3D card flip",
+            "pinch_zoom": "On detail screen, pinch to zoom with elastic bounds",
+            "long_press": "On grid, long press enters multi-select mode with haptic",
+            "pull_refresh": "Elastic pull with spinning logo, release bounce",
+            "double_tap": "Double tap wallpaper to like with heart burst animation"
+        },
+        "haptic_feedback": {
+            "light_tap": "Button presses, toggles",
+            "medium_tap": "Download complete, action success",
+            "heavy_tap": "Premium unlock, major achievement",
+            "success_pattern": "Light-Medium-Heavy triple for major milestones",
+            "error_pattern": "Two quick medium taps for errors"
+        },
+        "sound_design": {
+            "download_complete": "Subtle chime (can be disabled)",
+            "premium_unlock": "Satisfying unlock sound",
+            "coin_tip": "Coin drop sound",
+            "notification": "Soft ping with subtle reverb"
+        }
+    },
+    "gamification_elements": {
+        "user_side": {
+            "download_streak": "Daily download streak with flame animation, rewards at milestones",
+            "collection_badges": "Categories completed (e.g., 'Nature Explorer', 'Abstract Master')",
+            "social_sharing": "Share to unlock exclusive wallpapers",
+            "referral_program": "Invite friends, both get premium trial"
+        },
+        "creator_side": {
+            "creator_levels": {
+                "level_1": "Seedling - New creator, basic upload limit",
+                "level_2": "Sprout - 10 uploads, higher limit",
+                "level_3": "Bloom - 50 uploads, verified badge",
+                "level_4": "Star - 200 uploads, featured placement",
+                "level_5": "Legend - 500 uploads, custom profile, early access"
+            },
+            "achievements": [
+                "First Download",
+                "100 Downloads",
+                "First Sale",
+                "Top 10 Weekly",
+                "Trending Creator"
+            ],
+            "leaderboard": "Weekly top creators with podium animation"
+        }
+    },
+    "technical_implementation": {
+        "mobile_frameworks": {
+            "android": "Jetpack Compose with accompanist animations",
+            "ios": "SwiftUI with matchedGeometryEffect for shared transitions",
+            "cross_platform_consideration": "React Native with Reanimated 3 (if choosing cross-platform)"
+        },
+        "animation_libraries": {
+            "android": [
+                "Jetpack Compose Animation",
+                "Lottie",
+                "MotionLayout"
+            ],
+            "ios": [
+                "SwiftUI Animation",
+                "Lottie",
+                "UIViewPropertyAnimator"
+            ],
+            "web": [
+                "Framer Motion",
+                "GSAP",
+                "Lottie Web"
+            ]
+        },
+        "performance": {
+            "image_loading": "Progressive loading with blur placeholder, lazy loading",
+            "animation_optimization": "Use hardware acceleration, avoid layout thrashing",
+            "reduced_motion": "Respect system accessibility settings, fallback to simple fades"
+        }
+    }
+}

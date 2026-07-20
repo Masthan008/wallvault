@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "753128679795",
+    "project_id": "wallvault-dev-9182",
+    "storage_bucket": "wallvault-dev-9182.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:753128679795:android:4ab0b19119694155203d06",
+        "android_client_info": {
+          "package_name": "com.wallvault.wallvault"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "753128679795-8iles7cd8ms9id55nkl7fo2f937vsv7u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wallvault.wallvault",
+            "certificate_hash": "9fc76a366d4096ff181f54bc232787a766df0b94"
+          }
+        },
+        {
+          "client_id": "753128679795-rd0o2g4mguv5gbnk8m235brdip4ch4o4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAE6govqbMl2HAajAHjLhFcZh_q7AoWW4E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "753128679795-rd0o2g4mguv5gbnk8m235brdip4ch4o4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "753128679795-7fh1ct4u02q1p79dndm3bim3k0ts2olu.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.wallvault.wallvault"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

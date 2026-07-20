@@ -1,0 +1,25 @@
+# Root GitIgnore for WallVault
+
+# Node dependencies
+node_modules/
+
+# Flutter build and metadata
+wallvault/build/
+wallvault/.dart_tool/
+wallvault/.idea/
+wallvault/.flutter-plugins
+wallvault/.flutter-plugins-dependencies
+wallvault/pubspec.lock
+
+# NextJS builds
+wallvault-web/.next/
+wallvault-web/node_modules/
+wallvault-web/.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+:root {
+  /* Backgrounds */
+  --bg-primary: #0A0A0F;
+  --bg-secondary: #12121A;
+  --bg-card: #1A1A24;
+  --bg-elevated: #22222E;
+
+  /* Accents */
+  --accent-purple: #B829DD;
+  --accent-cyan: #00D4FF;
+  --accent-gold: #FFD700;
+  --accent-success: #00E676;
+  --accent-error: #FF1744;
+  --accent-warning: #FF9100;
+
+  /* Text */
+  --text-primary: #FFFFFF;
+  --text-secondary: #8B8B9E;
+  --text-muted: #5A5A6E;
+
+  /* Formats for standard tailwind fallback */
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
+}
+
+@theme {
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-card: var(--bg-card);
+  --color-bg-elevated: var(--bg-elevated);
+
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-gold: var(--accent-gold);
+  --color-accent-success: var(--accent-success);
+  --color-accent-error: var(--accent-error);
+  --color-accent-warning: var(--accent-warning);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-elevated);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-purple);
+}
+
+/* Glow effects */
+.glow-purple {
+  box-shadow: 0 0 16px rgba(184, 41, 221, 0.4);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.4);
+}
+
+.glow-gold {
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.4);
+}

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>753128679795-7fh1ct4u02q1p79dndm3bim3k0ts2olu.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.753128679795-7fh1ct4u02q1p79dndm3bim3k0ts2olu</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>753128679795-8iles7cd8ms9id55nkl7fo2f937vsv7u.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBiK7QT-5MRc08w10iM8amkvbIz378pKuY</string>
+	<key>GCM_SENDER_ID</key>
+	<string>753128679795</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.wallvault.wallvault</string>
+	<key>PROJECT_ID</key>
+	<string>wallvault-dev-9182</string>
+	<key>STORAGE_BUCKET</key>
+	<string>wallvault-dev-9182.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:753128679795:ios:181c39ab1ba0588c203d06</string>
+</dict>
+</plist>

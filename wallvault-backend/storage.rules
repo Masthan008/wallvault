@@ -1,0 +1,35 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper: is user authenticated
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    // Helper: matches folder ownership
+    function isOwner(userId) {
+      return isLoggedIn() && request.auth.uid == userId;
+    }
+
+    // ── TEMP UPLOADS FOLDER ─────────────────────────────────
+    match /temp_uploads/{userId}/{allPaths=**} {
+      allow read, write: if isOwner(userId);
+      // Validations: Max 50MB file size, must be image
+      allow create: if request.resource.size < 50 * 1024 * 1024
+                    && request.resource.contentType.matches('image/.*');
+    }
+
+    // ── CREATOR WALLPAPERS FOLDER ───────────────────────────
+    match /wallpapers/{creatorId}/{allPaths=**} {
+      allow read: if true; // Publicly readable for premium/free walls
+      allow write: if isOwner(creatorId);
+    }
+
+    // ── AVATARS FOLDER ─────────────────────────────────────
+    match /avatars/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId);
+    }
+  }
+}

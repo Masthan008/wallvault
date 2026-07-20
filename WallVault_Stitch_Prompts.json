@@ -1,0 +1,683 @@
+{
+    "project_overview": {
+        "app_name": "WallVault",
+        "style": "CRED-inspired dark theme",
+        "theme_tokens": {
+            "background_primary": "#0A0A0F",
+            "background_secondary": "#12121A",
+            "card_surface": "#1A1A24",
+            "accent_purple": "#B829DD",
+            "accent_cyan": "#00D4FF",
+            "premium_gold": "#FFD700",
+            "success_green": "#00E676",
+            "text_primary": "#FFFFFF",
+            "text_secondary": "#8B8B9E"
+        },
+        "animation_style": "Micro-interactions, 3D card tilt, neon glow pulses, morphing buttons, confetti bursts, spring physics, haptic-synced animations",
+        "font": "Inter / SF Pro Display, bold headings with tight letter-spacing"
+    },
+    "screens": [
+        {
+            "id": "S01",
+            "name": "Splash Screen",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile app splash screen for a wallpaper app called \"WallVault\". Deep black background (#0A0A0F). Centered stylized \"W\" logo that draws with an animated neon purple (#B829DD) stroke effect, then fills with a purple-to-cyan gradient. Below the logo, the tagline \"Your Walls, Your Story\" types in with a cursor blink animation. At 1.8 seconds, particles burst from the logo and the screen fades. Premium, dark, minimal. No buttons, no navigation.",
+            "key_elements": [
+                "Animated logo draw",
+                "Gradient fill",
+                "Typing tagline",
+                "Particle burst"
+            ],
+            "animation_notes": "2.5s total duration, auto-navigate after animation"
+        },
+        {
+            "id": "S02",
+            "name": "Onboarding - Slide 1",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile onboarding screen for WallVault wallpaper app. Deep black background with subtle parallax wallpaper images floating in 3D space (slightly tilted cards showing nature and abstract wallpapers). Large bold white heading \"Discover Stunning Walls\" at top. Subtext \"Explore thousands of 4K wallpapers curated just for you\" in gray (#8B8B9E). Bottom has a \"Swipe to explore →\" hint with a pulsing arrow. Dark theme, premium feel, CRED app inspired.",
+            "key_elements": [
+                "3D floating wallpaper cards",
+                "Parallax effect",
+                "Swipe hint"
+            ],
+            "animation_notes": "Tilt phone to parallax wallpapers"
+        },
+        {
+            "id": "S03",
+            "name": "Onboarding - Slide 2",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile onboarding screen for WallVault. Deep black background (#0A0A0F). Center shows golden coins raining down animation with creator avatar circles popping in with stagger. Large white heading \"Support Creators\". Subtext \"Buy wallpapers directly from independent artists and tip your favorites\" in gray. Bottom \"Next\" button with neon purple gradient and rounded corners. Premium dark theme.",
+            "key_elements": [
+                "Coin rain animation",
+                "Creator avatars",
+                "Stagger pop-in"
+            ],
+            "animation_notes": "Coins rain continuously, avatars pop with 100ms stagger"
+        },
+        {
+            "id": "S04",
+            "name": "Onboarding - Slide 3",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile onboarding screen for WallVault. Deep black background. Center shows a golden padlock with a key turning animation, then the lock opens with a satisfying click visual. Confetti particles burst out. Large white heading \"Go Premium\". Subtext \"Unlock exclusive wallpapers, remove ads, and support the community\" in gray. Bottom \"Get Started\" button with gold gradient (#FFD700). Premium, celebratory feel.",
+            "key_elements": [
+                "Lock unlock animation",
+                "Key turn",
+                "Confetti burst",
+                "Gold CTA"
+            ],
+            "animation_notes": "Lock opens at 0.8s, confetti at 1.0s"
+        },
+        {
+            "id": "S05",
+            "name": "Login Screen",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile login screen for WallVault wallpaper app. Deep black background with a subtle blurred wallpaper image as background overlay (20% opacity). Centered app logo (stylized W) at top. Two input fields: \"Phone Number\" and \"Password\" with rounded corners, dark card surface (#1A1A24), glowing purple border on focus. Large \"Continue\" button with neon purple gradient (#B829DD to #00D4FF), rounded corners, subtle shadow. Below: \"or continue with\" divider, then Google and Apple social login buttons. Bottom text: \"New here? Sign Up\" in cyan (#00D4FF). Premium, minimal, CRED-inspired.",
+            "key_elements": [
+                "Phone input",
+                "Password input",
+                "Continue CTA",
+                "Social login",
+                "Sign up link"
+            ],
+            "animation_notes": "Fields float up on focus with glow border, button has press scale 0.95"
+        },
+        {
+            "id": "S06",
+            "name": "Sign Up Screen",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile sign up screen for WallVault. Deep black background. Step indicator at top: \"Step 1/4\" with progress dots. Heading \"Create Your Account\" in bold white. Input fields: Full Name, Phone Number, Email, Password — all with dark card surface (#1A1A24), rounded corners, purple glow on focus. \"Continue\" button with gradient. At bottom: \"Already have an account? Login\" in cyan. Clean, premium, dark theme.",
+            "key_elements": [
+                "Step indicator",
+                "4 input fields",
+                "Continue CTA",
+                "Login link"
+            ],
+            "animation_notes": "Fields slide in from right with 100ms stagger"
+        },
+        {
+            "id": "S07",
+            "name": "OTP Verification Screen",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile OTP verification screen for WallVault. Deep black background. Heading \"Verify Your Number\" in bold white. Subtext \"Enter the 6-digit code sent to +91 98765 43210\" in gray. Six square input boxes in a row, each 48x48px, dark card surface (#1A1A24), rounded 12px, with cyan (#00D4FF) border when active. Numbers bounce in with spring animation when typed. Below: \"Didn't receive? Resend (30s)\" in gray. \"Verify\" button with purple gradient. Premium, minimal.",
+            "key_elements": [
+                "6 OTP boxes",
+                "Auto-focus",
+                "Resend timer",
+                "Verify CTA"
+            ],
+            "animation_notes": "Numbers bounce in with spring, boxes scale on focus"
+        },
+        {
+            "id": "S08",
+            "name": "Home Screen",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile home screen for WallVault wallpaper app. Deep black background (#0A0A0F). Top section: greeting \"Good Morning, Alex\" in white, fire emoji with \"7-day streak!\" in orange, search icon and profile avatar on right. Below: horizontal tab bar \"For You | Trending | Categories | Creators\" with a liquid morph animated indicator in purple. Featured section: horizontal scroll carousel of large wallpaper cards (280px wide) with \"PREMIUM\" or \"NEW\" badges. Below: 2-column masonry grid of wallpaper cards, each showing wallpaper preview, name, creator avatar with verified checkmark, download count, and price tag (gold for paid, green for free). Cards have subtle border glow on hover. Bottom floating action button (circular, purple gradient) for upload. Premium, dark, CRED-inspired with neon accents.",
+            "key_elements": [
+                "Greeting + streak",
+                "Tab bar",
+                "Featured carousel",
+                "2-col masonry grid",
+                "Wallpaper cards",
+                "FAB"
+            ],
+            "animation_notes": "Cards fade up with 50ms stagger on scroll, tab indicator morphs liquid-like, FAB has subtle float animation"
+        },
+        {
+            "id": "S09",
+            "name": "Wallpaper Detail Screen",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile wallpaper detail screen for WallVault. Full-bleed wallpaper image taking top 70% of screen with pinch-to-zoom capability. Top overlay: back arrow, heart favorite button, and more options (three dots) in white with blur backdrop. Bottom 30%: draggable sheet with dark card surface (#1A1A24), rounded top corners (24px). Inside sheet: wallpaper name \"Neon Sunset\" in bold white, creator row with avatar + \"@creative_alex\" in cyan with blue verified checkmark, star rating 4.9, download count \"12.5K downloads\" in gray. Tags as pill badges: #nature #neon #abstract. Resolution badge \"4K (3840x2160)\". Price tag \"₹49\" in gold (#FFD700) for paid wallpapers. Action buttons row: \"Download\" (purple gradient, morphing button), \"Apply\" (cyan outline), \"Share\" (gray outline), \"Tip Creator\" (gold coin icon). Premium, immersive, dark theme.",
+            "key_elements": [
+                "Full-bleed image",
+                "Pinch zoom",
+                "Draggable info sheet",
+                "Creator info",
+                "Tags",
+                "Price",
+                "Action buttons"
+            ],
+            "animation_notes": "Shared element transition from grid, sheet slides up with spring, download button morphs to progress → checkmark → confetti"
+        },
+        {
+            "id": "S10",
+            "name": "Apply Wallpaper Modal",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile bottom sheet modal for applying wallpaper in WallVault. Dark card surface (#1A1A24), rounded top corners (24px). Heading \"Preview & Apply\" in white. Two side-by-side preview cards: left labeled \"Home Screen\" showing wallpaper behind simulated app icons, right labeled \"Lock Screen\" showing wallpaper behind simulated clock and notifications. Both cards have rounded corners and subtle border. Below: three full-width buttons stacked: \"Apply to Home Screen\" (purple gradient), \"Apply to Lock Screen\" (cyan gradient), \"Apply to Both\" (gold gradient). Bottom: \"Cancel\" text button in gray. Premium, dark, minimal.",
+            "key_elements": [
+                "Home preview",
+                "Lock preview",
+                "Apply buttons",
+                "Cancel"
+            ],
+            "animation_notes": "Sheet slides up with spring, previews scale in with 150ms stagger"
+        },
+        {
+            "id": "S11",
+            "name": "Search Screen",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile search screen for WallVault. Deep black background. Top: expanded search bar with glowing purple border, search icon, and \"Search wallpapers...\" placeholder in gray. Below: \"Trending Searches\" section with pill-shaped tags (#nature, #neon, #minimal, #dark, #anime) in dark card surface with cyan text. \"Recent Searches\" section below with history items and X clear buttons. \"Popular Categories\" grid: 2x3 grid of category cards with icon + label (Nature, Abstract, Cars, Anime, Space, Dark). Premium, dark, clean.",
+            "key_elements": [
+                "Search bar",
+                "Trending tags",
+                "Recent searches",
+                "Category grid"
+            ],
+            "animation_notes": "Tags stagger in from left, categories fade up"
+        },
+        {
+            "id": "S12",
+            "name": "Profile Screen",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile profile screen for WallVault. Deep black background. Top: settings gear icon. Center: large circular avatar (100px) with 3D tilt on touch, username \"@alex_wallz\" in bold white, \"Member since 2024\" in gray. Stats row: three columns — \"247 Downloads\", \"89 Favorites\", \"12 Following\" with animated number counters. Divider line. \"Subscription\" section with PRO badge in gold, \"Active until Dec 2026\", \"Manage Subscription\" button. Menu list: My Downloads, My Favorites, My Uploads (with \"Creator\" badge), Notifications, Dark Mode toggle (animated sun/moon morph), Language, Help & Support, Log Out (red text). Each row has right arrow. Premium, dark, CRED-inspired.",
+            "key_elements": [
+                "Avatar",
+                "Username",
+                "Stats counters",
+                "Subscription card",
+                "Menu list",
+                "Theme toggle"
+            ],
+            "animation_notes": "Numbers count up on screen enter, avatar tilts 3D on touch, toggle morphs sun to moon"
+        },
+        {
+            "id": "S13",
+            "name": "My Downloads Screen",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile downloads screen for WallVault. Deep black background. Top: back arrow + \"My Downloads\" heading. Below: 2-column grid of downloaded wallpaper cards. Each card shows wallpaper preview, name, and an offline indicator (cloud with checkmark) in green. Long-press enters multi-select mode with haptic feedback. Selected items show checkmark overlay. Bottom action bar appears in multi-select: \"Delete\" (red), \"Share\", \"Apply\". Premium, dark, minimal.",
+            "key_elements": [
+                "2-col grid",
+                "Offline indicator",
+                "Multi-select",
+                "Bottom action bar"
+            ],
+            "animation_notes": "Cards fade up with stagger, multi-select mode scales cards slightly"
+        },
+        {
+            "id": "S14",
+            "name": "Creator Enrollment - Step 1",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile creator enrollment screen for WallVault. Deep black background. Top: \"Become a Creator\" heading, \"Step 1/4\" with progress bar (25% filled in purple). Section \"Basic Info\". Input fields: Display Name, Bio (multiline), both with dark card surface and purple glow on focus. \"Upload Profile Photo\" area: large dashed border box with camera icon and \"Tap to upload\" text. Bottom: \"Next\" button with purple gradient. Premium, dark, form-focused.",
+            "key_elements": [
+                "Step indicator",
+                "Name input",
+                "Bio input",
+                "Photo upload",
+                "Next CTA"
+            ],
+            "animation_notes": "Fields slide in from right, progress bar animates fill"
+        },
+        {
+            "id": "S15",
+            "name": "Creator Enrollment - Step 2",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile creator enrollment screen for WallVault. Step 2/4, progress bar 50%. Heading \"Upload Portfolio\". Subtext \"Upload 3 sample wallpapers to showcase your style\". Three upload slots in a row, each showing either a dashed border placeholder with \"+\" icon or a thumbnail preview with remove X button. Dark card surface (#1A1A24). \"Next\" button enabled only when 3 uploads complete. Premium, dark, minimal.",
+            "key_elements": [
+                "3 upload slots",
+                "Thumbnail previews",
+                "Remove buttons",
+                "Validation"
+            ],
+            "animation_notes": "Images drop in with bounce, remove button spins on tap"
+        },
+        {
+            "id": "S16",
+            "name": "Creator Enrollment - Step 3",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile creator enrollment screen for WallVault. Step 3/4, progress bar 75%. Heading \"Payout Setup\". Subtext \"How you'll receive your earnings\". Two options as cards: \"UPI\" (selected by default) with input field for UPI ID (abc@upi), and \"Razorpay Connect\" with \"Link Account\" button. Info text: \"Minimum payout: ₹500\" in gray. \"Next\" button with purple gradient. Premium, dark, financial feel.",
+            "key_elements": [
+                "UPI input",
+                "Razorpay option",
+                "Minimum payout info",
+                "Next CTA"
+            ],
+            "animation_notes": "Cards slide in, selected card gets purple border glow"
+        },
+        {
+            "id": "S17",
+            "name": "Creator Enrollment - Step 4",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile creator enrollment screen for WallVault. Step 4/4, progress bar 100% (animated fill). Heading \"Review & Submit\". Summary card showing: Display Name, Bio preview, 3 portfolio thumbnails, payout method. Checkbox: \"I agree to the Creator Terms and Conditions\" with link. \"Submit Application\" button with rocket icon, purple gradient. On submit: rocket launch animation with particle trail. Premium, celebratory, dark theme.",
+            "key_elements": [
+                "Summary card",
+                "Portfolio thumbnails",
+                "Terms checkbox",
+                "Submit CTA"
+            ],
+            "animation_notes": "Progress bar fills to 100%, rocket launches on submit with trail"
+        },
+        {
+            "id": "S18",
+            "name": "Creator Dashboard Screen",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile creator dashboard for WallVault. Deep black background. Top: creator avatar with verified badge, username \"@creative_alex\", level badge \"Level 3: Bloom ⭐\" in gold. Earnings card: \"Total Earnings ₹12,450\" with animated number counter, \"↑ 23% this month\" in green. Below: line chart showing earnings over last 7 days with gradient fill (purple to transparent). \"Top Wallpapers\" list: ranked 1-3 with wallpaper thumbnail, name, download count bar that animates fill. \"Payout Status\" card: \"Available: ₹2,450\" with \"Request Payout\" button in gold gradient. Bottom nav: My Uploads, Analytics, Settings, Help. Premium, data-rich, dark theme.",
+            "key_elements": [
+                "Earnings card",
+                "Line chart",
+                "Top wallpapers list",
+                "Payout status",
+                "Bottom nav"
+            ],
+            "animation_notes": "Numbers count up, chart draws on enter, bars fill with gradient"
+        },
+        {
+            "id": "S19",
+            "name": "Creator Upload - Step 1",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile wallpaper upload screen for WallVault creators. Deep black background. Top: \"Upload Wallpaper\" heading, \"Step 1/3\" progress. Large drag-and-drop zone: dashed border in purple, centered upload icon with \"Tap to select or drag wallpaper here\". Below: preview area showing selected wallpaper with crop guide overlay (9:16 ratio lines). \"Wallpaper Name\" input field. \"Next\" button. Premium, creator-focused, dark.",
+            "key_elements": [
+                "Upload zone",
+                "Crop guides",
+                "Name input",
+                "Next CTA"
+            ],
+            "animation_notes": "Image drops in with bounce, crop guides animate in"
+        },
+        {
+            "id": "S20",
+            "name": "Creator Upload - Step 2",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile wallpaper upload screen for WallVault. Step 2/3. Heading \"Add Details\". Wallpaper preview thumbnail at top. Fields: Category dropdown (Nature, Abstract, Cars, etc.), Tags input with auto-suggest pills (#nature, #neon), Description multiline text area. All fields have dark card surface (#1A1A24) and purple glow on focus. \"Next\" button. Premium, form-focused, dark theme.",
+            "key_elements": [
+                "Category dropdown",
+                "Tags with auto-suggest",
+                "Description",
+                "Next CTA"
+            ],
+            "animation_notes": "Fields slide in with stagger, tags pop in when selected"
+        },
+        {
+            "id": "S21",
+            "name": "Creator Upload - Step 3 (Pricing)",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile wallpaper pricing screen for WallVault creators. Step 3/3. Heading \"Set Pricing\". Two toggle cards: \"Free\" (selected by default, green border) and \"Paid\" (unselected, gray). When \"Paid\" selected: price input field with ₹ prefix, animated number counter. Below: earnings breakdown card showing \"Your Earnings: ₹34 (70%)\" in green, \"Platform Fee: ₹10 (20%)\" in gray, \"Community: ₹5 (10%)\" in cyan. Payout method display: \"UPI: abc@upi\" with edit icon. \"Publish\" button with rocket icon, purple gradient. On tap: rocket launch animation. Premium, financial, dark theme.",
+            "key_elements": [
+                "Free/Paid toggle",
+                "Price input",
+                "Earnings breakdown",
+                "Payout method",
+                "Publish CTA"
+            ],
+            "animation_notes": "Toggle morphs card shape, numbers animate on price change, rocket launches on publish"
+        },
+        {
+            "id": "S22",
+            "name": "Creator Payout Request Screen",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile payout request screen for WallVault creators. Deep black background. Top: \"Request Payout\" heading with back arrow. Balance card: large \"₹2,450\" in gold with \"Available Balance\" label. \"Amount to Withdraw\" input with ₹ prefix and max button. Below: \"Payout Method\" card showing UPI ID with verified checkmark. \"Minimum payout: ₹500\" info text in gray. \"Request Payout\" button with gold gradient, pulsing glow. Bottom: \"Payout History\" link. Premium, financial, dark theme.",
+            "key_elements": [
+                "Balance display",
+                "Amount input",
+                "Payout method",
+                "Request CTA",
+                "History link"
+            ],
+            "animation_notes": "Balance number counts up, button has idle pulse glow"
+        },
+        {
+            "id": "S23",
+            "name": "Subscription / Premium Screen",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile premium subscription screen for WallVault. Deep black background. Top: \"Go Premium\" heading with crown icon in gold. Hero section: large golden lock that unlocks with animation, confetti burst. Three plan cards stacked vertically: \"Monthly\" ₹49/month, \"Yearly\" ₹299/year (\"Save 49%\" badge in green, recommended), \"Lifetime\" ₹999 one-time (\"Best Value\" badge in gold). Each card shows feature checklist with checkmarks. Selected plan gets golden border glow. \"Subscribe Now\" button with gold gradient, pulsing. Bottom: \"Restore Purchases\" link. Premium, celebratory, dark theme.",
+            "key_elements": [
+                "Plan cards",
+                "Feature checklist",
+                "Save badges",
+                "Subscribe CTA",
+                "Restore link"
+            ],
+            "animation_notes": "Lock unlocks on enter, confetti bursts, selected card glows gold"
+        },
+        {
+            "id": "S24",
+            "name": "Notifications Screen",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile notifications screen for WallVault. Deep black background. Top: \"Notifications\" heading with back arrow, \"Mark all read\" text button. List of notification cards: each has icon (download, coin, message, alert), title in white, description in gray, timestamp in muted gray. Unread notifications have purple left border accent and subtle background glow. Swipe right to dismiss with red background. Empty state: \"No notifications yet\" with bell icon. Premium, dark, clean.",
+            "key_elements": [
+                "Notification list",
+                "Unread indicators",
+                "Swipe dismiss",
+                "Empty state"
+            ],
+            "animation_notes": "Cards slide in with stagger, swipe reveals red dismiss background"
+        },
+        {
+            "id": "S25",
+            "name": "Settings Screen",
+            "type": "Mobile",
+            "platforms": [
+                "Android",
+                "iOS"
+            ],
+            "prompt": "Mobile settings screen for WallVault. Deep black background. Top: \"Settings\" heading with back arrow. Grouped sections with headers: \"Account\" (Edit Profile, Change Password, Delete Account in red), \"Preferences\" (Notifications toggle, Dark Mode toggle with sun/moon morph animation, Language selector), \"Support\" (Help Center, Contact Us, Terms of Service), \"About\" (App Version, Rate App, Share App). Each row has icon, label, and right arrow or toggle. Premium, organized, dark theme.",
+            "key_elements": [
+                "Grouped sections",
+                "Toggles",
+                "Selectors",
+                "Danger zone"
+            ],
+            "animation_notes": "Toggles snap with elastic animation, rows fade in with stagger"
+        },
+        {
+            "id": "S26",
+            "name": "Creator Web - Dashboard",
+            "type": "Web",
+            "platforms": [
+                "Web (Desktop)"
+            ],
+            "prompt": "Desktop web dashboard for WallVault creator portal. Dark theme (#0A0A0F background). Left sidebar navigation: Dashboard, Upload, My Wallpapers, Analytics, Payouts, Settings — each with icon and label, active item has purple left border and glow. Top bar: search icon, notification bell with badge, profile avatar. Main content: four KPI cards in a row — \"Total Earnings ₹12,450\" (green up arrow), \"Total Downloads 45.2K\", \"Wallpapers 89\", \"Avg Rating 4.8\". Below: large earnings line chart with purple gradient fill, interactive hover tooltips. \"Recent Uploads\" grid: 4 wallpaper thumbnails with status badges. \"Quick Actions\" row: \"+ Upload New\" (purple), \"View Analytics\" (cyan), \"Request Payout\" (gold). Premium, data-rich, dark, CRED-inspired.",
+            "key_elements": [
+                "Sidebar nav",
+                "KPI cards",
+                "Earnings chart",
+                "Recent uploads",
+                "Quick actions"
+            ],
+            "animation_notes": "Cards stagger in, chart draws on load, numbers count up"
+        },
+        {
+            "id": "S27",
+            "name": "Creator Web - Upload Interface",
+            "type": "Web",
+            "platforms": [
+                "Web (Desktop)"
+            ],
+            "prompt": "Desktop web upload interface for WallVault creator portal. Dark theme. Left sidebar navigation. Main area: \"Upload New Wallpaper\" heading. Large drag-and-drop zone: dashed purple border, centered cloud upload icon with \"Drag & drop or click to upload\" text, \"Supports: JPG, PNG, WEBP (Max 20MB)\" below. Below drop zone: wallpaper preview with crop tools. Form fields: Wallpaper Name, Category dropdown, Tags input with auto-suggest, Description textarea. Pricing section: \"Free\" and \"Paid\" radio cards, when Paid selected: price input with ₹ prefix, live earnings calculator showing \"You earn: ₹X (70%)\". Payout method display. \"Preview\" and \"Publish\" buttons at bottom. Premium, form-focused, dark.",
+            "key_elements": [
+                "Drag-drop zone",
+                "Crop tools",
+                "Form fields",
+                "Pricing toggle",
+                "Earnings calculator"
+            ],
+            "animation_notes": "File drops in with bounce, earnings number updates live with animation"
+        },
+        {
+            "id": "S28",
+            "name": "Creator Web - Analytics",
+            "type": "Web",
+            "platforms": [
+                "Web (Desktop)"
+            ],
+            "prompt": "Desktop web analytics page for WallVault creator portal. Dark theme. Left sidebar. Main area: \"Analytics\" heading with date range picker. Top row: three stat cards — \"Views 45.2K\", \"Downloads 8.1K\", \"Earnings ₹3,200 this month\". Below: two charts side by side — left: bar chart \"Downloads by Wallpaper\" with purple bars, right: donut chart \"Downloads by Category\" with neon colors. Below: heatmap calendar showing download activity by day (darker = more downloads). \"Top Performing Wallpapers\" table with columns: Wallpaper, Views, Downloads, Earnings, Trend sparkline. Premium, data-dense, dark theme.",
+            "key_elements": [
+                "Date picker",
+                "Stat cards",
+                "Bar chart",
+                "Donut chart",
+                "Heatmap",
+                "Table"
+            ],
+            "animation_notes": "Charts animate draw-on-enter, heatmap cells fade in by intensity"
+        },
+        {
+            "id": "S29",
+            "name": "Creator Web - Payout Management",
+            "type": "Web",
+            "platforms": [
+                "Web (Desktop)"
+            ],
+            "prompt": "Desktop web payouts page for WallVault creator portal. Dark theme. Left sidebar. Main area: \"Payouts\" heading. Balance card: large \"₹2,450\" in gold with \"Available Balance\" and \"Request Payout\" gold button. Below: \"Payout History\" table with columns: Date, Amount, Method, Status (green checkmark for completed, orange clock for pending), Transaction ID. Each row has hover highlight. \"Export CSV\" button top-right. Empty state: \"No payouts yet\" with wallet icon. Premium, financial, dark.",
+            "key_elements": [
+                "Balance card",
+                "Request payout CTA",
+                "History table",
+                "Export CSV",
+                "Status badges"
+            ],
+            "animation_notes": "Table rows fade in with stagger, status icons pop in"
+        },
+        {
+            "id": "S30",
+            "name": "Admin Web - Dashboard Overview",
+            "type": "Web",
+            "platforms": [
+                "Web (Desktop)"
+            ],
+            "prompt": "Desktop web admin dashboard for WallVault. Dark theme (#0A0A0F). Left sidebar: Dashboard, Wallpapers, Creators, Users, Payments, Payouts, Reports, Settings. Top bar: search, notification bell with red badge \"5\", admin profile dropdown. Main content: six KPI cards in 2 rows of 3 — \"Total Users 45.2K\" (up 12%), \"Total Wallpapers 12.8K\" (up 8%), \"Active Subscriptions 3.2K\" (up 15%), \"Monthly Revenue ₹89K\" (up 22%), \"Pending Approvals 23\" (alert pulse in orange), \"Payouts Due 8\" (alert pulse). Below: two charts — revenue area chart with gradient, user growth line chart. \"Action Required\" alert box: \"23 wallpapers pending approval [Review Now →]\", \"5 creators pending verification [Review Now →]\", \"8 payout requests pending [Process Now →]\". Premium, data-dense, admin-focused, dark.",
+            "key_elements": [
+                "KPI cards",
+                "Revenue chart",
+                "Growth chart",
+                "Action alerts",
+                "Sidebar nav"
+            ],
+            "animation_notes": "Cards stagger in, alert badges pulse, charts draw on load"
+        },
+        {
+            "id": "S31",
+            "name": "Admin Web - Wallpaper Management",
+            "type": "Web",
+            "platforms": [
+                "Web (Desktop)"
+            ],
+            "prompt": "Desktop web wallpaper management page for WallVault admin. Dark theme. Left sidebar. Top: \"Wallpapers\" heading, filter dropdown, search bar. Tab bar: All, Pending, Approved, Rejected, Flagged — with count badges. Below: grid view of wallpaper thumbnails (6 per row), each showing preview, status badge (pending=orange clock, approved=green check, rejected=red X, flagged=red alert), creator name. Bulk select checkbox on each. Top action bar appears on selection: \"Approve\", \"Reject\", \"Delete\" buttons. Click opens detail modal: large preview left, metadata right (name, creator, upload date, resolution, price, status), action buttons. Premium, content-management, dark.",
+            "key_elements": [
+                "Filter tabs",
+                "Thumbnail grid",
+                "Status badges",
+                "Bulk actions",
+                "Detail modal"
+            ],
+            "animation_notes": "Grid items fade in, modal scales in from center, badges pop"
+        },
+        {
+            "id": "S32",
+            "name": "Admin Web - Creator Management",
+            "type": "Web",
+            "platforms": [
+                "Web (Desktop)"
+            ],
+            "prompt": "Desktop web creator management page for WallVault admin. Dark theme. Left sidebar. Top: \"Creators\" heading, search, filters. Two sections: \"Pending Approvals\" (5 items) — card list with creator avatar, name, upload count, payout method, document preview icon, Approve/Reject/View buttons. \"All Creators\" table with columns: Name, Level (with emoji badge), Uploads, Earnings, Payouts, Status (Active/Suspended), Actions (View, Edit, Suspend). Sortable headers. Row hover highlight. Premium, admin-focused, dark.",
+            "key_elements": [
+                "Pending approvals list",
+                "Creator table",
+                "Level badges",
+                "Action buttons",
+                "Sortable columns"
+            ],
+            "animation_notes": "Pending cards slide in, table rows fade in with stagger"
+        },
+        {
+            "id": "S33",
+            "name": "Admin Web - Payout Management",
+            "type": "Web",
+            "platforms": [
+                "Web (Desktop)"
+            ],
+            "prompt": "Desktop web payout management page for WallVault admin. Dark theme. Left sidebar. Top: \"Payouts\" heading. \"Pending Payouts\" table: columns Creator, Amount, Method, Requested Date, Action (Process button in gold). \"Process All\" button top-right. \"Payout History\" table below: Date, Creator, Amount, Method, Status (green checkmark), Transaction ID. Each completed row has green left border. \"Export CSV\" button. Summary cards: \"Total Processed ₹45K\", \"Pending ₹12K\", \"Failed ₹0\". Premium, financial, admin-focused, dark.",
+            "key_elements": [
+                "Pending table",
+                "Process buttons",
+                "History table",
+                "Summary cards",
+                "Export CSV"
+            ],
+            "animation_notes": "Tables fade in, process button has idle gold pulse"
+        },
+        {
+            "id": "S34",
+            "name": "Admin Web - User Management",
+            "type": "Web",
+            "platforms": [
+                "Web (Desktop)"
+            ],
+            "prompt": "Desktop web user management page for WallVault admin. Dark theme. Left sidebar. Top: \"Users\" heading, search bar with filters (Status, Join Date, Subscription). User table: Avatar, Name, Email, Join Date, Downloads, Subscription (Free/Pro badge), Status (Active/Suspended dot), Actions (View, Ban, Edit). Pagination at bottom. Click row opens user detail sidebar: profile info, activity log (downloads, uploads, payments), ban button with confirmation modal. Premium, admin-focused, dark.",
+            "key_elements": [
+                "Search filters",
+                "User table",
+                "Subscription badges",
+                "Detail sidebar",
+                "Ban action"
+            ],
+            "animation_notes": "Table rows stagger in, sidebar slides in from right"
+        },
+        {
+            "id": "S35",
+            "name": "Admin Web - Payment Analytics",
+            "type": "Web",
+            "platforms": [
+                "Web (Desktop)"
+            ],
+            "prompt": "Desktop web payment analytics page for WallVault admin. Dark theme. Left sidebar. Top: \"Payment Analytics\" heading, date range picker. Four stat cards: \"Total Revenue ₹89K\", \"Subscription Revenue ₹45K\", \"Wallpaper Sales ₹32K\", \"Tips ₹12K\". Below: stacked area chart \"Revenue Breakdown by Source\" with purple, cyan, gold layers. \"Payout vs Revenue\" comparison bar chart. \"Top Selling Wallpapers\" table. \"Refund/Disputes\" alert section with pending items. \"Export Report\" button. Premium, data-dense, dark.",
+            "key_elements": [
+                "Revenue cards",
+                "Stacked area chart",
+                "Comparison chart",
+                "Top sellers table",
+                "Disputes alerts"
+            ],
+            "animation_notes": "Charts draw on load, alert badges pulse"
+        },
+        {
+            "id": "S36",
+            "name": "Loading / Skeleton States",
+            "type": "Mobile + Web",
+            "platforms": [
+                "Android",
+                "iOS",
+                "Web"
+            ],
+            "prompt": "Loading and skeleton states for WallVault app. Dark background (#0A0A0F). Shimmer effect: animated gradient sweep (dark gray #1A1A24 to light gray #2A2A3A to dark gray) moving left to right. Skeleton cards: rounded rectangles for wallpaper thumbnails, text lines for names and stats. Circular skeleton for avatars. Pulsing dots for small loading states. Purple accent shimmer for premium content areas. Premium, smooth, dark theme.",
+            "key_elements": [
+                "Shimmer gradient",
+                "Skeleton cards",
+                "Pulsing dots",
+                "Circular skeletons"
+            ],
+            "animation_notes": "Shimmer sweeps continuously, dots pulse with 1.5s interval"
+        },
+        {
+            "id": "S37",
+            "name": "Empty States",
+            "type": "Mobile + Web",
+            "platforms": [
+                "Android",
+                "iOS",
+                "Web"
+            ],
+            "prompt": "Empty state screens for WallVault. Dark background (#0A0A0F). Centered large illustration icon (line art style) in purple (#B829DD) or gray (#5A5A6E). Heading in white: \"No downloads yet\", \"No favorites yet\", \"No uploads yet\", \"No notifications\", \"No results found\". Subtext in gray with helpful action: \"Browse wallpapers to get started\" with link in cyan. \"Add\" or \"Explore\" CTA button with purple gradient. Premium, encouraging, minimal.",
+            "key_elements": [
+                "Illustration icon",
+                "Heading",
+                "Subtext with action",
+                "CTA button"
+            ],
+            "animation_notes": "Icon draws with SVG stroke animation, text fades in"
+        },
+        {
+            "id": "S38",
+            "name": "Error States",
+            "type": "Mobile + Web",
+            "platforms": [
+                "Android",
+                "iOS",
+                "Web"
+            ],
+            "prompt": "Error state screens for WallVault. Dark background (#0A0A0F). Centered alert icon (triangle with exclamation) in red (#FF1744) with subtle pulse glow. Heading: \"Something went wrong\" in white. Subtext: specific error message in gray. \"Retry\" button with purple gradient. \"Contact Support\" link in cyan below. For network errors: \"No internet connection\" with wifi-off icon. For payment errors: \"Payment failed\" with card icon. Premium, reassuring, dark.",
+            "key_elements": [
+                "Alert icon",
+                "Error heading",
+                "Specific message",
+                "Retry CTA",
+                "Support link"
+            ],
+            "animation_notes": "Icon pulses red glow, retry button has shake animation on error"
+        }
+    ]
+}
