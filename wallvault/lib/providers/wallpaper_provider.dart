@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/repositories/wallpaper_repository.dart';
 import '../data/models/wallpaper_model.dart';
+import 'auth_provider.dart';
 
 final wallpaperRepositoryProvider = Provider<WallpaperRepository>((ref) {
   return WallpaperRepository();
@@ -20,5 +21,15 @@ final categoryWallpapersProvider = FutureProvider.family<List<WallpaperModel>, S
 
 final wallpaperDetailProvider = FutureProvider.family<WallpaperModel?, String>((ref, id) async {
   return ref.watch(wallpaperRepositoryProvider).getWallpaperById(id);
+});
+
+final downloadedWallpapersProvider = FutureProvider<List<WallpaperModel>>((ref) async {
+  final user = ref.watch(userProfileProvider).asData?.value;
+  if (user == null || user.downloads.isEmpty) return [];
+
+  final repo = ref.watch(wallpaperRepositoryProvider);
+  final futures = user.downloads.map((id) => repo.getWallpaperById(id));
+  final results = await Future.wait(futures);
+  return results.whereType<WallpaperModel>().toList();
 });
 

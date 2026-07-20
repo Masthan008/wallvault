@@ -8,6 +8,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/router/routes.dart';
 import '../../../providers/wallpaper_provider.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../data/models/wallpaper_model.dart';
 
 /// S08 — Home feed connected to real Firestore collection queries (exclusively prebuilt wallpapers).
@@ -46,6 +47,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final AsyncValue<List<WallpaperModel>> wallpapersAsync = categoryFilter != null
         ? ref.watch(categoryWallpapersProvider(categoryFilter))
         : ref.watch(trendingWallpapersProvider);
+    final userAsync = ref.watch(userProfileProvider);
 
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
@@ -56,43 +58,71 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             floating: true,
             backgroundColor: AppColors.bgPrimary,
             elevation: 0,
-            title: Row(
-              children: [
-                const Hero(
-                  tag: 'user-profile-avatar',
-                  child: CircleAvatar(
-                    radius: 18,
-                    backgroundColor: AppColors.bgCard,
-                    backgroundImage: NetworkImage('https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            title: userAsync.when(
+              data: (user) {
+                final name = (user?.displayName.isNotEmpty == true) ? user!.displayName : 'Guest';
+                final avatar = user?.avatarUrl;
+                final streakVal = user?.streak.current ?? 0;
+                
+                final hour = DateTime.now().hour;
+                String greeting;
+                if (hour < 12) {
+                  greeting = 'Good Morning';
+                } else if (hour < 17) {
+                  greeting = 'Good Afternoon';
+                } else {
+                  greeting = 'Good Evening';
+                }
+
+                return Row(
                   children: [
-                    Text('Good Morning, Alex', style: AppTypography.h4),
-                    Row(
+                    Hero(
+                      tag: 'user-profile-avatar',
+                      child: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: AppColors.bgCard,
+                        backgroundImage: (avatar != null && avatar.isNotEmpty)
+                            ? NetworkImage(avatar)
+                            : null,
+                        child: (avatar == null || avatar.isEmpty)
+                            ? Text(
+                                name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'G',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('🔥 ', style: TextStyle(fontSize: 12)),
-                        Text(
-                          '7-day streak!',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.orangeAccent.shade200,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Text('$greeting, $name', style: AppTypography.h4),
+                        Row(
+                          children: [
+                            const Text('🔥 ', style: TextStyle(fontSize: 12)),
+                            Text(
+                              '$streakVal-day streak!',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.orangeAccent.shade200,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ],
-                ),
-              ],
+                );
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (e, s) => const SizedBox.shrink(),
             ),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.search_rounded, color: AppColors.textPrimary),
-                onPressed: () => context.push(AppRoutes.search),
-              ),
               IconButton(
                 icon: const Icon(Icons.notifications_outlined, color: AppColors.textPrimary),
                 onPressed: () => context.push(AppRoutes.notifications),
@@ -163,7 +193,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     itemBuilder: (context, index) {
                       final item = featured[index];
                       return GestureDetector(
-                        onTap: () => context.push(AppRoutes.wallpaperDetailPath('featured_$index')),
+                        onTap: () => context.push(AppRoutes.wallpaperDetailPath(item.id)),
                         child: Container(
                           width: 200,
                           decoration: BoxDecoration(
@@ -177,7 +207,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               )
                             ],
                             image: DecorationImage(
-                              image: AssetImage(item.imageUrl),
+                              image: item.imageUrl.startsWith('assets/')
+                                  ? AssetImage(item.imageUrl) as ImageProvider
+                                  : NetworkImage(item.imageUrl) as ImageProvider,
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -339,14 +371,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     final item = wallpapers[index];
                     final heights = [240.0, 290.0, 220.0, 270.0, 230.0, 280.0];
                     return GestureDetector(
-                      onTap: () => context.push(AppRoutes.wallpaperDetailPath('grid_$index')),
+                      onTap: () => context.push(AppRoutes.wallpaperDetailPath(item.id)),
                       child: Container(
                         height: heights[index % heights.length],
                         decoration: BoxDecoration(
                           color: AppColors.bgCard,
                           borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
                           image: DecorationImage(
-                            image: AssetImage(item.imageUrl),
+                            image: item.imageUrl.startsWith('assets/')
+                                ? AssetImage(item.imageUrl) as ImageProvider
+                                : NetworkImage(item.imageUrl) as ImageProvider,
                             fit: BoxFit.cover,
                           ),
                           boxShadow: [
@@ -442,28 +476,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
 
           // Bottom padding
-          const SliverToBoxAdapter(child: SizedBox(height: 120)),
+          const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.creatorUpload),
-        backgroundColor: AppColors.accentPurple,
-        shape: const CircleBorder(),
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.accentPurple,
-                blurRadius: 12,
-                spreadRadius: 2,
-              )
-            ],
-          ),
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
-        ),
       ),
     );
   }

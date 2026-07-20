@@ -1,24 +1,28 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/router/routes.dart';
+import '../../../providers/auth_provider.dart';
 
 /// S01 — Splash screen with custom animated W-stroke, typing tagline, and particle bursts.
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProviderStateMixin {
   late AnimationController _drawController;
   late AnimationController _fillController;
   late AnimationController _textController;
   late AnimationController _cursorController;
+  late AnimationController _pulseController;
   
   final List<Particle> _particles = [];
   bool _burstTriggered = false;
@@ -54,6 +58,12 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       duration: const Duration(milliseconds: 500),
     )..repeat(reverse: true);
 
+    // Background breathing pulse
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+
     _drawController.addListener(() {
       setState(() {});
     });
@@ -77,16 +87,28 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       }
     });
 
-    // Handle particle burst at 1.8 seconds and navigation at 2.5 seconds
+    // Handle particle burst at 1.8 seconds and navigation at 2.8 seconds
     Future.delayed(const Duration(milliseconds: 1800), () {
       if (mounted) {
         _triggerParticleBurst();
       }
     });
 
-    Future.delayed(const Duration(milliseconds: 2800), () {
+    Future.delayed(const Duration(milliseconds: 2800), () async {
       if (mounted) {
-        context.go(AppRoutes.onboarding);
+        final prefs = await SharedPreferences.getInstance();
+        final seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
+        
+        final user = ref.read(authStateProvider).value;
+        final isLoggedIn = user != null;
+
+        if (isLoggedIn) {
+          context.go(AppRoutes.home);
+        } else if (seenOnboarding) {
+          context.go(AppRoutes.login);
+        } else {
+          context.go(AppRoutes.onboarding);
+        }
       }
     });
   }
@@ -127,6 +149,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     _fillController.dispose();
     _textController.dispose();
     _cursorController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -136,44 +159,75 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
+          // Dynamic breathing background glow
+          AnimatedBuilder(
+            animation: _pulseController,
+            builder: (context, child) {
+              final scale = 1.0 + _pulseController.value * 0.15;
+              return Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment.center,
+                      radius: 0.8 * scale,
+                      colors: [
+                        AppColors.accentPurple.withValues(alpha: 0.12),
+                        AppColors.bgPrimary,
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
           // Logo & Text Centered
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo paint slot
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CustomPaint(
-                      size: const Size(120, 100),
-                      painter: LogoPainter(
-                        drawProgress: _drawController.value,
-                        fillOpacity: _fillController.value,
+                // Logo paint slot with elastic scale
+                AnimatedBuilder(
+                  animation: _drawController,
+                  builder: (context, child) {
+                    final scale = Curves.elasticOut.transform((_drawController.value * 1.25).clamp(0.0, 1.0));
+                    return Transform.scale(
+                      scale: scale,
+                      child: child,
+                    );
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CustomPaint(
+                        size: const Size(120, 100),
+                        painter: LogoPainter(
+                          drawProgress: _drawController.value,
+                          fillOpacity: _fillController.value,
+                        ),
                       ),
-                    ),
-                    // Optional burst particles
-                    if (_particles.isNotEmpty)
-                      ..._particles.map((p) => Positioned(
-                            left: 60 + p.x,
-                            top: 50 + p.y,
-                            child: Container(
-                              width: p.size,
-                              height: p.size,
-                              decoration: BoxDecoration(
-                                color: p.color.withOpacity(p.alpha),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: p.color,
-                                    blurRadius: 4,
-                                    spreadRadius: 1,
-                                  )
-                                ],
+                      // Optional burst particles
+                      if (_particles.isNotEmpty)
+                        ..._particles.map((p) => Positioned(
+                              left: 60 + p.x,
+                              top: 50 + p.y,
+                              child: Container(
+                                width: p.size,
+                                height: p.size,
+                                decoration: BoxDecoration(
+                                  color: p.color.withOpacity(p.alpha),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: p.color,
+                                      blurRadius: 4,
+                                      spreadRadius: 1,
+                                    )
+                                  ],
+                                ),
                               ),
-                            ),
-                          )),
-                  ],
+                            )),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 36),
                 
@@ -233,18 +287,22 @@ class Particle {
   double x = 0;
   double y = 0;
   double alpha = 1.0;
+  late double currentSpeed;
 
   Particle({
     required this.angle,
     required this.speed,
     required this.size,
     required this.color,
-  });
+  }) {
+    currentSpeed = speed;
+  }
 
   void update() {
-    x += cos(angle) * speed;
-    y += sin(angle) * speed;
-    alpha = (alpha - 0.02).clamp(0.0, 1.0);
+    x += cos(angle) * currentSpeed;
+    y += sin(angle) * currentSpeed;
+    currentSpeed *= 0.95;
+    alpha = (alpha - 0.015).clamp(0.0, 1.0);
   }
 }
 

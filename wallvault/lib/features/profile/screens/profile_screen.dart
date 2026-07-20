@@ -121,12 +121,6 @@ class ProfileScreen extends ConsumerWidget {
                     onTap: () => context.push(AppRoutes.subscription),
                   ),
                   _MenuItem(
-                    icon: Icons.palette_rounded,
-                    label: 'Become a Creator',
-                    color: AppColors.accentCyan,
-                    onTap: () => context.push(AppRoutes.creatorEnroll),
-                  ),
-                  _MenuItem(
                     icon: Icons.notifications_rounded,
                     label: 'Notifications',
                     onTap: () => context.push(AppRoutes.notifications),

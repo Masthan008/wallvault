@@ -14,8 +14,7 @@ class MainShell extends StatelessWidget {
     final location = GoRouterState.of(context).uri.toString();
     if (location.startsWith(AppRoutes.home)) return 0;
     if (location.startsWith(AppRoutes.search)) return 1;
-    if (location.startsWith(AppRoutes.creatorDashboard)) return 2;
-    if (location.startsWith(AppRoutes.profile)) return 3;
+    if (location.startsWith(AppRoutes.profile)) return 2;
     return 0;
   }
 
@@ -23,8 +22,7 @@ class MainShell extends StatelessWidget {
     switch (index) {
       case 0: context.go(AppRoutes.home);
       case 1: context.go(AppRoutes.search);
-      case 2: context.go(AppRoutes.creatorDashboard);
-      case 3: context.go(AppRoutes.profile);
+      case 2: context.go(AppRoutes.profile);
     }
   }
 
@@ -34,22 +32,6 @@ class MainShell extends StatelessWidget {
 
     return Scaffold(
       body: child,
-      floatingActionButton: Container(
-        height: AppSpacing.fabSize,
-        width: AppSpacing.fabSize,
-        decoration: BoxDecoration(
-          gradient: AppColors.gradientHero,
-          shape: BoxShape.circle,
-          boxShadow: AppColors.buttonShadow,
-        ),
-        child: FloatingActionButton(
-          onPressed: () => context.push(AppRoutes.creatorUpload),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: const Icon(Icons.add_rounded, size: 32, color: Colors.white),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: AppColors.bgSecondary,
@@ -75,18 +57,11 @@ class MainShell extends StatelessWidget {
                   isSelected: currentIndex == 1,
                   onTap: () => _onTap(context, 1),
                 ),
-                const SizedBox(width: 56), // FAB space
-                _NavItem(
-                  icon: Icons.dashboard_rounded,
-                  label: 'Creator',
-                  isSelected: currentIndex == 2,
-                  onTap: () => _onTap(context, 2),
-                ),
                 _NavItem(
                   icon: Icons.person_rounded,
                   label: 'Profile',
-                  isSelected: currentIndex == 3,
-                  onTap: () => _onTap(context, 3),
+                  isSelected: currentIndex == 2,
+                  onTap: () => _onTap(context, 2),
                 ),
               ],
             ),

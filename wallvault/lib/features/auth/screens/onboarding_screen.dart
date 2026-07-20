@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -27,6 +28,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
+  Future<void> _completeOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seen_onboarding', true);
+    if (mounted) {
+      context.go(AppRoutes.login);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,7 +49,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: TextButton(
-                  onPressed: () => context.go(AppRoutes.login),
+                  onPressed: _completeOnboarding,
                   child: const Text(
                     'Skip',
                     style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold),
@@ -92,7 +101,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           curve: Curves.easeInOut,
                         );
                       } else {
-                        context.go(AppRoutes.login);
+                        _completeOnboarding();
                       }
                     },
                   ),
@@ -248,6 +257,65 @@ class _OnboardingSlide2State extends State<_OnboardingSlide2> with SingleTickerP
     super.dispose();
   }
 
+  Widget _buildCreatorCard(String emoji, String name, String category, Color accentColor) {
+    return Container(
+      width: 90,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.bgElevated),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: 0.15),
+            blurRadius: 12,
+            spreadRadius: 1,
+          )
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              emoji,
+              style: const TextStyle(fontSize: 20),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
+              ),
+              const SizedBox(width: 2),
+              const Icon(Icons.verified, color: AppColors.accentCyan, size: 10),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            category,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 8,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -262,13 +330,13 @@ class _OnboardingSlide2State extends State<_OnboardingSlide2> with SingleTickerP
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Avatars circles pop-in row
+                // Premium illustrated designer cards
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildAvatarCircle('https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100'),
-                    _buildAvatarCircle('https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=100'),
-                    _buildAvatarCircle('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100'),
+                    _buildCreatorCard('🎨', 'Satoshi', 'Nature', AppColors.accentCyan),
+                    _buildCreatorCard('⚡', 'Matrix', 'Abstract', AppColors.accentPurple),
+                    _buildCreatorCard('⭐', 'Luna', 'Space', AppColors.accentGold),
                   ],
                 ),
                 // Falling gold coins
@@ -300,20 +368,6 @@ class _OnboardingSlide2State extends State<_OnboardingSlide2> with SingleTickerP
             textAlign: TextAlign.center,
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildAvatarCircle(String url) {
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: const BoxDecoration(
-        color: AppColors.accentPurple,
-        shape: BoxShape.circle,
-      ),
-      child: CircleAvatar(
-        radius: 32,
-        backgroundImage: NetworkImage(url),
       ),
     );
   }

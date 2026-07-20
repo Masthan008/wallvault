@@ -1,22 +1,151 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/gradient_button.dart';
+import '../../../core/router/routes.dart';
+import '../../../providers/auth_provider.dart';
 
 /// S25 — Settings screen with profile options, support details, and logout confirmations.
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _pushNotifications = true;
   bool _wifiOnly = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _pushNotifications = prefs.getBool('push_notifications') ?? true;
+      _wifiOnly = prefs.getBool('wifi_only') ?? false;
+    });
+  }
+
+  Future<void> _setPushNotifications(bool val) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('push_notifications', val);
+    setState(() {
+      _pushNotifications = val;
+    });
+  }
+
+  Future<void> _setWifiOnly(bool val) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('wifi_only', val);
+    setState(() {
+      _wifiOnly = val;
+    });
+  }
+
+  void _showEditProfileDialog() {
+    final user = ref.read(userProfileProvider).value;
+    if (user == null) return;
+    final controller = TextEditingController(text: user.displayName);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        title: Text('Edit Profile', style: AppTypography.h3),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Display Name',
+            labelStyle: TextStyle(color: AppColors.textSecondary),
+            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.bgElevated)),
+            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentPurple)),
+          ),
+          style: const TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newName = controller.text.trim();
+              if (newName.isNotEmpty) {
+                await ref.read(userRepositoryProvider).updateUser(user.uid, {'displayName': newName});
+                ref.invalidate(userProfileProvider);
+                if (mounted) Navigator.pop(context);
+              }
+            },
+            child: const Text('Save', style: TextStyle(color: AppColors.accentPurple)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChangePasswordDialog() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        title: Text('Change Password', style: AppTypography.h3),
+        content: TextField(
+          controller: controller,
+          obscureText: true,
+          decoration: const InputDecoration(
+            labelText: 'New Password',
+            labelStyle: TextStyle(color: AppColors.textSecondary),
+            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.bgElevated)),
+            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentPurple)),
+          ),
+          style: const TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newPass = controller.text.trim();
+              if (newPass.length >= 6) {
+                try {
+                  await ref.read(authRepositoryProvider).currentUser?.updatePassword(newPass);
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Password updated successfully.')),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $e')),
+                    );
+                  }
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Password must be at least 6 characters.')),
+                );
+              }
+            },
+            child: const Text('Update', style: TextStyle(color: AppColors.accentPurple)),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showDeleteAccountConfirmation() {
     showModalBottomSheet(
@@ -45,9 +174,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
               gradient: const LinearGradient(
                 colors: [AppColors.accentError, Colors.redAccent],
               ),
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
-                // TODO: Perform account deletion
+                try {
+                  final authRepo = ref.read(authRepositoryProvider);
+                  final user = authRepo.currentUser;
+                  if (user != null) {
+                    await user.delete();
+                    await authRepo.signOut();
+                    if (mounted) {
+                      context.go(AppRoutes.login);
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to delete account: $e')),
+                    );
+                  }
+                }
               },
             ),
             const SizedBox(height: 8),
@@ -82,9 +227,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
               gradient: const LinearGradient(
                 colors: [AppColors.accentError, Colors.redAccent],
               ),
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
-                // TODO: Perform logout
+                try {
+                  await ref.read(authRepositoryProvider).signOut();
+                  if (mounted) {
+                    context.go(AppRoutes.login);
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Logout failed: $e')),
+                    );
+                  }
+                }
               },
             ),
             const SizedBox(height: 8),
@@ -114,8 +270,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           // Account Section
           _buildHeader('Account'),
-          _buildItem(Icons.person_outline_rounded, 'Edit Profile'),
-          _buildItem(Icons.lock_outline_rounded, 'Change Password'),
+          _buildItem(Icons.person_outline_rounded, 'Edit Profile', onTap: _showEditProfileDialog),
+          _buildItem(Icons.lock_outline_rounded, 'Change Password', onTap: _showChangePasswordDialog),
           _buildItem(
             Icons.delete_outline_rounded,
             'Delete Account',
@@ -137,7 +293,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: _pushNotifications,
             activeColor: AppColors.accentPurple,
             contentPadding: EdgeInsets.zero,
-            onChanged: (val) => setState(() => _pushNotifications = val),
+            onChanged: _setPushNotifications,
           ),
           SwitchListTile(
             title: Row(
@@ -150,7 +306,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: _wifiOnly,
             activeColor: AppColors.accentPurple,
             contentPadding: EdgeInsets.zero,
-            onChanged: (val) => setState(() => _wifiOnly = val),
+            onChanged: _setWifiOnly,
           ),
           const SizedBox(height: 24),
 

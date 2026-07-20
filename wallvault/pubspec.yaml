@@ -54,6 +54,7 @@ dependencies:
   uuid: ^4.5.1
   flutter_secure_storage: ^10.3.1
   connectivity_plus: ^7.3.0
+  shared_preferences: ^2.3.2
 
   # --- Crypto (for Apple Sign-In nonce) ---
   crypto: ^3.0.6
