@@ -12,7 +12,6 @@ import '../../../core/widgets/gradient_button.dart';
 import '../../../core/router/routes.dart';
 import '../../../providers/auth_provider.dart';
 
-/// S07 — OTP verification screen with real Firebase SMS confirmation checks.
 class OtpScreen extends ConsumerStatefulWidget {
   final String phone;
   final String verificationId;
@@ -64,7 +63,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
     }
-    // Auto-verify when all filled
     final otp = _controllers.map((c) => c.text).join();
     if (otp.length == 6) {
       _verifyOtp(otp);
@@ -76,9 +74,11 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     setState(() => _isVerifying = true);
 
     if (widget.verificationId.isEmpty) {
-      // Graceful fallback for mock modes
       setState(() => _isVerifying = false);
-      context.go(AppRoutes.home);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Verification failed. Please try again.')),
+      );
+      context.pop();
       return;
     }
 
@@ -132,8 +132,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 ),
               ).animate().fadeIn(delay: 100.ms),
               const SizedBox(height: 48),
-              
-              // OTP boxes row (6 inputs, 48x48px size)
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(6, (index) {
@@ -171,8 +170,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 }),
               ),
               const SizedBox(height: 32),
-              
-              // Verify Button
+
               GradientButton(
                 label: 'Verify',
                 isLoading: _isVerifying,
@@ -182,8 +180,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 },
               ).animate().fadeIn(delay: 700.ms),
               const SizedBox(height: 24),
-              
-              // Countdown & Resend link
+
               Center(
                 child: _resendCountdown > 0
                     ? Text(

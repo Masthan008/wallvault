@@ -1,26 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  /* Backgrounds */
-  --bg-primary: #0A0A0F;
-  --bg-secondary: #12121A;
-  --bg-card: #1A1A24;
-  --bg-elevated: #22222E;
+  /* 21st.dev / shadcn Zinc Dark Theme */
+  --bg-primary: #09090b;
+  --bg-secondary: #030303;
+  --bg-card: #09090b;
+  --bg-elevated: #18181b;
+  
+  /* Borders and Dividers */
+  --border-glass: #27272a;
+  --border-glass-hover: #3f3f46;
 
-  /* Accents */
-  --accent-purple: #B829DD;
-  --accent-cyan: #00D4FF;
-  --accent-gold: #FFD700;
-  --accent-success: #00E676;
-  --accent-error: #FF1744;
-  --accent-warning: #FF9100;
+  /* Accents - Minimal & Clean */
+  --accent-purple: #a855f7;
+  --accent-cyan: #06b6d4;
+  --accent-gold: #f59e0b;
+  --accent-success: #10b981;
+  --accent-error: #ef4444;
+  --accent-warning: #f59e0b;
 
-  /* Text */
-  --text-primary: #FFFFFF;
-  --text-secondary: #8B8B9E;
-  --text-muted: #5A5A6E;
+  /* Premium Typography */
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #52525b;
 
-  /* Formats for standard tailwind fallback */
   --background: var(--bg-primary);
   --foreground: var(--text-primary);
 }
@@ -42,7 +45,12 @@
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
 
-  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-shimmer: shimmer 2s infinite linear;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 body {
@@ -50,36 +58,96 @@ body {
   color: var(--text-primary);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
 }
 
-/* Custom Scrollbars */
+/* 21st.dev Modern Technical Grid Background */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+  pointer-events: none;
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+}
+
+/* Premium Thin Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: var(--bg-secondary);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-elevated);
-  border-radius: 3px;
+  background: var(--border-glass);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-purple);
+  background: var(--border-glass-hover);
 }
 
-/* Glow effects */
-.glow-purple {
-  box-shadow: 0 0 16px rgba(184, 41, 221, 0.4);
+/* 21st.dev Premium Developer Card Panel */
+.glass-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
 }
 
-.glow-cyan {
-  box-shadow: 0 0 16px rgba(0, 212, 255, 0.4);
+.glass-panel:hover {
+  border-color: var(--border-glass-hover);
 }
 
-.glow-gold {
-  box-shadow: 0 0 16px rgba(255, 215, 0, 0.4);
+/* Clean Form Input Elements */
+.glass-input {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-glass);
+  border-radius: 8px;
+  color: var(--text-primary);
+  outline: none;
+  transition: all 0.2s ease-in-out;
 }
+
+.glass-input:focus {
+  border-color: var(--text-secondary);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.03);
+}
+
+/* Developer-style card glow highlights */
+.glow-purple-hover:hover {
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.glow-cyan-hover:hover {
+  border-color: rgba(6, 182, 212, 0.4);
+}
+
+.glow-gold-hover:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+/* Shimmer Loader */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.01) 25%,
+    rgba(255, 255, 255, 0.04) 37%,
+    rgba(255, 255, 255, 0.01) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.5s ease infinite;
+}
+
+
+

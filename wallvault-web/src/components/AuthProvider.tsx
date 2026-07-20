@@ -38,13 +38,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
           if (userDoc.exists()) {
             const data = userDoc.data();
-            setIsAdmin(data.isAdmin === true || currentUser.email === 'admin@wallvault.com');
-            setIsCreator(data.isCreator === true || data.role === 'creator' || true); // default to creator role for dev ease
+            setIsAdmin(data.isAdmin === true);
+            setIsCreator(data.isCreator === true || data.role === 'creator');
           } else {
-            // Seed a new user record if they logged in via Google but doc doesn't exist
-            const isDefaultAdmin = currentUser.email === 'admin@wallvault.com';
+            const isDefaultAdmin = currentUser.email === 'masthan@admin.com';
             await setDoc(doc(db, 'users', currentUser.uid), {
-              name: currentUser.displayName || 'Creator User',
+              name: currentUser.displayName || 'User',
               email: currentUser.email,
               isAdmin: isDefaultAdmin,
               isCreator: !isDefaultAdmin,
@@ -53,10 +52,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsAdmin(isDefaultAdmin);
             setIsCreator(!isDefaultAdmin);
           }
-        } catch (e) {
-          // Fallback roles if Firestore fails
-          setIsAdmin(currentUser.email === 'admin@wallvault.com');
-          setIsCreator(true);
+        } catch {
+          setIsAdmin(currentUser.email === 'masthan@admin.com');
+          setIsCreator(false);
         }
       } else {
         setIsAdmin(false);

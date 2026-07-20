@@ -5,6 +5,7 @@ import { LayoutDashboard, CloudUpload, BarChart3, Wallet, Loader2 } from 'lucide
 import { Sidebar } from '@/components/Sidebar';
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const creatorNavItems = [
   { label: 'Dashboard', href: '/creator/dashboard', icon: LayoutDashboard },
@@ -25,8 +26,11 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#0A0A0F] text-white">
-        <Loader2 className="w-8 h-8 animate-spin text-[#B829DD]" />
+      <div className="flex h-screen w-full items-center justify-center bg-bg-primary text-white">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin text-accent-purple" />
+          <span className="text-xs uppercase tracking-widest font-extrabold text-text-muted">Loading Creator Hub</span>
+        </div>
       </div>
     );
   }
@@ -36,17 +40,31 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-white">
+    <div className="min-h-screen bg-bg-primary text-text-primary relative overflow-hidden">
+      {/* Background blurs */}
+      <div className="absolute top-0 right-0 w-[40rem] h-[40rem] rounded-full bg-accent-purple/5 blur-[140px] pointer-events-none" />
+
       <Sidebar
         title="Creator Hub"
         items={creatorNavItems}
         portalType="creator"
       />
+      
       <div className="pl-64">
-        <main className="min-h-[calc(100vh-4rem)] p-8">
-          {children}
+        <main className="min-h-screen p-8 relative z-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 15 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>
   );
 }
+

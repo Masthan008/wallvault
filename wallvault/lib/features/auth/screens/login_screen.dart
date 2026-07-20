@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -11,7 +12,6 @@ import '../../../core/widgets/glow_input.dart';
 import '../../../core/router/routes.dart';
 import '../../../providers/auth_provider.dart';
 
-/// S05 — Login screen with blurred wallpaper background and phone + password inputs.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -21,13 +21,11 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
     _phoneController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -42,29 +40,83 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    ref.read(authRepositoryProvider).signInWithPhone(
+    final authRepo = ref.read(authRepositoryProvider);
+
+    authRepo.signInWithPhone(
       phone,
       (credential) async {
-        await ref.read(authRepositoryProvider).signInWithCredential(credential);
+        await authRepo.signInWithCredential(credential);
         if (mounted) context.go(AppRoutes.home);
       },
       (error) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message ?? 'Verification failed.')),
-        );
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error.message ?? 'Verification failed.')),
+          );
+        }
       },
       (verificationId, forceResendingToken) {
-        setState(() => _isLoading = false);
-        context.push(AppRoutes.otp, extra: {
-          'phone': phone,
-          'verificationId': verificationId,
-        });
+        if (mounted) {
+          setState(() => _isLoading = false);
+          context.push(AppRoutes.otp, extra: {
+            'phone': phone,
+            'verificationId': verificationId,
+          });
+        }
       },
       (verificationId) {
         if (mounted) setState(() => _isLoading = false);
       },
     );
+  }
+
+  void _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authRepositoryProvider).signInWithGoogle();
+      if (mounted) context.go(AppRoutes.home);
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (e.code != 'CANCELED') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.message ?? 'Google sign-in failed.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google sign-in failed: $e')),
+        );
+      }
+    }
+  }
+
+  void _handleAppleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authRepositoryProvider).signInWithApple();
+      if (mounted) context.go(AppRoutes.home);
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (e.code != 'CANCELED') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.message ?? 'Apple sign-in failed.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Apple sign-in failed: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -73,7 +125,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       backgroundColor: AppColors.bgPrimary,
       body: Stack(
         children: [
-          // 1. Subtle blurred wallpaper background (20% opacity)
           Positioned.fill(
             child: Opacity(
               opacity: 0.20,
@@ -83,13 +134,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
           ),
-          // Gradient shadow overlay
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.black.withOpacity(0.4),
+                    Colors.black.withValues(alpha: 0.4),
                     AppColors.bgPrimary,
                   ],
                   begin: Alignment.topCenter,
@@ -99,7 +149,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
 
-          // Content body
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.screenPadding),
@@ -107,7 +156,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 32),
-                  // Logo
                   Container(
                     width: 64,
                     height: 64,
@@ -141,24 +189,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ).animate().fadeIn(delay: 300.ms),
                   const SizedBox(height: 40),
-                  
-                  // Inputs
+
                   GlowInput(
                     controller: _phoneController,
                     hintText: 'Phone Number',
                     prefixIcon: Icons.phone_rounded,
                     keyboardType: TextInputType.phone,
                   ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1),
-                  const SizedBox(height: 12),
-                  GlowInput(
-                    controller: _passwordController,
-                    hintText: 'Password',
-                    prefixIcon: Icons.lock_rounded,
-                    obscureText: true,
-                  ).animate().fadeIn(delay: 450.ms).slideY(begin: 0.1),
                   const SizedBox(height: 24),
-                  
-                  // Submit
+
                   GradientButton(
                     label: 'Continue',
                     onPressed: _onLogin,
@@ -166,8 +205,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     icon: Icons.arrow_forward_rounded,
                   ).animate().fadeIn(delay: 500.ms),
                   const SizedBox(height: 32),
-                  
-                  // Divider
+
                   Row(
                     children: [
                       Expanded(child: Divider(color: AppColors.bgElevated)),
@@ -180,17 +218,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ],
                   ).animate().fadeIn(delay: 600.ms),
                   const SizedBox(height: 24),
-                  
-                  // Social buttons
+
                   Row(
                     children: [
                       Expanded(
                         child: _SocialButton(
                           icon: Icons.g_mobiledata_rounded,
                           label: 'Google',
-                          onTap: () {
-                            // Google sign-in trigger
-                          },
+                          onTap: _handleGoogleSignIn,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -198,16 +233,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: _SocialButton(
                           icon: Icons.apple_rounded,
                           label: 'Apple',
-                          onTap: () {
-                            // Apple sign-in trigger
-                          },
+                          onTap: _handleAppleSignIn,
                         ),
                       ),
                     ],
                   ).animate().fadeIn(delay: 700.ms),
                   const SizedBox(height: 32),
-                  
-                  // Sign up link
+
                   Center(
                     child: GestureDetector(
                       onTap: () => context.push(AppRoutes.signup),

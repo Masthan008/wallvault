@@ -54,6 +54,14 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       duration: const Duration(milliseconds: 500),
     )..repeat(reverse: true);
 
+    _drawController.addListener(() {
+      setState(() {});
+    });
+
+    _fillController.addListener(() {
+      setState(() {});
+    });
+
     _drawController.forward().then((_) {
       _fillController.forward();
       // Start typing tagline
@@ -82,6 +90,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       }
     });
   }
+
 
   void _triggerParticleBurst() {
     final rand = Random();

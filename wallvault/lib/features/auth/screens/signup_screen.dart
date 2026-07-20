@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -10,8 +11,8 @@ import '../../../core/widgets/gradient_button.dart';
 import '../../../core/widgets/glow_input.dart';
 import '../../../core/router/routes.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../data/models/user_model.dart';
 
-/// S06 — Sign Up screen with full fields and social Google/Apple sign-in buttons.
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
@@ -35,42 +36,119 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     super.dispose();
   }
 
-  void _onCreateAccount() {
-    final phone = _phoneController.text.trim();
-    if (phone.length < 10) {
+  void _onCreateAccount() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid phone number.')),
+        const SnackBar(content: Text('Please enter your full name.')),
+      );
+      return;
+    }
+    if (email.isEmpty || !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email.')),
+      );
+      return;
+    }
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password must be at least 6 characters.')),
       );
       return;
     }
 
     setState(() => _isLoading = true);
 
-    ref.read(authRepositoryProvider).signInWithPhone(
-      phone,
-      (credential) async {
-        // Verification completed automatically
-        await ref.read(authRepositoryProvider).signInWithCredential(credential);
-        if (mounted) context.go(AppRoutes.home);
-      },
-      (error) {
+    try {
+      final authRepo = ref.read(authRepositoryProvider);
+      final userRepo = ref.read(userRepositoryProvider);
+
+      final userCredential = await authRepo.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final firebaseUser = userCredential.user;
+      if (firebaseUser == null) throw Exception('User creation failed.');
+
+      final now = DateTime.now();
+      final newUser = UserModel(
+        uid: firebaseUser.uid,
+        phone: _phoneController.text.trim(),
+        email: email,
+        displayName: name,
+        createdAt: now,
+        updatedAt: now,
+      );
+      await userRepo.createUser(newUser);
+
+      if (mounted) context.go(AppRoutes.home);
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message ?? 'Verification failed.')),
+          SnackBar(content: Text(e.message ?? 'Account creation failed.')),
         );
-      },
-      (verificationId, forceResendingToken) {
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() => _isLoading = false);
-        // Push verification ID to OtpScreen
-        context.push(AppRoutes.otp, extra: {
-          'phone': phone,
-          'verificationId': verificationId,
-        });
-      },
-      (verificationId) {
-        if (mounted) setState(() => _isLoading = false);
-      },
-    );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
+  void _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authRepositoryProvider).signInWithGoogle();
+      if (mounted) context.go(AppRoutes.home);
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (e.code != 'CANCELED') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.message ?? 'Google sign-in failed.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google sign-in failed: $e')),
+        );
+      }
+    }
+  }
+
+  void _handleAppleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authRepositoryProvider).signInWithApple();
+      if (mounted) context.go(AppRoutes.home);
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (e.code != 'CANCELED') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.message ?? 'Apple sign-in failed.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Apple sign-in failed: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -115,7 +193,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               const SizedBox(height: 12),
               GlowInput(
                 controller: _phoneController,
-                hintText: 'Phone Number',
+                hintText: 'Phone Number (optional)',
                 prefixIcon: Icons.phone_rounded,
                 keyboardType: TextInputType.phone,
               ),
@@ -132,9 +210,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 onPressed: _onCreateAccount,
                 isLoading: _isLoading,
               ),
-              
+
               const SizedBox(height: 32),
-              // Divider
               Row(
                 children: [
                   Expanded(child: Divider(color: AppColors.bgElevated)),
@@ -146,17 +223,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 ],
               ).animate().fadeIn(delay: 200.ms),
               const SizedBox(height: 24),
-              
-              // Social buttons
+
               Row(
                 children: [
                   Expanded(
                     child: _SocialButton(
                       icon: Icons.g_mobiledata_rounded,
                       label: 'Google',
-                      onTap: () {
-                        // Google account creation
-                      },
+                      onTap: _handleGoogleSignIn,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -164,9 +238,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     child: _SocialButton(
                       icon: Icons.apple_rounded,
                       label: 'Apple',
-                      onTap: () {
-                        // Apple account creation
-                      },
+                      onTap: _handleAppleSignIn,
                     ),
                   ),
                 ],
