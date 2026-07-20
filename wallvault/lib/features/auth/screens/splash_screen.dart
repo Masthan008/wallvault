@@ -255,23 +255,52 @@ class LogoPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.accentPurple
+    final shieldPaint = Paint()
+      ..color = AppColors.accentPurple.withOpacity(0.8)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 6.0
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = 4.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
-    final path = Path()
-      ..moveTo(size.width * 0.1, size.height * 0.2)
-      ..lineTo(size.width * 0.35, size.height * 0.85)
-      ..lineTo(size.width * 0.5, size.height * 0.45)
-      ..lineTo(size.width * 0.65, size.height * 0.85)
-      ..lineTo(size.width * 0.9, size.height * 0.2);
+    final wPaint = Paint()
+      ..color = AppColors.accentCyan
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
-    // Animate stroke draw progress using path metrics
-    for (final metric in path.computeMetrics()) {
-      final extractPath = metric.extractPath(0.0, metric.length * drawProgress);
-      canvas.drawPath(extractPath, paint);
+    final shieldPath = Path()
+      ..moveTo(size.width * 0.5, size.height * 0.05)
+      ..quadraticBezierTo(size.width * 0.8, size.height * 0.05, size.width * 0.85, size.height * 0.15)
+      ..lineTo(size.width * 0.85, size.height * 0.5)
+      ..quadraticBezierTo(size.width * 0.85, size.height * 0.8, size.width * 0.5, size.height * 0.95)
+      ..quadraticBezierTo(size.width * 0.15, size.height * 0.8, size.width * 0.15, size.height * 0.5)
+      ..lineTo(size.width * 0.15, size.height * 0.15)
+      ..quadraticBezierTo(size.width * 0.2, size.height * 0.05, size.width * 0.5, size.height * 0.05);
+
+    final wPath = Path()
+      ..moveTo(size.width * 0.3, size.height * 0.32)
+      ..lineTo(size.width * 0.42, size.height * 0.68)
+      ..lineTo(size.width * 0.5, size.height * 0.48)
+      ..lineTo(size.width * 0.58, size.height * 0.68)
+      ..lineTo(size.width * 0.7, size.height * 0.32);
+
+    // Let's divide drawProgress:
+    // First 60% of progress animates the shield outline.
+    // Last 40% of progress animates the inner "W".
+    double shieldProgress = (drawProgress / 0.6).clamp(0.0, 1.0);
+    double wProgress = ((drawProgress - 0.6) / 0.4).clamp(0.0, 1.0);
+
+    for (final metric in shieldPath.computeMetrics()) {
+      final extractPath = metric.extractPath(0.0, metric.length * shieldProgress);
+      canvas.drawPath(extractPath, shieldPaint);
+    }
+
+    if (wProgress > 0) {
+      for (final metric in wPath.computeMetrics()) {
+        final extractPath = metric.extractPath(0.0, metric.length * wProgress);
+        canvas.drawPath(extractPath, wPaint);
+      }
     }
 
     // Paint full-gradient fill once stroke completes
@@ -285,8 +314,8 @@ class LogoPainter extends CustomPainter {
         ).createShader(rect)
         ..style = PaintingStyle.fill;
       
-      canvas.saveLayer(rect, Paint()..color = Colors.white.withOpacity(fillOpacity * 0.3));
-      canvas.drawPath(path, fillPaint);
+      canvas.saveLayer(rect, Paint()..color = Colors.white.withOpacity(fillOpacity * 0.15));
+      canvas.drawPath(shieldPath, fillPaint);
       canvas.restore();
     }
   }
@@ -296,3 +325,4 @@ class LogoPainter extends CustomPainter {
     return oldDelegate.drawProgress != drawProgress || oldDelegate.fillOpacity != fillOpacity;
   }
 }
+

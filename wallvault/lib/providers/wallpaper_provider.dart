@@ -17,3 +17,8 @@ final searchWallpapersProvider = FutureProvider.family<List<WallpaperModel>, Str
 final categoryWallpapersProvider = FutureProvider.family<List<WallpaperModel>, String>((ref, category) async {
   return ref.watch(wallpaperRepositoryProvider).getWallpapers(category: category);
 });
+
+final wallpaperDetailProvider = FutureProvider.family<WallpaperModel?, String>((ref, id) async {
+  return ref.watch(wallpaperRepositoryProvider).getWallpaperById(id);
+});
+

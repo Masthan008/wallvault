@@ -1,175 +1,185 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../widgets/apply_wallpaper_sheet.dart';
+import '../../../providers/wallpaper_provider.dart';
 
 /// S09 — Wallpaper detail with full-screen preview, spring animation overlays, and animated morphing download CTA.
-class WallpaperDetailScreen extends StatelessWidget {
+class WallpaperDetailScreen extends ConsumerWidget {
   final String wallpaperId;
   const WallpaperDetailScreen({super.key, required this.wallpaperId});
 
   @override
-  Widget build(BuildContext context) {
-    final String imagePath;
-    if (wallpaperId.startsWith('featured_')) {
-      final index = int.tryParse(wallpaperId.split('_').last) ?? 0;
-      imagePath = const [
-        'assets/images/japan_sunset_street.png',
-        'assets/images/uchiha_madara_shadow.png',
-        'assets/images/neon_cyber_temple.png',
-      ][index % 3];
-    } else if (wallpaperId.startsWith('grid_')) {
-      final index = int.tryParse(wallpaperId.split('_').last) ?? 0;
-      imagePath = const [
-        'assets/images/japan_sunset_street.png',
-        'assets/images/uchiha_madara_shadow.png',
-        'assets/images/neon_cyber_temple.png',
-        'assets/images/cosmic_nebula_ocean.png',
-        'assets/images/cyberpunk_car_drift.png',
-        'assets/images/minimalist_mountain_lake.png',
-      ][index % 6];
-    } else {
-      imagePath = 'assets/images/japan_sunset_street.png';
-    }
+  Widget build(BuildContext context, WidgetRef ref) {
+    final wallpaperAsync = ref.watch(wallpaperDetailProvider(wallpaperId));
 
-    return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.4),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.arrow_back_rounded,
-                color: Colors.white, size: 20),
-          ),
-          onPressed: () => context.pop(),
+    return wallpaperAsync.when(
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.bgPrimary,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.accentPurple),
         ),
-        actions: [
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.4),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.share_rounded,
-                  color: Colors.white, size: 20),
-            ),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.4),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.favorite_border_rounded,
-                  color: Colors.white, size: 20),
-            ),
-            onPressed: () {},
-          ),
-        ],
       ),
-      body: Stack(
-        children: [
-          // Full-screen image preview (supports local assets)
-          Positioned.fill(
-            child: imagePath.startsWith('assets/')
-                ? Image.asset(imagePath, fit: BoxFit.cover)
-                : Image.network(imagePath, fit: BoxFit.cover),
-          ),
+      error: (err, stack) => Scaffold(
+        backgroundColor: AppColors.bgPrimary,
+        body: Center(
+          child: Text('Error loading details: $err', style: const TextStyle(color: Colors.white)),
+        ),
+      ),
+      data: (wallpaper) {
+        if (wallpaper == null) {
+          return const Scaffold(
+            backgroundColor: AppColors.bgPrimary,
+            body: Center(
+              child: Text('Wallpaper not found.', style: TextStyle(color: Colors.white)),
+            ),
+          );
+        }
 
-          // Bottom Vignette overlay
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 340,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.screenPadding,
-                vertical: 24,
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    AppColors.bgPrimary.withValues(alpha: 0.9),
-                    AppColors.bgPrimary,
-                  ],
+        final imagePath = wallpaper.imageUrl;
+
+        return Scaffold(
+          backgroundColor: AppColors.bgPrimary,
+          extendBodyBehindAppBar: true,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            leading: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  shape: BoxShape.circle,
                 ),
+                child: const Icon(Icons.arrow_back_rounded,
+                    color: Colors.white, size: 20),
               ),
-              child: SafeArea(
-                top: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 60),
-                    Text('Wallpaper Preview', style: AppTypography.h2),
-                    const SizedBox(height: 4),
-                    Text('by Creator Name',
-                        style: AppTypography.creatorName),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        _InfoChip(Icons.photo_size_select_actual_rounded,
-                            '4K'),
-                        const SizedBox(width: 8),
-                        _InfoChip(Icons.aspect_ratio_rounded, '9:16'),
-                        const SizedBox(width: 8),
-                        _InfoChip(Icons.download_rounded, '12.4K'),
-                        const SizedBox(width: 8),
-                        _InfoChip(Icons.star_rounded, '4.8'),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: GradientButton(
-                            label: 'Apply Wallpaper',
-                            icon: Icons.wallpaper_rounded,
-                            onPressed: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                builder: (context) => ApplyWallpaperSheet(
-                                  wallpaperId: wallpaperId,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        
-                        // S09: Morphing download button with confetti burst simulator
-                        AnimatedDownloadButton(wallpaperId: wallpaperId),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+              onPressed: () => context.pop(),
             ),
+            actions: [
+              IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.share_rounded,
+                      color: Colors.white, size: 20),
+                ),
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.favorite_border_rounded,
+                      color: Colors.white, size: 20),
+                ),
+                onPressed: () {},
+              ),
+            ],
           ),
-        ],
-      ),
+          body: Stack(
+            children: [
+              // Full-screen image preview
+              Positioned.fill(
+                child: imagePath.startsWith('assets/')
+                    ? Image.asset(imagePath, fit: BoxFit.cover)
+                    : Image.network(imagePath, fit: BoxFit.cover),
+              ),
+
+              // Bottom Vignette overlay
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 340,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.screenPadding,
+                    vertical: 24,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        AppColors.bgPrimary.withValues(alpha: 0.9),
+                        AppColors.bgPrimary,
+                      ],
+                    ),
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 60),
+                        Text(wallpaper.name, style: AppTypography.h2),
+                        const SizedBox(height: 4),
+                        Text('by ${wallpaper.creatorName}',
+                            style: AppTypography.creatorName),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            _InfoChip(Icons.photo_size_select_actual_rounded,
+                                wallpaper.resolution),
+                            const SizedBox(width: 8),
+                            _InfoChip(Icons.aspect_ratio_rounded, '9:16'),
+                            const SizedBox(width: 8),
+                            _InfoChip(Icons.download_rounded, '${wallpaper.downloads}'),
+                            const SizedBox(width: 8),
+                            _InfoChip(Icons.star_rounded, '${wallpaper.rating}'),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: GradientButton(
+                                label: 'Apply Wallpaper',
+                                icon: Icons.wallpaper_rounded,
+                                onPressed: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    builder: (context) => ApplyWallpaperSheet(
+                                      wallpaperId: wallpaperId,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            
+                            // S09: Morphing download button with confetti burst simulator
+                            AnimatedDownloadButton(wallpaperId: wallpaperId),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
+
 
 class AnimatedDownloadButton extends StatefulWidget {
   final String wallpaperId;

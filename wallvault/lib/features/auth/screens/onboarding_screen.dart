@@ -123,29 +123,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Transform(
                   alignment: Alignment.center,
                   transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.002)
-                    ..rotateY(-0.3)
-                    ..rotateX(0.1)
-                    ..translate(-50.0, 0.0, -20.0),
-                  child: _buildMockCard('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=150'),
+                    ..setEntry(3, 2, 0.0025)
+                    ..rotateY(-0.35)
+                    ..rotateX(0.12)
+                    ..translate(-55.0, 5.0, -25.0),
+                  child: _buildMockCard('assets/images/japan_sunset_street.png'),
                 ),
                 // Back card (right skewed)
                 Transform(
                   alignment: Alignment.center,
                   transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.002)
-                    ..rotateY(0.3)
-                    ..rotateX(0.1)
-                    ..translate(50.0, 0.0, -20.0),
-                  child: _buildMockCard('https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150'),
+                    ..setEntry(3, 2, 0.0025)
+                    ..rotateY(0.35)
+                    ..rotateX(0.12)
+                    ..translate(55.0, 5.0, -25.0),
+                  child: _buildMockCard('assets/images/neon_cyber_temple.png'),
                 ),
-                // Center main card
+                // Center main card (elevated)
                 Transform(
                   alignment: Alignment.center,
                   transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.002)
-                    ..rotateX(0.1),
-                  child: _buildMockCard('https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=180', isGlow: true),
+                    ..setEntry(3, 2, 0.0025)
+                    ..rotateX(0.08)
+                    ..translate(0.0, -10.0, 20.0),
+                  child: _buildMockCard('assets/images/uchiha_madara_shadow.png', isGlow: true),
                 ),
               ],
             ),
@@ -158,7 +159,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Explore thousands of 4K wallpapers curated just for you with premium dark theme designs.',
+            'Explore thousands of 4K & 8K wallpapers curated just for you with premium dark theme designs.',
             style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
@@ -177,17 +178,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return _OnboardingSlide3();
   }
 
-  Widget _buildMockCard(String imageUrl, {bool isGlow = false}) {
+  Widget _buildMockCard(String imagePath, {bool isGlow = false}) {
+    final imageProvider = imagePath.startsWith('assets/')
+        ? AssetImage(imagePath) as ImageProvider
+        : NetworkImage(imagePath) as ImageProvider;
+
     return Container(
       width: 120,
       height: 180,
       decoration: BoxDecoration(
         color: AppColors.bgCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isGlow ? AppColors.accentPurple : AppColors.bgElevated, width: isGlow ? 2 : 1),
-        boxShadow: isGlow ? AppColors.glowPurple : null,
+        border: Border.all(
+          color: isGlow ? AppColors.accentCyan : AppColors.bgElevated,
+          width: isGlow ? 2 : 1,
+        ),
+        boxShadow: isGlow ? [
+          BoxShadow(
+            color: AppColors.accentCyan.withOpacity(0.3),
+            blurRadius: 15,
+            spreadRadius: 2,
+          )
+        ] : null,
         image: DecorationImage(
-          image: NetworkImage(imageUrl),
+          image: imageProvider,
           fit: BoxFit.cover,
         ),
       ),

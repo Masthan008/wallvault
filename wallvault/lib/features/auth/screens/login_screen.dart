@@ -20,56 +20,60 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  void _onLogin() {
-    final phone = _phoneController.text.trim();
-    if (phone.length < 10) {
+  void _onLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || !email.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid phone number.')),
+        const SnackBar(content: Text('Please enter a valid email address.')),
+      );
+      return;
+    }
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password must be at least 6 characters.')),
       );
       return;
     }
 
     setState(() => _isLoading = true);
 
-    final authRepo = ref.read(authRepositoryProvider);
-
-    authRepo.signInWithPhone(
-      phone,
-      (credential) async {
-        await authRepo.signInWithCredential(credential);
-        if (mounted) context.go(AppRoutes.home);
-      },
-      (error) {
-        if (mounted) {
-          setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error.message ?? 'Verification failed.')),
-          );
-        }
-      },
-      (verificationId, forceResendingToken) {
-        if (mounted) {
-          setState(() => _isLoading = false);
-          context.push(AppRoutes.otp, extra: {
-            'phone': phone,
-            'verificationId': verificationId,
-          });
-        }
-      },
-      (verificationId) {
-        if (mounted) setState(() => _isLoading = false);
-      },
-    );
+    try {
+      final authRepo = ref.read(authRepositoryProvider);
+      await authRepo.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      if (mounted) context.go(AppRoutes.home);
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? 'Sign-in failed.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
   }
+
 
   void _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
@@ -191,12 +195,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 40),
 
                   GlowInput(
-                    controller: _phoneController,
-                    hintText: 'Phone Number',
-                    prefixIcon: Icons.phone_rounded,
-                    keyboardType: TextInputType.phone,
+                    controller: _emailController,
+                    hintText: 'Email Address',
+                    prefixIcon: Icons.email_rounded,
+                    keyboardType: TextInputType.emailAddress,
                   ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1),
+                  const SizedBox(height: 12),
+                  GlowInput(
+                    controller: _passwordController,
+                    hintText: 'Password',
+                    prefixIcon: Icons.lock_rounded,
+                    obscureText: true,
+                  ).animate().fadeIn(delay: 450.ms).slideY(begin: 0.1),
                   const SizedBox(height: 24),
+
 
                   GradientButton(
                     label: 'Continue',

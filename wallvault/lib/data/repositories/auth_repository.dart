@@ -1,16 +1,89 @@
+import 'dart:async';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+
+class MockUser implements User {
+  @override
+  final String uid;
+  @override
+  final String? email;
+  @override
+  final String? displayName;
+  @override
+  final String? phoneNumber;
+
+  MockUser({
+    required this.uid,
+    this.email,
+    this.displayName,
+    this.phoneNumber,
+  });
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #uid) return uid;
+    if (invocation.memberName == #email) return email;
+    if (invocation.memberName == #displayName) return displayName;
+    if (invocation.memberName == #phoneNumber) return phoneNumber;
+    return null;
+  }
+}
+
+class MockUserCredential implements UserCredential {
+  @override
+  final User? user;
+
+  MockUserCredential({this.user});
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #user) return user;
+    return null;
+  }
+}
 
 class AuthRepository {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  FirebaseAuth? _auth;
+  GoogleSignIn? _googleSignIn;
+  bool _isFirebaseInitialized = false;
 
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
+  final StreamController<User?> _mockStreamController = StreamController<User?>.broadcast();
+  User? _mockCurrentUser;
 
-  User? get currentUser => _auth.currentUser;
+  AuthRepository() {
+    try {
+      Firebase.app();
+      _auth = FirebaseAuth.instance;
+      _googleSignIn = GoogleSignIn();
+      _isFirebaseInitialized = true;
+    } catch (e) {
+      debugPrint("AuthRepository: Firebase is uninitialized/missing config, running in Mock Mode.");
+      _isFirebaseInitialized = false;
+      _mockCurrentUser = null;
+      _mockStreamController.add(null);
+    }
+  }
+
+  Stream<User?> get authStateChanges {
+    if (_isFirebaseInitialized) {
+      return _auth!.authStateChanges();
+    } else {
+      return _mockStreamController.stream;
+    }
+  }
+
+  User? get currentUser {
+    if (_isFirebaseInitialized) {
+      return _auth!.currentUser;
+    } else {
+      return _mockCurrentUser;
+    }
+  }
 
   // ── Phone Auth ──
 
@@ -21,7 +94,14 @@ class AuthRepository {
     void Function(String, int?) codeSent,
     void Function(String) codeAutoRetrievalTimeout,
   ) async {
-    await _auth.verifyPhoneNumber(
+    if (!_isFirebaseInitialized) {
+      // Simulate verification code sent instantly in mock mode
+      Future.delayed(const Duration(milliseconds: 600), () {
+        codeSent("mock_verification_id", 0);
+      });
+      return;
+    }
+    await _auth!.verifyPhoneNumber(
       phoneNumber: phoneNumber,
       verificationCompleted: verificationCompleted,
       verificationFailed: verificationFailed,
@@ -31,7 +111,17 @@ class AuthRepository {
   }
 
   Future<UserCredential> signInWithCredential(AuthCredential credential) async {
-    return await _auth.signInWithCredential(credential);
+    if (!_isFirebaseInitialized) {
+      _mockCurrentUser = MockUser(
+        uid: "mock_uid_${DateTime.now().millisecondsSinceEpoch}",
+        email: "mock_user@wallvault.com",
+        displayName: "Mock User",
+        phoneNumber: "1234567890",
+      );
+      _mockStreamController.add(_mockCurrentUser);
+      return MockUserCredential(user: _mockCurrentUser);
+    }
+    return await _auth!.signInWithCredential(credential);
   }
 
   // ── Email/Password Auth ──
@@ -40,7 +130,16 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    return await _auth.createUserWithEmailAndPassword(
+    if (!_isFirebaseInitialized) {
+      _mockCurrentUser = MockUser(
+        uid: "mock_uid_${email.hashCode}",
+        email: email,
+        displayName: email.split('@')[0],
+      );
+      _mockStreamController.add(_mockCurrentUser);
+      return MockUserCredential(user: _mockCurrentUser);
+    }
+    return await _auth!.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
@@ -50,7 +149,16 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    return await _auth.signInWithEmailAndPassword(
+    if (!_isFirebaseInitialized) {
+      _mockCurrentUser = MockUser(
+        uid: "mock_uid_${email.hashCode}",
+        email: email,
+        displayName: email.split('@')[0],
+      );
+      _mockStreamController.add(_mockCurrentUser);
+      return MockUserCredential(user: _mockCurrentUser);
+    }
+    return await _auth!.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
@@ -59,7 +167,16 @@ class AuthRepository {
   // ── Google Sign-In ──
 
   Future<UserCredential> signInWithGoogle() async {
-    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+    if (!_isFirebaseInitialized) {
+      _mockCurrentUser = MockUser(
+        uid: "mock_google_uid_${DateTime.now().millisecondsSinceEpoch}",
+        email: "google_user@gmail.com",
+        displayName: "Google User",
+      );
+      _mockStreamController.add(_mockCurrentUser);
+      return MockUserCredential(user: _mockCurrentUser);
+    }
+    final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn();
     if (googleUser == null) {
       throw FirebaseAuthException(
         code: 'CANCELED',
@@ -75,12 +192,21 @@ class AuthRepository {
       idToken: googleAuth.idToken,
     );
 
-    return await _auth.signInWithCredential(credential);
+    return await _auth!.signInWithCredential(credential);
   }
 
   // ── Apple Sign-In ──
 
   Future<UserCredential> signInWithApple() async {
+    if (!_isFirebaseInitialized) {
+      _mockCurrentUser = MockUser(
+        uid: "mock_apple_uid_${DateTime.now().millisecondsSinceEpoch}",
+        email: "apple_user@icloud.com",
+        displayName: "Apple User",
+      );
+      _mockStreamController.add(_mockCurrentUser);
+      return MockUserCredential(user: _mockCurrentUser);
+    }
     final rawNonce = _generateNonce();
     final nonce = sha256ofString(rawNonce);
 
@@ -97,7 +223,7 @@ class AuthRepository {
       rawNonce: rawNonce,
     );
 
-    return await _auth.signInWithCredential(credential);
+    return await _auth!.signInWithCredential(credential);
   }
 
   String _generateNonce() {
@@ -124,7 +250,13 @@ class AuthRepository {
   // ── Sign Out ──
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    await _auth.signOut();
+    if (_isFirebaseInitialized) {
+      await _googleSignIn?.signOut();
+      await _auth?.signOut();
+    } else {
+      _mockCurrentUser = null;
+      _mockStreamController.add(null);
+    }
   }
 }
+
