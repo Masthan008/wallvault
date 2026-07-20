@@ -9,3 +9,11 @@ final wallpaperRepositoryProvider = Provider<WallpaperRepository>((ref) {
 final trendingWallpapersProvider = FutureProvider<List<WallpaperModel>>((ref) async {
   return ref.watch(wallpaperRepositoryProvider).getTrendingWallpapers();
 });
+
+final searchWallpapersProvider = FutureProvider.family<List<WallpaperModel>, String>((ref, query) async {
+  return ref.watch(wallpaperRepositoryProvider).getWallpapers(query: query);
+});
+
+final categoryWallpapersProvider = FutureProvider.family<List<WallpaperModel>, String>((ref, category) async {
+  return ref.watch(wallpaperRepositoryProvider).getWallpapers(category: category);
+});

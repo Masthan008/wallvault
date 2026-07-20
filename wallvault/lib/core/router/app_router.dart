@@ -47,8 +47,15 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.otp,
       builder: (context, state) {
-        final phone = state.extra as String? ?? '';
-        return OtpScreen(phone: phone);
+        final extra = state.extra;
+        if (extra is Map<String, dynamic>) {
+          return OtpScreen(
+            phone: extra['phone'] as String? ?? '',
+            verificationId: extra['verificationId'] as String? ?? '',
+          );
+        }
+        final phone = extra as String? ?? '';
+        return OtpScreen(phone: phone, verificationId: '');
       },
     ),
 

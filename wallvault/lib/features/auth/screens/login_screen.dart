@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -8,16 +9,17 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../../../core/widgets/glow_input.dart';
 import '../../../core/router/routes.dart';
+import '../../../providers/auth_provider.dart';
 
 /// S05 — Login screen with blurred wallpaper background and phone + password inputs.
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
@@ -30,11 +32,39 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _onLogin() {
-    if (_phoneController.text.length >= 10 && _passwordController.text.isNotEmpty) {
-      setState(() => _isLoading = true);
-      // Trigger OTP verification navigation
-      context.push(AppRoutes.otp, extra: _phoneController.text);
+    final phone = _phoneController.text.trim();
+    if (phone.length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid phone number.')),
+      );
+      return;
     }
+
+    setState(() => _isLoading = true);
+
+    ref.read(authRepositoryProvider).signInWithPhone(
+      phone,
+      (credential) async {
+        await ref.read(authRepositoryProvider).signInWithCredential(credential);
+        if (mounted) context.go(AppRoutes.home);
+      },
+      (error) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message ?? 'Verification failed.')),
+        );
+      },
+      (verificationId, forceResendingToken) {
+        setState(() => _isLoading = false);
+        context.push(AppRoutes.otp, extra: {
+          'phone': phone,
+          'verificationId': verificationId,
+        });
+      },
+      (verificationId) {
+        if (mounted) setState(() => _isLoading = false);
+      },
+    );
   }
 
   @override

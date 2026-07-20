@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
-import { Shield, ImageIcon, Users, CheckSquare, IndianRupee, UsersRound } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Shield, ImageIcon, Users, CheckSquare, IndianRupee, UsersRound, Loader2 } from 'lucide-react';
 import { Sidebar } from '@/components/Sidebar';
+import { useAuth } from '@/components/AuthProvider';
+import { useRouter } from 'next/navigation';
 
 const adminNavItems = [
   { label: 'Overview', href: '/admin/overview', icon: Shield },
@@ -14,8 +16,29 @@ const adminNavItems = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { user, loading, isAdmin } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && (!user || !isAdmin)) {
+      router.push('/login');
+    }
+  }, [user, loading, isAdmin, router]);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0A0A0F] text-white">
+        <Loader2 className="w-8 h-8 animate-spin text-[#00D4FF]" />
+      </div>
+    );
+  }
+
+  if (!user || !isAdmin) {
+    return null; // Route redirect in progress
+  }
+
   return (
-    <div className="min-h-screen bg-bg-primary text-text-primary">
+    <div className="min-h-screen bg-[#0A0A0F] text-white">
       <Sidebar
         title="Admin Control"
         items={adminNavItems}

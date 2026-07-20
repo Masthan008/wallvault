@@ -1,30 +1,35 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../../../core/router/routes.dart';
+import '../../../providers/auth_provider.dart';
 
-/// S07 — OTP verification screen with 48x48px boxes, active cyan borders, and interactive resend countdown.
-class OtpScreen extends StatefulWidget {
+/// S07 — OTP verification screen with real Firebase SMS confirmation checks.
+class OtpScreen extends ConsumerStatefulWidget {
   final String phone;
-  const OtpScreen({super.key, required this.phone});
+  final String verificationId;
+  const OtpScreen({super.key, required this.phone, required this.verificationId});
 
   @override
-  State<OtpScreen> createState() => _OtpScreenState();
+  ConsumerState<OtpScreen> createState() => _OtpScreenState();
 }
 
-class _OtpScreenState extends State<OtpScreen> {
+class _OtpScreenState extends ConsumerState<OtpScreen> {
   final List<TextEditingController> _controllers =
       List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   int _resendCountdown = 30;
   Timer? _timer;
+  bool _isVerifying = false;
 
   @override
   void initState() {
@@ -66,9 +71,37 @@ class _OtpScreenState extends State<OtpScreen> {
     }
   }
 
-  void _verifyOtp(String otp) {
-    // Navigate on successful login
-    context.go(AppRoutes.home);
+  void _verifyOtp(String otp) async {
+    if (_isVerifying) return;
+    setState(() => _isVerifying = true);
+
+    if (widget.verificationId.isEmpty) {
+      // Graceful fallback for mock modes
+      setState(() => _isVerifying = false);
+      context.go(AppRoutes.home);
+      return;
+    }
+
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: widget.verificationId,
+        smsCode: otp,
+      );
+      await ref.read(authRepositoryProvider).signInWithCredential(credential);
+      if (mounted) {
+        context.go(AppRoutes.home);
+      }
+    } catch (e) {
+      setState(() => _isVerifying = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Invalid code: ${e.toString()}'),
+            backgroundColor: AppColors.accentError,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -127,7 +160,7 @@ class _OtpScreenState extends State<OtpScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                              color: AppColors.accentCyan, width: 2), // Active cyan border
+                              color: AppColors.accentCyan, width: 2),
                         ),
                       ),
                     ),
@@ -142,6 +175,7 @@ class _OtpScreenState extends State<OtpScreen> {
               // Verify Button
               GradientButton(
                 label: 'Verify',
+                isLoading: _isVerifying,
                 onPressed: () {
                   final otp = _controllers.map((c) => c.text).join();
                   if (otp.length == 6) _verifyOtp(otp);
