@@ -14,6 +14,7 @@ interface UserItem {
   email: string;
   plan: string;
   streak: number;
+  avatarUrl?: string;
 }
 
 export default function AdminUsers() {
@@ -43,11 +44,12 @@ export default function AdminUsers() {
 
         items.push({
           id: docSnap.id,
-          name: data.name || data.displayName || 'Unknown User',
+          name: data.displayName || data.name || 'Unknown User',
           phone: data.phone || data.phoneNumber || 'N/A',
           email: data.email || 'N/A',
           plan: planTier,
           streak: data.streak || 0,
+          avatarUrl: data.avatarUrl || data.photoURL || '',
         });
       });
       setUsers(items);
@@ -82,8 +84,12 @@ export default function AdminUsers() {
       header: 'Name',
       accessor: (row: UserItem) => (
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center border border-white/[0.05]">
-            <User className="w-4 h-4 text-text-muted" />
+          <div className="w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center border border-white/[0.05] overflow-hidden">
+            {row.avatarUrl ? (
+              <img src={row.avatarUrl} alt={row.name} className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-4 h-4 text-text-muted" />
+            )}
           </div>
           <span className="font-bold text-text-primary text-sm">{row.name}</span>
         </div>

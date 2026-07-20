@@ -1,7 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import 'package:share_plus/share_plus.dart';
@@ -15,6 +17,8 @@ import '../../../core/widgets/gradient_button.dart';
 import '../widgets/apply_wallpaper_sheet.dart';
 import '../../../providers/wallpaper_provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../data/services/razorpay_service.dart';
+import '../../../data/models/wallpaper_model.dart';
 
 /// S09 — Wallpaper detail with full-screen preview, spring animation overlays, and animated morphing download CTA.
 class WallpaperDetailScreen extends ConsumerWidget {
@@ -255,8 +259,7 @@ class WallpaperDetailScreen extends ConsumerWidget {
                                 
                                 // S09: Morphing download button with confetti burst simulator
                                 AnimatedDownloadButton(
-                                  wallpaperId: wallpaperId,
-                                  imageUrl: wallpaper.imageUrl,
+                                  wallpaper: wallpaper,
                                 ),
                               ],
                             ),
@@ -276,12 +279,10 @@ class WallpaperDetailScreen extends ConsumerWidget {
 }
 
 class AnimatedDownloadButton extends ConsumerStatefulWidget {
-  final String wallpaperId;
-  final String imageUrl;
+  final WallpaperModel wallpaper;
   const AnimatedDownloadButton({
     super.key,
-    required this.wallpaperId,
-    required this.imageUrl,
+    required this.wallpaper,
   });
 
   @override
@@ -293,10 +294,88 @@ class _AnimatedDownloadButtonState extends ConsumerState<AnimatedDownloadButton>
   double _loadProgress = 0.0;
   final List<_Confetti> _confetti = [];
   bool _burstRunning = false;
+  final RazorpayService _razorpayService = RazorpayService();
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpayService.init(
+      onSuccess: _onPaymentSuccess,
+      onFailure: _onPaymentError,
+      onExternalWallet: _onExternalWallet,
+    );
+  }
+
+  @override
+  void dispose() {
+    _razorpayService.dispose();
+    super.dispose();
+  }
+
+  void _onPaymentSuccess(PaymentSuccessResponse response) {
+    _startActualDownload();
+  }
+
+  void _onPaymentError(PaymentFailureResponse response) {
+    setState(() {
+      _downloadState = 0;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Payment Failed: [${response.code}] ${response.message}')),
+    );
+  }
+
+  void _onExternalWallet(ExternalWalletResponse response) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('External Wallet: ${response.walletName}')),
+    );
+  }
 
   void _triggerDownload() async {
     if (_downloadState != 0) return;
-    
+
+    final user = ref.read(userProfileProvider).value;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please sign in to download wallpapers')),
+      );
+      return;
+    }
+
+    if (widget.wallpaper.isPremium) {
+      final isPro = user.subscription.isPro;
+      final alreadyDownloaded = user.downloads.contains(widget.wallpaper.id);
+
+      if (!isPro && !alreadyDownloaded) {
+        setState(() {
+          _downloadState = 1;
+          _loadProgress = 0.0;
+        });
+
+        try {
+          _razorpayService.openCheckout(
+            amount: widget.wallpaper.price,
+            name: 'WallVault Premium',
+            description: 'Buy Wallpaper: ${widget.wallpaper.name}',
+            email: user.email.isNotEmpty ? user.email : 'user@example.com',
+            contact: user.phone.isNotEmpty ? user.phone : '9999999999',
+          );
+        } catch (e) {
+          setState(() {
+            _downloadState = 0;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to initiate checkout: $e')),
+          );
+        }
+        return;
+      }
+    }
+
+    _startActualDownload();
+  }
+
+  void _startActualDownload() async {
     setState(() {
       _downloadState = 1;
       _loadProgress = 0.1;
@@ -304,31 +383,50 @@ class _AnimatedDownloadButtonState extends ConsumerState<AnimatedDownloadButton>
 
     try {
       // 1. Download image bytes
-      final response = await Dio().get(
-        widget.imageUrl,
-        options: Options(responseType: ResponseType.bytes),
-        onReceiveProgress: (count, total) {
-          if (total > 0 && mounted) {
-            setState(() {
-              _loadProgress = 0.1 + (count / total * 0.8);
-            });
-          }
-        },
-      );
+      final Uint8List imageBytes;
+      if (widget.wallpaper.imageUrl.startsWith('assets/')) {
+        final byteData = await rootBundle.load(widget.wallpaper.imageUrl);
+        imageBytes = byteData.buffer.asUint8List();
+      } else {
+        final response = await Dio().get(
+          widget.wallpaper.imageUrl,
+          options: Options(responseType: ResponseType.bytes),
+          onReceiveProgress: (count, total) {
+            if (total > 0 && mounted) {
+              setState(() {
+                _loadProgress = 0.1 + (count / total * 0.8);
+              });
+            }
+          },
+        );
+        imageBytes = Uint8List.fromList(response.data);
+      }
 
       // 2. Save to gallery
       final result = await ImageGallerySaverPlus.saveImage(
-        Uint8List.fromList(response.data),
+        imageBytes,
         quality: 100,
-        name: "WallVault_${widget.wallpaperId}",
+        name: "WallVault_${widget.wallpaper.id}",
       );
 
       if (mounted && result['isSuccess'] == true) {
         setState(() => _loadProgress = 1.0);
         
         // 3. Increment downloads in DB
-        await ref.read(wallpaperRepositoryProvider).incrementDownloads(widget.wallpaperId);
-        ref.invalidate(wallpaperDetailProvider(widget.wallpaperId));
+        await ref.read(wallpaperRepositoryProvider).incrementDownloads(widget.wallpaper.id);
+        
+        // Update user profile downloads list
+        final user = ref.read(userProfileProvider).value;
+        if (user != null) {
+          final userRepo = ref.read(userRepositoryProvider);
+          if (!user.downloads.contains(widget.wallpaper.id)) {
+            final updatedDownloads = List<String>.from(user.downloads)..add(widget.wallpaper.id);
+            await userRepo.updateUser(user.uid, {'downloads': updatedDownloads});
+            ref.invalidate(userProfileProvider);
+          }
+        }
+
+        ref.invalidate(wallpaperDetailProvider(widget.wallpaper.id));
 
         _onDownloadComplete();
       } else {
@@ -507,59 +605,137 @@ class _InfoChip extends StatelessWidget {
 
 void _showRatingDialog(BuildContext context, WidgetRef ref, dynamic wallpaper) {
   int selectedRating = 5;
+  final ratingLabels = ['Poor', 'Fair', 'Good Wallpaper', 'Great Art!', 'Masterpiece ⭐'];
+
   showDialog(
     context: context,
     builder: (ctx) {
       return StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            backgroundColor: AppColors.bgCard,
-            title: const Text('Rate Wallpaper', style: TextStyle(color: Colors.white)),
-            content: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(5, (index) {
-                return IconButton(
-                  icon: Icon(
-                    index < selectedRating ? Icons.star_rounded : Icons.star_border_rounded,
-                    color: AppColors.accentGold,
-                    size: 32,
+        builder: (context, setDialogState) {
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppColors.bgCard,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
+                border: Border.all(color: AppColors.bgElevated),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.accentPurple.withOpacity(0.15),
+                    blurRadius: 30,
+                    spreadRadius: 2,
+                  )
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentGold.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.star_rounded, color: AppColors.accentGold, size: 36),
                   ),
-                  onPressed: () {
-                    setState(() {
-                      selectedRating = index + 1;
-                    });
-                  },
-                );
-              }),
+                  const SizedBox(height: 16),
+                  Text('Rate This Wallpaper', style: AppTypography.h3),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Your feedback helps creators grow!',
+                    style: AppTypography.caption,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // Stars Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      final starNum = index + 1;
+                      final isSelected = starNum <= selectedRating;
+                      return IconButton(
+                        iconSize: 36,
+                        icon: AnimatedScale(
+                          scale: isSelected ? 1.15 : 1.0,
+                          duration: const Duration(milliseconds: 200),
+                          child: Icon(
+                            isSelected ? Icons.star_rounded : Icons.star_border_rounded,
+                            color: isSelected ? AppColors.accentGold : AppColors.textMuted,
+                          ),
+                        ),
+                        onPressed: () {
+                          setDialogState(() {
+                            selectedRating = starNum;
+                          });
+                        },
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // Rating Feedback Label
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: Text(
+                      ratingLabels[selectedRating - 1],
+                      key: ValueKey(selectedRating),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.accentGold.withOpacity(0.9),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Actions Row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GradientButton(
+                          label: 'Submit Rating',
+                          height: 44,
+                          gradient: AppColors.gradientHero,
+                          onPressed: () async {
+                            Navigator.pop(ctx);
+                            final repo = ref.read(wallpaperRepositoryProvider);
+                            final currentTotal = wallpaper.rating * wallpaper.ratingCount;
+                            final newCount = wallpaper.ratingCount + 1;
+                            final newRating = (currentTotal + selectedRating) / newCount;
+                            
+                            await repo.updateRating(wallpaper.id, newRating, newCount);
+                            ref.invalidate(wallpaperDetailProvider(wallpaper.id));
+                            
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Rated ${wallpaper.name} $selectedRating ⭐!'),
+                                  backgroundColor: AppColors.accentSuccess,
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(ctx);
-                  final repo = ref.read(wallpaperRepositoryProvider);
-                  // Calculate new average rating
-                  final currentTotal = wallpaper.rating * wallpaper.ratingCount;
-                  final newCount = wallpaper.ratingCount + 1;
-                  final newRating = (currentTotal + selectedRating) / newCount;
-                  
-                  await repo.updateRating(wallpaper.id, newRating, newCount);
-                  ref.invalidate(wallpaperDetailProvider(wallpaper.id));
-                  
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Thank you for rating!')),
-                    );
-                  }
-                },
-                child: const Text('Submit', style: TextStyle(color: AppColors.accentPurple)),
-              ),
-            ],
           );
-        }
+        },
       );
     },
   );

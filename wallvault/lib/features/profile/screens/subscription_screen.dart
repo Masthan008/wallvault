@@ -1,16 +1,141 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../data/services/razorpay_service.dart';
 
 /// S24 — Subscription plans screen.
-class SubscriptionScreen extends StatelessWidget {
+class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
+
+  @override
+  ConsumerState<SubscriptionScreen> createState() => _SubscriptionScreenState();
+}
+
+class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
+  final RazorpayService _razorpayService = RazorpayService();
+  String? _selectedPlanTitle;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpayService.init(
+      onSuccess: _onPaymentSuccess,
+      onFailure: _onPaymentError,
+      onExternalWallet: _onExternalWallet,
+    );
+  }
+
+  @override
+  void dispose() {
+    _razorpayService.dispose();
+    super.dispose();
+  }
+
+  void _onPaymentSuccess(PaymentSuccessResponse response) async {
+    final title = _selectedPlanTitle;
+    final user = ref.read(userProfileProvider).value;
+    if (user == null || title == null) return;
+
+    final days = title.toLowerCase() == 'monthly'
+        ? 30
+        : title.toLowerCase() == 'yearly'
+            ? 365
+            : 99999;
+
+    try {
+      await ref.read(userRepositoryProvider).updateUser(user.uid, {
+        'subscription': {
+          'plan': title.toLowerCase(),
+          'startDate': Timestamp.fromDate(DateTime.now()),
+          'endDate': Timestamp.fromDate(DateTime.now().add(Duration(days: days))),
+          'autoRenew': true,
+        }
+      });
+
+      ref.invalidate(userProfileProvider);
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (successCtx) => AlertDialog(
+            backgroundColor: AppColors.bgCard,
+            title: const Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: AppColors.accentSuccess),
+                SizedBox(width: 8),
+                Text('Payment Successful', style: TextStyle(color: Colors.white)),
+              ],
+            ),
+            content: Text(
+              'Thank you! You have successfully subscribed to the $title plan. Welcome to WallVault PRO!',
+              style: AppTypography.bodyMedium,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(successCtx),
+                child: const Text('Great!', style: TextStyle(color: AppColors.accentPurple)),
+              )
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update subscription in database: $e')),
+        );
+      }
+    }
+  }
+
+  void _onPaymentError(PaymentFailureResponse response) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Payment Failed: [${response.code}] ${response.message}')),
+      );
+    }
+  }
+
+  void _onExternalWallet(ExternalWalletResponse response) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('External Wallet: ${response.walletName}')),
+      );
+    }
+  }
+
+  void _handleSubscription(String title, String price) {
+    final user = ref.read(userProfileProvider).value;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in first.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _selectedPlanTitle = title;
+    });
+
+    double amt = 99.0;
+    if (title.toLowerCase() == 'yearly') amt = 799.0;
+    if (title.toLowerCase() == 'lifetime') amt = 1999.0;
+
+    _razorpayService.openCheckout(
+      amount: amt,
+      name: 'WallVault Pro',
+      description: '$title Membership',
+      email: user.email.isNotEmpty ? user.email : 'user@example.com',
+      contact: user.phone.isNotEmpty ? user.phone : '9999999999',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,28 +160,31 @@ class SubscriptionScreen extends StatelessWidget {
                     color: AppColors.textSecondary)),
             const SizedBox(height: 32),
             // Plans
-            const _PlanCard(
+            _PlanCard(
               title: 'Monthly',
               price: '₹99',
               period: '/month',
-              features: ['Unlimited premium', 'No ads', 'Early access'],
+              features: const ['Unlimited premium', 'No ads', 'Early access'],
               isPopular: false,
+              onSubscribe: () => _handleSubscription('Monthly', '₹99'),
             ),
             const SizedBox(height: 12),
-            const _PlanCard(
+            _PlanCard(
               title: 'Yearly',
               price: '₹799',
               period: '/year',
-              features: ['Everything in Monthly', 'Save 33%', 'Exclusive badges'],
+              features: const ['Everything in Monthly', 'Save 33%', 'Exclusive badges'],
               isPopular: true,
+              onSubscribe: () => _handleSubscription('Yearly', '₹799'),
             ),
             const SizedBox(height: 12),
-            const _PlanCard(
+            _PlanCard(
               title: 'Lifetime',
               price: '₹1,999',
               period: 'one-time',
-              features: ['Everything in Yearly', 'Forever access', 'Founder badge'],
+              features: const ['Everything in Yearly', 'Forever access', 'Founder badge'],
               isPopular: false,
+              onSubscribe: () => _handleSubscription('Lifetime', '₹1,999'),
             ),
           ],
         ),
@@ -65,12 +193,13 @@ class SubscriptionScreen extends StatelessWidget {
   }
 }
 
-class _PlanCard extends ConsumerWidget {
+class _PlanCard extends StatelessWidget {
   final String title;
   final String price;
   final String period;
   final List<String> features;
   final bool isPopular;
+  final VoidCallback onSubscribe;
 
   const _PlanCard({
     required this.title,
@@ -78,112 +207,11 @@ class _PlanCard extends ConsumerWidget {
     required this.period,
     required this.features,
     required this.isPopular,
+    required this.onSubscribe,
   });
 
-  void _handleSubscription(BuildContext context, WidgetRef ref) async {
-    final user = ref.read(userProfileProvider).value;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please log in first.')),
-      );
-      return;
-    }
-
-    // Show simulated Razorpay dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogCtx) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        title: Row(
-          children: [
-            const Icon(Icons.payment_rounded, color: AppColors.accentPurple),
-            const SizedBox(width: 8),
-            Text('Razorpay checkout', style: AppTypography.h3),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('WallVault Pro - $title Plan', style: AppTypography.bodyMedium),
-            const SizedBox(height: 4),
-            Text('Amount: $price', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 16),
-            const Center(
-              child: CircularProgressIndicator(color: AppColors.accentPurple),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Simulating secure payment gateway transaction...',
-              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 2));
-
-    // Close checkout dialog
-    if (context.mounted) Navigator.pop(context);
-
-    // Write premium status to Firestore
-    try {
-      final days = title.toLowerCase() == 'monthly'
-          ? 30
-          : title.toLowerCase() == 'yearly'
-              ? 365
-              : 99999;
-      await ref.read(userRepositoryProvider).updateUser(user.uid, {
-        'subscription': {
-          'plan': title.toLowerCase(),
-          'startDate': Timestamp.fromDate(DateTime.now()),
-          'endDate': Timestamp.fromDate(DateTime.now().add(Duration(days: days))),
-          'autoRenew': true,
-        }
-      });
-
-      ref.invalidate(userProfileProvider);
-
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          builder: (successCtx) => AlertDialog(
-            backgroundColor: AppColors.bgCard,
-            title: const Row(
-              children: [
-                Icon(Icons.check_circle_rounded, color: AppColors.accentSuccess),
-                const SizedBox(width: 8),
-                Text('Payment Successful', style: TextStyle(color: Colors.white)),
-              ],
-            ),
-            content: Text(
-              'Thank you! You have successfully subscribed to the $title plan. Welcome to WallVault PRO!',
-              style: AppTypography.bodyMedium,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(successCtx),
-                child: const Text('Great!', style: TextStyle(color: AppColors.accentPurple)),
-              )
-            ],
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Payment verification failed: $e')),
-        );
-      }
-    }
-  }
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -253,7 +281,7 @@ class _PlanCard extends ConsumerWidget {
             label: 'Subscribe',
             gradient: isPopular ? AppColors.gradientHero : AppColors.gradientPremium,
             height: 44,
-            onPressed: () => _handleSubscription(context, ref),
+            onPressed: onSubscribe,
           ),
         ],
       ),

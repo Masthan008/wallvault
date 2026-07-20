@@ -104,18 +104,20 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        _MiniStat(
-                            icon: '🔥',
-                            label: 'Streak',
-                            targetValue: user.streak.current),
-                        _MiniStat(
-                            icon: '⭐',
-                            label: 'XP',
-                            targetValue: user.xp),
-                        _MiniStat(
-                            icon: '🏅',
-                            label: 'Level',
-                            targetValue: user.level),
+                        if (user.isCreator) ...[
+                          _MiniStat(
+                              icon: '🔥',
+                              label: 'Streak',
+                              targetValue: user.streak.current),
+                          _MiniStat(
+                              icon: '⭐',
+                              label: 'XP',
+                              targetValue: user.xp),
+                          _MiniStat(
+                              icon: '🏅',
+                              label: 'Level',
+                              targetValue: user.level),
+                        ],
                         _MiniStat(
                             icon: '📥',
                             label: 'Downloads',

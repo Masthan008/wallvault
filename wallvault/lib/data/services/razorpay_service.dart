@@ -16,7 +16,7 @@ class RazorpayService {
   }
 
   void openCheckout({
-    required String orderId,
+    String? orderId,
     required double amount,
     required String name,
     required String description,
@@ -27,7 +27,7 @@ class RazorpayService {
       'key': keyId,
       'amount': (amount * 100).toInt(), // in paise
       'name': name,
-      'order_id': orderId,
+      if (orderId != null && orderId.isNotEmpty) 'order_id': orderId,
       'description': description,
       'prefill': {'contact': contact, 'email': email},
     };

@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
@@ -8,6 +11,7 @@ import '../../../core/widgets/gradient_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:async_wallpaper/async_wallpaper.dart';
 import '../../../providers/wallpaper_provider.dart';
+import '../../../providers/auth_provider.dart';
 
 /// S10 — Apply Wallpaper modal bottom sheet with spring animations and staggered preview entry.
 class ApplyWallpaperSheet extends ConsumerStatefulWidget {
@@ -122,17 +126,45 @@ class _ApplyWallpaperSheetState extends ConsumerState<ApplyWallpaperSheet> {
                       if (_selectedScreen == 1) target = WallpaperTarget.lock;
                       if (_selectedScreen == 2) target = WallpaperTarget.both;
                       
-                      await AsyncWallpaper.setWallpaper(
-                        WallpaperRequest(
-                          source: widget.imageUrl,
-                          sourceType: WallpaperSourceType.url,
-                          target: target,
-                          goToHome: false,
-                        )
-                      );
+                      if (widget.imageUrl.startsWith('assets/')) {
+                        final byteData = await rootBundle.load(widget.imageUrl);
+                        final tempDir = await getTemporaryDirectory();
+                        final tempFile = File('${tempDir.path}/${widget.wallpaperId}.png');
+                        await tempFile.writeAsBytes(byteData.buffer.asUint8List());
+
+                        await AsyncWallpaper.setWallpaper(
+                          WallpaperRequest(
+                            source: tempFile.path,
+                            sourceType: WallpaperSourceType.file,
+                            target: target,
+                            goToHome: false,
+                          ),
+                        );
+                      } else {
+                        await AsyncWallpaper.setWallpaper(
+                          WallpaperRequest(
+                            source: widget.imageUrl,
+                            sourceType: WallpaperSourceType.url,
+                            target: target,
+                            goToHome: false,
+                          ),
+                        );
+                      }
                       
                       // Track metric (treat as a download/apply)
                       await ref.read(wallpaperRepositoryProvider).incrementDownloads(widget.wallpaperId);
+                      
+                      // Update user downloads history
+                      final user = ref.read(userProfileProvider).value;
+                      if (user != null) {
+                        final userRepo = ref.read(userRepositoryProvider);
+                        if (!user.downloads.contains(widget.wallpaperId)) {
+                          final updatedDownloads = List<String>.from(user.downloads)..add(widget.wallpaperId);
+                          await userRepo.updateUser(user.uid, {'downloads': updatedDownloads});
+                          ref.invalidate(userProfileProvider);
+                        }
+                      }
+                      
                       ref.invalidate(wallpaperDetailProvider(widget.wallpaperId));
 
                       if (context.mounted) {

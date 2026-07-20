@@ -21,7 +21,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ title, items, portalType }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
 
   const handleSignOut = async () => {
     try {
@@ -86,15 +86,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ title, items, portalType }) =>
       {user && (
         <div className="px-6 py-4 border-t border-border-glass flex items-center space-x-3 bg-white/[0.01]">
           <div className="w-8 h-8 rounded-full bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-text-secondary overflow-hidden">
-            {user.photoURL ? (
-              <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+            {profile?.avatarUrl || user.photoURL ? (
+              <img src={profile?.avatarUrl || user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <UserIcon className="w-3.5 h-3.5 text-text-muted" />
             )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold text-text-primary truncate">
-              {user.displayName || (portalType === 'admin' ? 'Admin' : 'Creator')}
+              {profile?.displayName || profile?.name || user.displayName || (portalType === 'admin' ? 'Admin' : 'Creator')}
             </p>
             <p className="text-[10px] text-text-muted truncate">
               {user.email}

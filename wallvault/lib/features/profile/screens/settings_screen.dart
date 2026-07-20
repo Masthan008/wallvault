@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -254,6 +256,241 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  void _showHelpCenter() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        title: Text('Help Center', style: AppTypography.h3),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('FAQs', style: AppTypography.bodyMedium.copyWith(color: AppColors.accentPurple, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              _buildFAQItem('How do I apply a wallpaper?', 'Browse and click on any wallpaper. Tap the "Apply" button at the bottom and choose Home Screen, Lock Screen, or both.'),
+              _buildFAQItem('How do downloads work?', 'Tap the download button. The image will be downloaded and saved to your device\'s gallery/photos.'),
+              _buildFAQItem('What is Pro Membership?', 'Pro Membership gives you access to all exclusive premium wallpapers and unlocks them forever.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close', style: TextStyle(color: AppColors.textMuted)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFAQItem(String q, String a) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(q, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+          const SizedBox(height: 4),
+          Text(a, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  void _showContactUs() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        title: Text('Contact Support', style: AppTypography.h3),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('We\'re here to help! Reach out via email:', style: AppTypography.bodyMedium),
+            const SizedBox(height: 12),
+            const Text('support@wallvault.com', style: TextStyle(color: AppColors.accentPurple, fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 8),
+            Text('Response Time: Within 24 Hours', style: AppTypography.caption),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Dismiss', style: TextStyle(color: AppColors.textMuted)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReportBug() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        title: Text('Report a Bug', style: AppTypography.h3),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Help us improve! Describe the issue you encountered below:', style: AppTypography.bodySmall),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                hintText: 'Describe the bug here...',
+                hintStyle: TextStyle(color: AppColors.textMuted),
+                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: AppColors.bgElevated)),
+                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: AppColors.accentPurple)),
+              ),
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final bugDesc = controller.text.trim();
+              if (bugDesc.isEmpty) return;
+
+              final user = ref.read(userProfileProvider).value;
+              try {
+                await FirebaseFirestore.instance.collection('reports').add({
+                  'userId': user?.uid,
+                  'description': bugDesc,
+                  'createdAt': FieldValue.serverTimestamp(),
+                });
+                
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Bug report submitted. Thank you!'), backgroundColor: AppColors.accentSuccess),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to submit report: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Submit', style: TextStyle(color: AppColors.accentPurple)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTermsOfService() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        title: Text('Terms of Service', style: AppTypography.h3),
+        content: const SingleChildScrollView(
+          child: Text(
+            'Welcome to WallVault! By accessing or using our application, you agree to comply with and be bound by these Terms of Service. All wallpapers provided are the intellectual property of their respective creators. You may download and use wallpapers for personal, non-commercial use only. Commercial redistribution is strictly prohibited.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Done', style: TextStyle(color: AppColors.accentPurple)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPrivacyPolicy() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        title: Text('Privacy Policy', style: AppTypography.h3),
+        content: const SingleChildScrollView(
+          child: Text(
+            'We value your privacy. WallVault does not sell or distribute your personal data. We collect minimal registration details (email, phone, display name) and anonymous app usage analytics to deliver and improve our wallpaper download and subscription services. Payments are securely processed via Razorpay.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Done', style: TextStyle(color: AppColors.accentPurple)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRateApp() {
+    int selectedStars = 5;
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.bgCard,
+          title: Center(child: Text('Rate WallVault', style: AppTypography.h3)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Enjoying WallVault? Let us know your thoughts!', style: AppTypography.bodySmall),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  final starIndex = index + 1;
+                  return IconButton(
+                    icon: Icon(
+                      starIndex <= selectedStars ? Icons.star_rounded : Icons.star_border_rounded,
+                      color: AppColors.accentGold,
+                      size: 32,
+                    ),
+                    onPressed: () {
+                      setDialogState(() {
+                        selectedStars = starIndex;
+                      });
+                    },
+                  );
+                }),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Not Now', style: TextStyle(color: AppColors.textMuted)),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Thank you for rating!'), backgroundColor: AppColors.accentSuccess),
+                );
+              },
+              child: const Text('Submit', style: TextStyle(color: AppColors.accentPurple)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _shareApp() {
+    Share.share('Check out WallVault for premium custom wallpapers! Download now to browse hand-crafted assets by digital artists.');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -312,32 +549,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           // Support Section
           _buildHeader('Support'),
-          _buildItem(Icons.help_outline_rounded, 'Help Center'),
-          _buildItem(Icons.chat_bubble_outline_rounded, 'Contact Us'),
-          _buildItem(Icons.bug_report_outlined, 'Report a Bug'),
-          _buildItem(Icons.description_outlined, 'Terms of Service'),
-          _buildItem(Icons.shield_outlined, 'Privacy Policy'),
+          _buildItem(Icons.help_outline_rounded, 'Help Center', onTap: _showHelpCenter),
+          _buildItem(Icons.chat_bubble_outline_rounded, 'Contact Us', onTap: _showContactUs),
+          _buildItem(Icons.bug_report_outlined, 'Report a Bug', onTap: _showReportBug),
+          _buildItem(Icons.description_outlined, 'Terms of Service', onTap: _showTermsOfService),
+          _buildItem(Icons.shield_outlined, 'Privacy Policy', onTap: _showPrivacyPolicy),
           const SizedBox(height: 24),
 
           // About Section
           _buildHeader('About'),
-          _buildItem(Icons.star_outline_rounded, 'Rate App'),
-          _buildItem(Icons.share_outlined, 'Share App'),
+          _buildItem(Icons.star_outline_rounded, 'Rate App', onTap: _showRateApp),
+          _buildItem(Icons.share_outlined, 'Share App', onTap: _shareApp),
           ListTile(
             leading: const Icon(Icons.info_outline_rounded, color: AppColors.textMuted),
             title: Text('Version', style: AppTypography.bodyMedium),
             trailing: Text('1.0.0 (1)', style: AppTypography.bodySmall),
             contentPadding: EdgeInsets.zero,
-          ),
-          const SizedBox(height: 32),
-
-          // Log Out Button
-          GradientButton(
-            label: 'Log Out',
-            gradient: const LinearGradient(
-              colors: [AppColors.accentError, Colors.redAccent],
-            ),
-            onPressed: _showLogoutConfirmation,
           ),
           const SizedBox(height: 32),
         ],

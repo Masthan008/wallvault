@@ -9,11 +9,12 @@ import {
   signInWithPopup,
   onAuthStateChanged
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
 interface AuthContextType {
   user: User | null;
+  profile: any | null;
   loading: boolean;
   isAdmin: boolean;
   isCreator: boolean;
@@ -26,23 +27,26 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isCreator, setIsCreator] = useState(false);
 
   useEffect(() => {
+    let unsubscribeSnapshot: (() => void) | null = null;
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        // Set up real-time listener on user profile
+        unsubscribeSnapshot = onSnapshot(doc(db, 'users', currentUser.uid), (userDoc) => {
           if (userDoc.exists()) {
             const data = userDoc.data();
+            setProfile(data);
             setIsAdmin(data.isAdmin === true);
             setIsCreator(data.isCreator === true || data.role === 'creator');
           } else {
             const isDefaultAdmin = currentUser.email === 'masthan@admin.com';
-            await setDoc(doc(db, 'users', currentUser.uid), {
+            setDoc(doc(db, 'users', currentUser.uid), {
               name: currentUser.displayName || 'User',
               email: currentUser.email,
               isAdmin: isDefaultAdmin,
@@ -52,18 +56,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsAdmin(isDefaultAdmin);
             setIsCreator(!isDefaultAdmin);
           }
-        } catch {
-          setIsAdmin(currentUser.email === 'masthan@admin.com');
-          setIsCreator(false);
-        }
+        });
       } else {
+        setProfile(null);
         setIsAdmin(false);
         setIsCreator(false);
       }
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+    };
   }, []);
 
   const loginWithEmail = async (email: string, pass: string) => {
@@ -98,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        profile,
         loading,
         isAdmin,
         isCreator,

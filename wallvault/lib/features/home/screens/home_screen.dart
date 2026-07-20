@@ -415,7 +415,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
                                 ),
                                 child: Text(
-                                  item.isPremium ? '₹49' : 'FREE',
+                                  item.isPremium ? '₹${item.price.toInt()}' : 'FREE',
                                   style: const TextStyle(
                                     fontSize: 9,
                                     fontWeight: FontWeight.bold,

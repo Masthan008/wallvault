@@ -24,6 +24,7 @@ interface CreatorRow {
   accountNo?: string;
   ifsc?: string;
   createdAt?: string;
+  avatarUrl?: string;
 }
 
 export default function AdminCreators() {
@@ -44,7 +45,7 @@ export default function AdminCreators() {
         const data = doc.data();
         items.push({
           id: doc.id,
-          name: data.name || data.email?.split('@')[0] || 'Unknown User',
+          name: data.displayName || data.name || data.email?.split('@')[0] || 'Unknown User',
           email: data.email || '',
           phone: data.phoneNumber || data.phone || 'N/A',
           level: `Level ${data.level || 1} — Seedling`,
@@ -57,6 +58,7 @@ export default function AdminCreators() {
           accountNo: data.accountNo || '',
           ifsc: data.ifsc || '',
           createdAt: data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'N/A',
+          avatarUrl: data.avatarUrl || data.photoURL || '',
         });
       });
       setCreators(items);
@@ -89,8 +91,12 @@ export default function AdminCreators() {
           onClick={() => setSelectedCreator(row)}
           className="flex items-center space-x-3 cursor-pointer"
         >
-          <div className="w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center border border-white/[0.05]">
-            <User className="w-4 h-4 text-text-muted" />
+          <div className="w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center border border-white/[0.05] overflow-hidden">
+            {row.avatarUrl ? (
+              <img src={row.avatarUrl} alt={row.name} className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-4 h-4 text-text-muted" />
+            )}
           </div>
           <div>
             <span className="font-bold text-white text-sm hover:underline">{row.name}</span>

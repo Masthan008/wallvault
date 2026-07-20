@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { LayoutDashboard, CloudUpload, BarChart3, Wallet, Loader2 } from 'lucide-react';
+import { LayoutDashboard, CloudUpload, BarChart3, Wallet, Loader2, User } from 'lucide-react';
 import { Sidebar } from '@/components/Sidebar';
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
@@ -12,6 +12,7 @@ const creatorNavItems = [
   { label: 'Upload Wallpaper', href: '/creator/upload', icon: CloudUpload },
   { label: 'Analytics', href: '/creator/analytics', icon: BarChart3 },
   { label: 'Payouts', href: '/creator/payouts', icon: Wallet },
+  { label: 'Profile Settings', href: '/creator/profile', icon: User },
 ];
 
 export default function CreatorLayout({ children }: { children: React.ReactNode }) {
