@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/router/routes.dart';
 
-/// S12 — Profile screen with user info, stats, and menu items.
+/// S12 — Profile screen with user info, count-up stats, and menu settings.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -20,37 +21,48 @@ class ProfileScreen extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 16),
-              // Avatar + Name
-              CircleAvatar(
-                radius: AppSpacing.avatarLarge / 2,
-                backgroundColor: AppColors.bgCard,
-                child: const Icon(Icons.person_rounded,
-                    size: 40, color: AppColors.textMuted),
+              // Avatar + Name (S12)
+              Hero(
+                tag: 'user-profile-avatar',
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: AppColors.accentPurple,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const CircleAvatar(
+                    radius: 48,
+                    backgroundImage: NetworkImage('https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100'),
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
-              Text('User Name', style: AppTypography.h2),
+              Text('Alex Vault', style: AppTypography.h2),
               const SizedBox(height: 4),
-              Text('+91 98765 43210',
-                  style: AppTypography.caption),
-              const SizedBox(height: 20),
-              // Streak + XP bar
+              Text('+91 98765 43210', style: AppTypography.caption),
+              const SizedBox(height: 24),
+              
+              // Streak / XP / Level / Downloads with custom count-up transition (S12)
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                 decoration: BoxDecoration(
                   color: AppColors.bgCard,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
+                  border: Border.all(color: AppColors.bgElevated),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    _MiniStat(icon: '🔥', label: 'Streak', value: '7'),
-                    _MiniStat(icon: '⭐', label: 'XP', value: '1,250'),
-                    _MiniStat(icon: '🏅', label: 'Level', value: '3'),
-                    _MiniStat(icon: '📥', label: 'Downloads', value: '42'),
+                    _MiniStat(icon: '🔥', label: 'Streak', targetValue: 7),
+                    _MiniStat(icon: '⭐', label: 'XP', targetValue: 1250),
+                    _MiniStat(icon: '🏅', label: 'Level', targetValue: 3),
+                    _MiniStat(icon: '📥', label: 'Downloads', targetValue: 42),
                   ],
                 ),
-              ),
+              ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1),
+              
               const SizedBox(height: 24),
-              // Menu items
+              
+              // Menu Options lists
               _MenuItem(
                 icon: Icons.download_rounded,
                 label: 'My Downloads',
@@ -58,13 +70,13 @@ class ProfileScreen extends StatelessWidget {
               ),
               _MenuItem(
                 icon: Icons.favorite_rounded,
-                label: 'Favorites',
+                label: 'Favorites List',
                 color: AppColors.accentError,
                 onTap: () {},
               ),
               _MenuItem(
                 icon: Icons.workspace_premium_rounded,
-                label: 'Subscription',
+                label: 'Subscription Plans',
                 color: AppColors.accentGold,
                 onTap: () => context.push(AppRoutes.subscription),
               ),
@@ -81,16 +93,14 @@ class ProfileScreen extends StatelessWidget {
               ),
               _MenuItem(
                 icon: Icons.settings_rounded,
-                label: 'Settings',
+                label: 'Settings Configuration',
                 onTap: () => context.push(AppRoutes.settings),
               ),
               _MenuItem(
                 icon: Icons.logout_rounded,
                 label: 'Sign Out',
                 color: AppColors.accentError,
-                onTap: () {
-                  // TODO: Sign out
-                },
+                onTap: () => _showSignOutDialog(context),
               ),
               const SizedBox(height: 80),
             ],
@@ -99,23 +109,121 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _showSignOutDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.bgCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(color: AppColors.textMuted, borderRadius: BorderRadius.circular(2)),
+              ),
+              const SizedBox(height: 24),
+              Text('Confirm Sign Out', style: AppTypography.h3),
+              const SizedBox(height: 12),
+              Text('Are you sure you want to sign out of WallVault?', style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary)),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textPrimary,
+                        side: const BorderSide(color: AppColors.bgElevated),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accentError,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        // Sign-out action
+                      },
+                      child: const Text('Sign Out'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
-class _MiniStat extends StatelessWidget {
+class _MiniStat extends StatefulWidget {
   final String icon;
   final String label;
-  final String value;
-  const _MiniStat({required this.icon, required this.label, required this.value});
+  final int targetValue;
+  const _MiniStat({required this.icon, required this.label, required this.targetValue});
+
+  @override
+  State<_MiniStat> createState() => _MiniStatState();
+}
+
+class _MiniStatState extends State<_MiniStat> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<int> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    _animation = IntTween(begin: 0, end: widget.targetValue).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Column(
         children: [
-          Text(icon, style: const TextStyle(fontSize: 20)),
+          Text(widget.icon, style: const TextStyle(fontSize: 20)),
           const SizedBox(height: 4),
-          Text(value, style: AppTypography.h4),
-          Text(label, style: AppTypography.caption.copyWith(fontSize: 10)),
+          AnimatedBuilder(
+            animation: _animation,
+            builder: (context, child) {
+              return Text(
+                _animation.value >= 1000 
+                    ? '${(_animation.value / 1000).toStringAsFixed(1)}K' 
+                    : _animation.value.toString(),
+                style: AppTypography.h4.copyWith(fontWeight: FontWeight.bold),
+              );
+            },
+          ),
+          Text(widget.label, style: AppTypography.caption.copyWith(fontSize: 10)),
         ],
       ),
     );

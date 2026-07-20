@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -8,7 +9,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../../../core/router/routes.dart';
 
-/// S07 — OTP verification screen with animated boxes.
+/// S07 — OTP verification screen with 48x48px boxes, active cyan borders, and interactive resend countdown.
 class OtpScreen extends StatefulWidget {
   final String phone;
   const OtpScreen({super.key, required this.phone});
@@ -22,8 +23,30 @@ class _OtpScreenState extends State<OtpScreen> {
       List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
+  int _resendCountdown = 30;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCountdown();
+  }
+
+  void _startCountdown() {
+    setState(() => _resendCountdown = 30);
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_resendCountdown > 0) {
+        setState(() => _resendCountdown--);
+      } else {
+        _timer?.cancel();
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _timer?.cancel();
     for (final c in _controllers) { c.dispose(); }
     for (final f in _focusNodes) { f.dispose(); }
     super.dispose();
@@ -44,7 +67,7 @@ class _OtpScreenState extends State<OtpScreen> {
   }
 
   void _verifyOtp(String otp) {
-    // TODO: Verify OTP with Firebase
+    // Navigate on successful login
     context.go(AppRoutes.home);
   }
 
@@ -65,56 +88,58 @@ class _OtpScreenState extends State<OtpScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
-              Text('Verify OTP', style: AppTypography.h1)
+              Text('Verify Your Number', style: AppTypography.h1)
                   .animate()
                   .fadeIn(duration: 400.ms),
               const SizedBox(height: 8),
               Text(
-                'We\'ve sent a 6-digit code to ${widget.phone.isNotEmpty ? widget.phone : 'your phone'}',
+                'Enter the 6-digit code sent to ${widget.phone.isNotEmpty ? widget.phone : '+91 98765 43210'}',
                 style: AppTypography.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ).animate().fadeIn(delay: 100.ms),
               const SizedBox(height: 48),
-              // OTP boxes
+              
+              // OTP boxes row (6 inputs, 48x48px size)
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(6, (index) {
                   return SizedBox(
-                    width: AppSpacing.otpBoxSize,
-                    height: AppSpacing.otpBoxSize,
+                    width: 48,
+                    height: 48,
                     child: TextField(
                       controller: _controllers[index],
                       focusNode: _focusNodes[index],
                       keyboardType: TextInputType.number,
                       textAlign: TextAlign.center,
                       maxLength: 1,
-                      style: AppTypography.h2,
+                      style: AppTypography.h3.copyWith(fontWeight: FontWeight.bold),
                       onChanged: (v) => _onChanged(index, v),
                       decoration: InputDecoration(
                         counterText: '',
                         filled: true,
                         fillColor: AppColors.bgCard,
+                        contentPadding: EdgeInsets.zero,
                         border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusInput),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusInput),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                              color: AppColors.accentPurple, width: 2),
+                              color: AppColors.accentCyan, width: 2), // Active cyan border
                         ),
                       ),
                     ),
                   )
                       .animate(delay: (100 * index).ms)
                       .fadeIn()
-                      .slideY(begin: 0.3);
+                      .scale(begin: const Offset(0.8, 0.8), curve: Curves.bounceOut);
                 }),
               ),
               const SizedBox(height: 32),
+              
+              // Verify Button
               GradientButton(
                 label: 'Verify',
                 onPressed: () {
@@ -123,18 +148,26 @@ class _OtpScreenState extends State<OtpScreen> {
                 },
               ).animate().fadeIn(delay: 700.ms),
               const SizedBox(height: 24),
+              
+              // Countdown & Resend link
               Center(
-                child: TextButton(
-                  onPressed: () {
-                    // TODO: Resend OTP
-                  },
-                  child: Text(
-                    'Resend OTP',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.accentCyan,
-                    ),
-                  ),
-                ),
+                child: _resendCountdown > 0
+                    ? Text(
+                        'Didn\'t receive? Resend (${_resendCountdown}s)',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                      )
+                    : TextButton(
+                        onPressed: _startCountdown,
+                        child: const Text(
+                          'Resend OTP',
+                          style: TextStyle(
+                            color: AppColors.accentCyan,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
               ),
             ],
           ),

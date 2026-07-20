@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,13 +8,35 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../widgets/apply_wallpaper_sheet.dart';
 
-/// S09 — Wallpaper detail with full-screen preview and actions.
+/// S09 — Wallpaper detail with full-screen preview, spring animation overlays, and animated morphing download CTA.
 class WallpaperDetailScreen extends StatelessWidget {
   final String wallpaperId;
   const WallpaperDetailScreen({super.key, required this.wallpaperId});
 
   @override
   Widget build(BuildContext context) {
+    final String imagePath;
+    if (wallpaperId.startsWith('featured_')) {
+      final index = int.tryParse(wallpaperId.split('_').last) ?? 0;
+      imagePath = const [
+        'assets/images/japan_sunset_street.png',
+        'assets/images/uchiha_madara_shadow.png',
+        'assets/images/neon_cyber_temple.png',
+      ][index % 3];
+    } else if (wallpaperId.startsWith('grid_')) {
+      final index = int.tryParse(wallpaperId.split('_').last) ?? 0;
+      imagePath = const [
+        'assets/images/japan_sunset_street.png',
+        'assets/images/uchiha_madara_shadow.png',
+        'assets/images/neon_cyber_temple.png',
+        'assets/images/cosmic_nebula_ocean.png',
+        'assets/images/cyberpunk_car_drift.png',
+        'assets/images/minimalist_mountain_lake.png',
+      ][index % 6];
+    } else {
+      imagePath = 'assets/images/japan_sunset_street.png';
+    }
+
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       extendBodyBehindAppBar: true,
@@ -60,31 +83,24 @@ class WallpaperDetailScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          // Full-screen wallpaper preview (placeholder gradient)
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.accentPurple.withValues(alpha: 0.4),
-                  AppColors.bgPrimary,
-                  AppColors.accentCyan.withValues(alpha: 0.3),
-                ],
-              ),
-            ),
-            child: const Center(
-              child: Icon(Icons.wallpaper_rounded,
-                  color: AppColors.textMuted, size: 64),
-            ),
+          // Full-screen image preview (supports local assets)
+          Positioned.fill(
+            child: imagePath.startsWith('assets/')
+                ? Image.asset(imagePath, fit: BoxFit.cover)
+                : Image.network(imagePath, fit: BoxFit.cover),
           ),
-          // Bottom info panel
+
+          // Bottom Vignette overlay
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
+            height: 340,
             child: Container(
-              padding: const EdgeInsets.all(AppSpacing.screenPadding),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.screenPadding,
+                vertical: 24,
+              ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -139,18 +155,9 @@ class WallpaperDetailScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Container(
-                          width: AppSpacing.buttonHeight,
-                          height: AppSpacing.buttonHeight,
-                          decoration: BoxDecoration(
-                            color: AppColors.bgCard,
-                            borderRadius: BorderRadius.circular(
-                                AppSpacing.radiusButton),
-                            border: Border.all(color: AppColors.bgElevated),
-                          ),
-                          child: const Icon(Icons.download_rounded,
-                              color: AppColors.accentCyan),
-                        ),
+                        
+                        // S09: Morphing download button with confetti burst simulator
+                        AnimatedDownloadButton(wallpaperId: wallpaperId),
                       ],
                     ),
                   ],
@@ -161,6 +168,178 @@ class WallpaperDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class AnimatedDownloadButton extends StatefulWidget {
+  final String wallpaperId;
+  const AnimatedDownloadButton({super.key, required this.wallpaperId});
+
+  @override
+  State<AnimatedDownloadButton> createState() => _AnimatedDownloadButtonState();
+}
+
+class _AnimatedDownloadButtonState extends State<AnimatedDownloadButton> with SingleTickerProviderStateMixin {
+  int _downloadState = 0; // 0: Idle, 1: Loading, 2: Complete
+  double _loadProgress = 0.0;
+  final List<_Confetti> _confetti = [];
+  bool _burstRunning = false;
+
+  void _triggerDownload() {
+    if (_downloadState != 0) return;
+    
+    setState(() {
+      _downloadState = 1;
+      _loadProgress = 0.0;
+    });
+
+    // Simulate downloading progress over 2s
+    Future.doWhile(() async {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return false;
+      setState(() {
+        _loadProgress += 0.05;
+      });
+      if (_loadProgress >= 1.0) {
+        _onDownloadComplete();
+        return false;
+      }
+      return true;
+    });
+  }
+
+  void _onDownloadComplete() {
+    setState(() {
+      _downloadState = 2;
+    });
+
+    // Fire confetti particles
+    final rand = Random();
+    setState(() {
+      _burstRunning = true;
+      for (int i = 0; i < 30; i++) {
+        _confetti.add(
+          _Confetti(
+            x: 0,
+            y: 0,
+            angle: rand.nextDouble() * 2 * pi,
+            speed: rand.nextDouble() * 5 + 3,
+            size: rand.nextDouble() * 6 + 3,
+            color: [AppColors.accentPurple, AppColors.accentCyan, AppColors.accentGold][rand.nextInt(3)],
+          ),
+        );
+      }
+    });
+
+    Future.doWhile(() async {
+      await Future.delayed(const Duration(milliseconds: 16));
+      if (!mounted) return false;
+      setState(() {
+        for (var p in _confetti) {
+          p.update();
+        }
+      });
+      return _burstRunning;
+    });
+
+    // Reset back to idle after 4 seconds
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted) {
+        setState(() {
+          _downloadState = 0;
+          _confetti.clear();
+          _burstRunning = false;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      clipBehavior: Clip.none,
+      children: [
+        // Confetti burst particles
+        if (_confetti.isNotEmpty)
+          ..._confetti.map((c) => Positioned(
+                left: c.x,
+                top: c.y,
+                child: Container(
+                  width: c.size,
+                  height: c.size,
+                  decoration: BoxDecoration(
+                    color: c.color.withOpacity(c.alpha),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              )),
+
+        // Main action container button
+        GestureDetector(
+          onTap: _triggerDownload,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: AppSpacing.buttonHeight,
+            height: AppSpacing.buttonHeight,
+            decoration: BoxDecoration(
+              color: _downloadState == 2 ? AppColors.accentSuccess.withOpacity(0.2) : AppColors.bgCard,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusButton),
+              border: Border.all(
+                color: _downloadState == 2 ? AppColors.accentSuccess : AppColors.bgElevated,
+                width: _downloadState == 2 ? 2 : 1,
+              ),
+            ),
+            child: Center(
+              child: _buildButtonContent(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildButtonContent() {
+    if (_downloadState == 0) {
+      return const Icon(Icons.download_rounded, color: AppColors.accentCyan);
+    } else if (_downloadState == 1) {
+      return SizedBox(
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(
+          value: _loadProgress,
+          strokeWidth: 2,
+          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentCyan),
+        ),
+      );
+    } else {
+      return const Icon(Icons.check_circle_rounded, color: AppColors.accentSuccess);
+    }
+  }
+}
+
+class _Confetti {
+  double x;
+  double y;
+  final double angle;
+  final double speed;
+  final double size;
+  final Color color;
+  double alpha = 1.0;
+
+  _Confetti({
+    required this.x,
+    required this.y,
+    required this.angle,
+    required this.speed,
+    required this.size,
+    required this.color,
+  });
+
+  void update() {
+    x += cos(angle) * speed;
+    y += sin(angle) * speed;
+    alpha = (alpha - 0.04).clamp(0.0, 1.0);
   }
 }
 

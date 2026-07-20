@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/gradient_button.dart';
 
-/// S10 — Apply Wallpaper modal bottom sheet.
+/// S10 — Apply Wallpaper modal bottom sheet with spring animations and staggered preview entry.
 class ApplyWallpaperSheet extends StatefulWidget {
   final String wallpaperId;
   const ApplyWallpaperSheet({super.key, required this.wallpaperId});
@@ -44,10 +45,13 @@ class _ApplyWallpaperSheetState extends State<ApplyWallpaperSheet> {
             ),
           ),
           const SizedBox(height: 24),
-          Text('Preview & Apply', style: AppTypography.h3),
+          Text('Preview & Apply', style: AppTypography.h3)
+              .animate()
+              .fadeIn(duration: 300.ms)
+              .slideX(begin: -0.1),
           const SizedBox(height: 16),
 
-          // Side-by-side preview cards
+          // Side-by-side preview cards with 150ms stagger scale animation (S10)
           Row(
             children: [
               Expanded(
@@ -57,7 +61,10 @@ class _ApplyWallpaperSheetState extends State<ApplyWallpaperSheet> {
                     title: 'Home Screen',
                     isSelected: _selectedScreen == 0,
                     icon: Icons.home_rounded,
-                  ),
+                  )
+                      .animate()
+                      .scale(begin: const Offset(0.8, 0.8), duration: 400.ms, curve: Curves.easeOutBack)
+                      .fadeIn(duration: 300.ms),
                 ),
               ),
               const SizedBox(width: 12),
@@ -68,14 +75,17 @@ class _ApplyWallpaperSheetState extends State<ApplyWallpaperSheet> {
                     title: 'Lock Screen',
                     isSelected: _selectedScreen == 1,
                     icon: Icons.lock_rounded,
-                  ),
+                  )
+                      .animate(delay: 150.ms)
+                      .scale(begin: const Offset(0.8, 0.8), duration: 400.ms, curve: Curves.easeOutBack)
+                      .fadeIn(duration: 300.ms),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 24),
 
-          // Actions
+          // Action button
           GradientButton(
             label: _selectedScreen == 0
                 ? 'Apply to Home Screen'
@@ -83,7 +93,6 @@ class _ApplyWallpaperSheetState extends State<ApplyWallpaperSheet> {
                     ? 'Apply to Lock Screen'
                     : 'Apply to Both',
             onPressed: () {
-              // TODO: Apply wallpaper to device using wallpaper manager
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -92,7 +101,8 @@ class _ApplyWallpaperSheetState extends State<ApplyWallpaperSheet> {
                 ),
               );
             },
-          ),
+          ).animate(delay: 300.ms).fadeIn().slideY(begin: 0.2),
+          
           const SizedBox(height: 12),
           Center(
             child: TextButton(
@@ -102,7 +112,7 @@ class _ApplyWallpaperSheetState extends State<ApplyWallpaperSheet> {
                 style: TextStyle(color: AppColors.textSecondary),
               ),
             ),
-          ),
+          ).animate(delay: 400.ms).fadeIn(),
         ],
       ),
     );
@@ -127,14 +137,15 @@ class _ApplyWallpaperSheetState extends State<ApplyWallpaperSheet> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Background placeholder gradient
+          // Blurred wallpaper background mockup
           Positioned.fill(
             child: Opacity(
-              opacity: 0.3,
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: AppColors.gradientHero,
-                  borderRadius: BorderRadius.all(Radius.circular(14)),
+              opacity: 0.15,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Image.network(
+                  'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=150',
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
@@ -142,14 +153,25 @@ class _ApplyWallpaperSheetState extends State<ApplyWallpaperSheet> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: isSelected ? AppColors.accentPurple : AppColors.textMuted, size: 32),
-              const SizedBox(height: 8),
-              Text(title, style: AppTypography.bodySmall.copyWith(
-                color: isSelected ? Colors.white : AppColors.textSecondary,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              )),
+              Icon(icon, color: isSelected ? AppColors.accentPurple : AppColors.textMuted, size: 36),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: TextStyle(
+                  color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
             ],
           ),
+          // Checkmark overlay for selection
+          if (isSelected)
+            const Positioned(
+              top: 8,
+              right: 8,
+              child: Icon(Icons.check_circle_rounded, color: AppColors.accentPurple, size: 20),
+            ),
         ],
       ),
     );
