@@ -435,22 +435,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      const CircleAvatar(
+                                      CircleAvatar(
                                         radius: 7,
-                                        backgroundImage: NetworkImage('https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=50'),
+                                        backgroundColor: AppColors.bgElevated,
+                                        backgroundImage: item.creatorAvatarUrl.isNotEmpty
+                                            ? NetworkImage(item.creatorAvatarUrl)
+                                            : null,
+                                        child: item.creatorAvatarUrl.isEmpty
+                                            ? Text(
+                                                item.creatorName.isNotEmpty ? item.creatorName[0].toUpperCase() : 'C',
+                                                style: const TextStyle(fontSize: 8, color: Colors.white),
+                                              )
+                                            : null,
                                       ),
                                       const SizedBox(width: 6),
                                       Expanded(
                                         child: Row(
                                           children: [
-                                            Text(
-                                              item.creatorName,
-                                              style: AppTypography.creatorName.copyWith(fontSize: 10),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
+                                            Flexible(
+                                              child: Text(
+                                                item.creatorName,
+                                                style: AppTypography.creatorName.copyWith(fontSize: 10),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
-                                            const SizedBox(width: 2),
-                                            const Icon(Icons.verified, color: AppColors.accentCyan, size: 10),
+                                            if (item.isCreatorVerified) ...[
+                                              const SizedBox(width: 2),
+                                              const Icon(Icons.verified_rounded, color: AppColors.accentCyan, size: 10),
+                                            ],
                                           ],
                                         ),
                                       ),

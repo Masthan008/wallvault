@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if true; // Publicly readable for creator profiles
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false; // Only via Cloud Functions
+    }
+
+    // Wallpapers Collection
+    match /wallpapers/{wallpaperId} {
+      // Anyone can read wallpapers
+      allow read: if true;
+      
+      // Allow updates to specific metrics (downloads, likes, ratings) by authenticated users
+      allow update: if isAuthenticated() 
+        && (request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['downloads', 'likes', 'rating', 'ratingCount']));
+            
+      // Allow creators to update their own wallpapers (assuming creatorId matches)
+      // and update creatorAvatarUrl, isCreatorVerified, etc.
+      allow update: if isOwner(resource.data.creatorId);
+      
+      // Allow creators to create wallpapers
+      allow create: if isOwner(request.resource.data.creatorId);
+      
+      // Allow creators to delete their wallpapers
+      allow delete: if isOwner(resource.data.creatorId);
+    }
+  }
+}

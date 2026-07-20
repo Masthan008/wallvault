@@ -206,4 +206,23 @@ class WallpaperRepository {
       'downloads': FieldValue.increment(1),
     });
   }
+
+  Future<void> incrementLikes(String id) async {
+    await _firestore.collection('wallpapers').doc(id).update({
+      'likes': FieldValue.increment(1),
+    });
+  }
+
+  Future<void> decrementLikes(String id) async {
+    await _firestore.collection('wallpapers').doc(id).update({
+      'likes': FieldValue.increment(-1),
+    });
+  }
+
+  Future<void> updateRating(String id, double newRating, int newRatingCount) async {
+    await _firestore.collection('wallpapers').doc(id).update({
+      'rating': newRating,
+      'ratingCount': newRatingCount,
+    });
+  }
 }

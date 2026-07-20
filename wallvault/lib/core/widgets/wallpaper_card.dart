@@ -156,10 +156,32 @@ class WallpaperCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Text(
-                          wallpaper.creatorName,
-                          style: AppTypography.creatorName.copyWith(fontSize: 11),
+                        CircleAvatar(
+                          radius: 7,
+                          backgroundColor: AppColors.bgElevated,
+                          backgroundImage: wallpaper.creatorAvatarUrl.isNotEmpty
+                              ? NetworkImage(wallpaper.creatorAvatarUrl)
+                              : null,
+                          child: wallpaper.creatorAvatarUrl.isEmpty
+                              ? Text(
+                                  wallpaper.creatorName.isNotEmpty ? wallpaper.creatorName[0].toUpperCase() : 'C',
+                                  style: const TextStyle(fontSize: 8, color: Colors.white),
+                                )
+                              : null,
                         ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            wallpaper.creatorName,
+                            style: AppTypography.creatorName.copyWith(fontSize: 11),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (wallpaper.isCreatorVerified) ...[
+                          const SizedBox(width: 2),
+                          const Icon(Icons.verified_rounded, color: AppColors.accentCyan, size: 10),
+                        ],
                         const Spacer(),
                         Icon(Icons.download_rounded,
                             size: 12, color: AppColors.textSecondary),

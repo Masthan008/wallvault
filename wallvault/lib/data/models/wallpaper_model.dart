@@ -7,6 +7,8 @@ class WallpaperModel {
   final String description;
   final String creatorId;
   final String creatorName;
+  final String creatorAvatarUrl;
+  final bool isCreatorVerified;
   final String category;
   final List<String> tags;
   final String imageUrl;
@@ -34,6 +36,8 @@ class WallpaperModel {
     this.description = '',
     required this.creatorId,
     this.creatorName = '',
+    this.creatorAvatarUrl = '',
+    this.isCreatorVerified = false,
     this.category = 'abstract',
     this.tags = const [],
     this.imageUrl = '',
@@ -84,6 +88,8 @@ class WallpaperModel {
       description: data['description'] ?? '',
       creatorId: data['creatorId'] ?? '',
       creatorName: data['creatorName'] ?? '',
+      creatorAvatarUrl: data['creatorAvatarUrl'] ?? '',
+      isCreatorVerified: data['isCreatorVerified'] ?? false,
       category: data['category'] ?? 'abstract',
       tags: List<String>.from(data['tags'] ?? []),
       imageUrl: data['imageUrl'] ?? '',
@@ -113,6 +119,8 @@ class WallpaperModel {
       'description': description,
       'creatorId': creatorId,
       'creatorName': creatorName,
+      'creatorAvatarUrl': creatorAvatarUrl,
+      'isCreatorVerified': isCreatorVerified,
       'category': category,
       'tags': tags,
       'imageUrl': imageUrl,
@@ -141,6 +149,8 @@ class WallpaperModel {
     String? description,
     String? creatorId,
     String? creatorName,
+    String? creatorAvatarUrl,
+    bool? isCreatorVerified,
     String? category,
     List<String>? tags,
     String? imageUrl,
@@ -168,6 +178,8 @@ class WallpaperModel {
       description: description ?? this.description,
       creatorId: creatorId ?? this.creatorId,
       creatorName: creatorName ?? this.creatorName,
+      creatorAvatarUrl: creatorAvatarUrl ?? this.creatorAvatarUrl,
+      isCreatorVerified: isCreatorVerified ?? this.isCreatorVerified,
       category: category ?? this.category,
       tags: tags ?? this.tags,
       imageUrl: imageUrl ?? this.imageUrl,

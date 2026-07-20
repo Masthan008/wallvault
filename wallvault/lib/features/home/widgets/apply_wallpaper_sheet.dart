@@ -5,17 +5,23 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/gradient_button.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:async_wallpaper/async_wallpaper.dart';
+import '../../../providers/wallpaper_provider.dart';
+
 /// S10 — Apply Wallpaper modal bottom sheet with spring animations and staggered preview entry.
-class ApplyWallpaperSheet extends StatefulWidget {
+class ApplyWallpaperSheet extends ConsumerStatefulWidget {
   final String wallpaperId;
-  const ApplyWallpaperSheet({super.key, required this.wallpaperId});
+  final String imageUrl;
+  const ApplyWallpaperSheet({super.key, required this.wallpaperId, required this.imageUrl});
 
   @override
-  State<ApplyWallpaperSheet> createState() => _ApplyWallpaperSheetState();
+  ConsumerState<ApplyWallpaperSheet> createState() => _ApplyWallpaperSheetState();
 }
 
-class _ApplyWallpaperSheetState extends State<ApplyWallpaperSheet> {
+class _ApplyWallpaperSheetState extends ConsumerState<ApplyWallpaperSheet> {
   int _selectedScreen = 0; // 0: Home, 1: Lock, 2: Both
+  bool _isApplying = false;
 
   @override
   Widget build(BuildContext context) {
@@ -81,27 +87,76 @@ class _ApplyWallpaperSheetState extends State<ApplyWallpaperSheet> {
                       .fadeIn(duration: 300.ms),
                 ),
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedScreen = 2),
+                  child: _buildPreviewFrame(
+                    title: 'Both',
+                    isSelected: _selectedScreen == 2,
+                    icon: Icons.phonelink_setup_rounded,
+                  )
+                      .animate(delay: 300.ms)
+                      .scale(begin: const Offset(0.8, 0.8), duration: 400.ms, curve: Curves.easeOutBack)
+                      .fadeIn(duration: 300.ms),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 24),
 
           // Action button
-          GradientButton(
-            label: _selectedScreen == 0
-                ? 'Apply to Home Screen'
-                : _selectedScreen == 1
-                    ? 'Apply to Lock Screen'
-                    : 'Apply to Both',
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Wallpaper applied successfully!'),
-                  backgroundColor: AppColors.accentSuccess,
-                ),
-              );
-            },
-          ).animate(delay: 300.ms).fadeIn().slideY(begin: 0.2),
+          _isApplying
+              ? const Center(child: CircularProgressIndicator(color: AppColors.accentPurple))
+              : GradientButton(
+                  label: _selectedScreen == 0
+                      ? 'Apply to Home Screen'
+                      : _selectedScreen == 1
+                          ? 'Apply to Lock Screen'
+                          : 'Apply to Both',
+                  onPressed: () async {
+                    setState(() => _isApplying = true);
+                    
+                    try {
+                      var target = WallpaperTarget.home;
+                      if (_selectedScreen == 1) target = WallpaperTarget.lock;
+                      if (_selectedScreen == 2) target = WallpaperTarget.both;
+                      
+                      await AsyncWallpaper.setWallpaper(
+                        WallpaperRequest(
+                          source: widget.imageUrl,
+                          sourceType: WallpaperSourceType.url,
+                          target: target,
+                          goToHome: false,
+                        )
+                      );
+                      
+                      // Track metric (treat as a download/apply)
+                      await ref.read(wallpaperRepositoryProvider).incrementDownloads(widget.wallpaperId);
+                      ref.invalidate(wallpaperDetailProvider(widget.wallpaperId));
+
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Wallpaper applied successfully!'),
+                            backgroundColor: AppColors.accentSuccess,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to apply wallpaper: $e'),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                ).animate(delay: 300.ms).fadeIn().slideY(begin: 0.2),
           
           const SizedBox(height: 12),
           Center(

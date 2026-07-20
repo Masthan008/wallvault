@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/router/routes.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../data/models/user_model.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -32,29 +36,48 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Hero(
                     tag: 'user-profile-avatar',
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: AppColors.accentPurple,
-                        shape: BoxShape.circle,
-                      ),
-                      child: CircleAvatar(
-                        radius: 48,
-                        backgroundImage: user.avatarUrl.isNotEmpty
-                            ? NetworkImage(user.avatarUrl)
-                            : null,
-                        child: user.avatarUrl.isEmpty
-                            ? Text(
-                                (user.displayName.isNotEmpty
-                                        ? user.displayName[0]
-                                        : 'U')
-                                    .toUpperCase(),
-                                style: const TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white),
-                              )
-                            : null,
+                    child: GestureDetector(
+                      onTap: () => _pickAndUploadAvatar(context, ref, user),
+                      child: Stack(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: AppColors.accentPurple,
+                              shape: BoxShape.circle,
+                            ),
+                            child: CircleAvatar(
+                              radius: 48,
+                              backgroundImage: user.avatarUrl.isNotEmpty
+                                  ? NetworkImage(user.avatarUrl)
+                                  : null,
+                              child: user.avatarUrl.isEmpty
+                                  ? Text(
+                                      (user.displayName.isNotEmpty
+                                              ? user.displayName[0]
+                                              : 'U')
+                                          .toUpperCase(),
+                                      style: const TextStyle(
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    )
+                                  : null,
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: AppColors.bgElevated,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.camera_alt_rounded, size: 16, color: Colors.white),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -152,72 +175,26 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _showSignOutDialog(BuildContext context, dynamic authRepo) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: AppColors.bgCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: AppColors.textMuted,
-                    borderRadius: BorderRadius.circular(2)),
-              ),
-              const SizedBox(height: 24),
-              Text('Confirm Sign Out', style: AppTypography.h3),
-              const SizedBox(height: 12),
-              Text(
-                'Are you sure you want to sign out of WallVault?',
-                style: AppTypography.bodyMedium
-                    .copyWith(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.textPrimary,
-                        side: const BorderSide(color: AppColors.bgElevated),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accentError,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        authRepo.signOut();
-                      },
-                      child: const Text('Sign Out'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        title: const Text('Sign Out', style: TextStyle(color: Colors.white)),
+        content: const Text('Are you sure you want to sign out?', style: TextStyle(color: AppColors.textSecondary)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
           ),
-        );
-      },
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              authRepo.signOut();
+            },
+            child: const Text('Sign Out', style: TextStyle(color: AppColors.accentError)),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -321,5 +298,34 @@ class _MenuItem extends StatelessWidget {
         onTap: onTap,
       ),
     );
+  }
+}
+
+Future<void> _pickAndUploadAvatar(BuildContext context, WidgetRef ref, UserModel user) async {
+  try {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile == null) return;
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Uploading image...')));
+    }
+
+    final file = File(pickedFile.path);
+    final storageRef = FirebaseStorage.instance.ref().child('avatars/${user.uid}.jpg');
+    await storageRef.putFile(file);
+    final downloadUrl = await storageRef.getDownloadURL();
+
+    final userRepo = ref.read(userRepositoryProvider);
+    await userRepo.updateUser(user.uid, {'avatarUrl': downloadUrl});
+    ref.invalidate(userProfileProvider);
+    
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Avatar updated!')));
+    }
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update avatar: $e')));
+    }
   }
 }

@@ -12,7 +12,7 @@ class AppRoutes {
   // ── Main Tabs ────────────────────────────────────────────
   static const String home = '/home';
   static const String search = '/search';
-  static const String creatorDashboard = '/creator-dashboard';
+  static const String saved = '/saved';
   static const String profile = '/profile';
 
   // ── Wallpaper ────────────────────────────────────────────

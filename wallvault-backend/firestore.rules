@@ -48,7 +48,8 @@ service cloud.firestore {
       allow read: if true; // Public access for browsing
       allow create: if isCreator() || isAdmin();
       allow update: if isLoggedIn() && 
-        (resource.data.creatorId == request.auth.uid || isAdmin());
+        (resource.data.creatorId == request.auth.uid || isAdmin() ||
+         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['downloads', 'likes', 'rating', 'ratingCount'])));
       allow delete: if isLoggedIn() && 
         (resource.data.creatorId == request.auth.uid || isAdmin());
     }

@@ -33,3 +33,13 @@ final downloadedWallpapersProvider = FutureProvider<List<WallpaperModel>>((ref) 
   return results.whereType<WallpaperModel>().toList();
 });
 
+final savedWallpapersProvider = FutureProvider<List<WallpaperModel>>((ref) async {
+  final user = ref.watch(userProfileProvider).asData?.value;
+  if (user == null || user.favorites.isEmpty) return [];
+
+  final repo = ref.watch(wallpaperRepositoryProvider);
+  final futures = user.favorites.map((id) => repo.getWallpaperById(id));
+  final results = await Future.wait(futures);
+  return results.whereType<WallpaperModel>().toList();
+});
+

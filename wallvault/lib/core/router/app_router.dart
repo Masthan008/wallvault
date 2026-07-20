@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,7 +10,7 @@ import '../../features/auth/screens/otp_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/home/screens/wallpaper_detail_screen.dart';
 import '../../features/search/screens/search_screen.dart';
-import '../../features/creator/screens/creator_dashboard_screen.dart';
+import '../../features/saved/screens/saved_screen.dart';
 import '../../features/creator/screens/creator_enroll_screen.dart';
 import '../../features/creator/screens/creator_upload_screen.dart';
 import '../../features/creator/screens/creator_analytics_screen.dart';
@@ -24,13 +25,22 @@ import '../widgets/main_shell.dart';
 import 'routes.dart';
 import '../../providers/auth_provider.dart';
 
+class RouterNotifier extends ChangeNotifier {
+  RouterNotifier(this.ref) {
+    ref.listen(authStateProvider, (_, __) => notifyListeners());
+  }
+  final Ref ref;
+}
+
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final notifier = RouterNotifier(ref);
 
   return GoRouter(
     initialLocation: AppRoutes.splash,
     debugLogDiagnostics: true,
+    refreshListenable: notifier,
     redirect: (context, state) {
+      final authState = ref.read(authStateProvider);
       if (authState.isLoading) return null;
 
       final isLoggedIn = authState.asData?.value != null;
@@ -100,9 +110,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
-            path: AppRoutes.creatorDashboard,
+            path: AppRoutes.saved,
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: CreatorDashboardScreen(),
+              child: SavedScreen(),
             ),
           ),
           GoRoute(
