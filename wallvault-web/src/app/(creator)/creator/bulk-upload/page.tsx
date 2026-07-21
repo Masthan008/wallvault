@@ -6,6 +6,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { collection, addDoc, doc, updateDoc, arrayUnion, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import { useCategories } from '@/lib/useCategories';
 
 interface BulkFileItem {
   id: string;
@@ -19,12 +20,11 @@ interface BulkFileItem {
   progress: number;
 }
 
-const CATEGORIES = ['Anime', 'Abstract', 'Nature', 'Space', 'Cars', 'Minimalist', '3D', 'Cyberpunk'];
-
 export default function CreatorBulkUpload() {
   const { user, profile } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { categories, addCategory } = useCategories();
 
   // Folders state
   const [folders, setFolders] = useState<string[]>(['General', 'Anime Series 2026', 'Cyberpunk Ultra']);
@@ -33,7 +33,9 @@ export default function CreatorBulkUpload() {
   const [showNewFolderModal, setShowNewFolderModal] = useState(false);
 
   // Global settings for batch
-  const [globalCategory, setGlobalCategory] = useState('Anime');
+  const [globalCategory, setGlobalCategory] = useState('Abstract');
+  const [isNewGlobalCatMode, setIsNewGlobalCatMode] = useState(false);
+  const [customGlobalCategory, setCustomGlobalCategory] = useState('');
   const [globalIsPremium, setGlobalIsPremium] = useState(false);
   const [globalPrice, setGlobalPrice] = useState<number>(0);
 
@@ -98,11 +100,10 @@ export default function CreatorBulkUpload() {
           await updateDoc(userRef, {
             folders: arrayUnion(cleanFolderName),
           });
-          const catId = cleanFolderName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-          await setDoc(doc(db, 'categories', catId), {
-            name: cleanFolderName,
-            createdAt: new Date(),
-          }, { merge: true });
+          // Call addCategory from useCategories hook to update state & firestore
+          await addCategory(cleanFolderName);
+          // Set globalCategory to the new folder/category!
+          setGlobalCategory(cleanFolderName);
         } catch (e) {
           console.error('Failed to save folder to Firestore', e);
         }
@@ -188,6 +189,7 @@ export default function CreatorBulkUpload() {
         await addDoc(collection(db, 'wallpapers'), {
           name: item.name,
           category: item.category.toLowerCase(),
+          categoryDisplayName: item.category,
           description: `${item.name} wallpaper in ${selectedFolder} collection.`,
           imageUrl: imageUrl,
           thumbnailUrl: imageUrl,
@@ -279,15 +281,57 @@ export default function CreatorBulkUpload() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="text-[11px] font-bold text-text-muted uppercase">Default Category</label>
-            <select
-              value={globalCategory}
-              onChange={(e) => setGlobalCategory(e.target.value)}
-              className="mt-1.5 w-full px-3.5 py-2.5 rounded-xl bg-[#141419] border border-white/[0.1] text-xs text-white"
-            >
-              {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
+            {isNewGlobalCatMode ? (
+              <div className="flex gap-2 mt-1.5">
+                <input
+                  type="text"
+                  value={customGlobalCategory}
+                  onChange={(e) => setCustomGlobalCategory(e.target.value)}
+                  placeholder="Enter new category..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#141419] border border-white/[0.1] text-xs text-white focus:outline-none focus:border-accent-purple"
+                />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const val = customGlobalCategory.trim();
+                    if (val) {
+                      await addCategory(val);
+                      setGlobalCategory(val);
+                      setFileItems(prev => prev.map(item => ({ ...item, category: val })));
+                    }
+                    setIsNewGlobalCatMode(false);
+                    setCustomGlobalCategory('');
+                  }}
+                  className="px-3 rounded-xl bg-accent-purple text-xs font-bold text-white hover:bg-accent-purple/90 cursor-pointer"
+                >
+                  Add
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsNewGlobalCatMode(false)}
+                  className="px-3 rounded-xl bg-white/[0.04] text-xs font-bold text-text-muted hover:text-white cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <select
+                value={globalCategory}
+                onChange={(e) => {
+                  if (e.target.value === '__new__') {
+                    setIsNewGlobalCatMode(true);
+                  } else {
+                    setGlobalCategory(e.target.value);
+                  }
+                }}
+                className="mt-1.5 w-full px-3.5 py-2.5 rounded-xl bg-[#141419] border border-white/[0.1] text-xs text-white cursor-pointer"
+              >
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+                <option value="__new__">+ Create New Category...</option>
+              </select>
+            )}
           </div>
 
           <div>
@@ -430,9 +474,9 @@ export default function CreatorBulkUpload() {
                         const val = e.target.value;
                         setFileItems(prev => prev.map(f => f.id === item.id ? { ...f, category: val } : f));
                       }}
-                      className="w-1/2 px-2 py-1 rounded-lg bg-[#141419] border border-white/[0.08] text-[11px] text-text-secondary"
+                      className="w-1/2 px-2 py-1 rounded-lg bg-[#141419] border border-white/[0.08] text-[11px] text-text-secondary cursor-pointer"
                     >
-                      {CATEGORIES.map(cat => (
+                      {categories.map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </select>
