@@ -31,14 +31,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return null;
   }
 
-  static const _categories = [
-    (Icons.forest_rounded, 'Nature'),
-    (Icons.palette_rounded, 'Abstract'),
-    (Icons.directions_car_rounded, 'Cars'),
-    (Icons.rocket_launch_rounded, 'Space'),
-    (Icons.face_rounded, 'Anime'),
-    (Icons.dark_mode_rounded, 'Dark'),
-  ];
+  static const _categories = ['All', 'Anime', 'Abstract', 'Nature', 'Space', 'Cars', 'Cyberpunk', '3D', 'Dark', 'Minimalist'];
 
   @override
   Widget build(BuildContext context) {
@@ -270,54 +263,87 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
-          // ── S08: Categories List ────────────────────────────────────────────────────────
+          // ── S08: Categories List (Liquid Glass Pill Design) ─────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.only(top: 32, bottom: 8),
+              padding: const EdgeInsets.only(top: 24, bottom: 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                    child: Text('Popular Categories', style: AppTypography.h3),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Explore Categories', style: AppTypography.h3),
+                        Text('Swipe', style: TextStyle(fontSize: 11, color: AppColors.textMuted.withOpacity(0.7))),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   SizedBox(
-                    height: 80,
+                    height: 44,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
                       itemCount: _categories.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 12),
+                      separatorBuilder: (_, _) => const SizedBox(width: 10),
                       itemBuilder: (context, index) {
-                        final cat = _categories[index];
+                        final catName = _categories[index];
+                        final tabIndex = _tabs.indexWhere((t) => t.toLowerCase() == catName.toLowerCase());
+                        final isActive = (_activeTab == tabIndex) || (_activeTab == 0 && index == 0);
+
                         return GestureDetector(
                           onTap: () {
-                            // Find category index matching the active tab list
-                            final tabIndex = _tabs.indexWhere((t) => t.toLowerCase() == cat.$2.toLowerCase());
                             if (tabIndex != -1) {
                               setState(() {
                                 _activeTab = tabIndex;
                               });
                             } else {
-                              // If not in tabs, trigger query search screen
-                              context.push(AppRoutes.search);
+                              setState(() {
+                                _activeTab = 0;
+                              });
                             }
                           },
-                          child: Container(
-                            width: 80,
-                            decoration: BoxDecoration(
-                              color: AppColors.bgCard,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: AppColors.bgElevated),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(cat.$1, color: AppColors.accentCyan, size: 24),
-                                const SizedBox(height: 6),
-                                Text(cat.$2, style: AppTypography.caption.copyWith(fontSize: 10)),
-                              ],
+                          child: AnimatedScale(
+                            scale: isActive ? 1.05 : 1.0,
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeOutCubic,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: isActive
+                                    ? AppColors.accentPurple.withOpacity(0.28)
+                                    : Colors.white.withOpacity(0.04),
+                                borderRadius: BorderRadius.circular(30),
+                                border: Border.all(
+                                  color: isActive
+                                      ? AppColors.accentPurple
+                                      : Colors.white.withOpacity(0.12),
+                                  width: isActive ? 1.5 : 1.0,
+                                ),
+                                boxShadow: isActive
+                                    ? [
+                                        BoxShadow(
+                                          color: AppColors.accentPurple.withOpacity(0.4),
+                                          blurRadius: 16,
+                                          spreadRadius: 1,
+                                        ),
+                                      ]
+                                    : [],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  catName,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
+                                    color: isActive ? Colors.white : AppColors.textSecondary,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         );
