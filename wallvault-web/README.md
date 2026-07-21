@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎨 WallVault — Web Console (Creator Hub & Admin Portal)
 
-## Getting Started
+<p align="center">
+  <strong>The High-Performance Next.js 16 Web Dashboard for Digital Artists & Platform Administrators</strong>
+</p>
 
-First, run the development server:
+---
+
+## 🚀 Quick Start Commands
 
 ```bash
+# Navigate to web folder
+cd wallvault-web
+
+# Install dependencies
+npm install
+
+# Start local development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm run start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📱 Modules Overview
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **🎨 Creator Hub (`/creator/*`)**: Dashboard, Bulk Wallpaper Uploader (100 wallpapers max), Real-time Analytics (Firebase downloads, monthly revenue, category breakdown pie chart), Payouts, Profile settings.
+- **🛡️ Admin Control Center (`/admin/*`)**: Moderation queue (approve/reject wallpapers), live platform analytics, creators list, payout approvals, user directory, transactions log.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For complete project documentation, see the [Root README](../README.md).

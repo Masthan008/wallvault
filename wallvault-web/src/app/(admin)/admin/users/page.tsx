@@ -6,6 +6,7 @@ import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { DataTable } from '@/components/DataTable';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
+import { motion } from 'framer-motion';
 
 interface UserItem {
   id: string;
@@ -129,36 +130,50 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-text-secondary bg-clip-text text-transparent">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <h1 className="text-3xl font-black tracking-tight text-white">
           User Directory
         </h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          View user accounts, streak history, subscription tiers, and developer roles in real-time.
+        <p className="mt-1 text-xs text-[#52525b] font-medium">
+          User accounts, streaks, subscriptions, and roles — live from Firebase.
         </p>
-      </div>
+      </motion.div>
 
-      <div className="flex items-center max-w-md bg-white/[0.01] border border-white/[0.05] rounded-xl px-4 py-2.5 focus-within:border-accent-purple transition-colors duration-300">
-        <Search className="w-5 h-5 text-text-muted mr-3" />
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.35 }}
+        className="flex items-center max-w-md bg-white/[0.015] border border-white/[0.06] rounded-xl px-4 py-2.5 focus-within:border-[#a855f7]/40 transition-all duration-300"
+      >
+        <Search className="w-4 h-4 text-[#52525b] mr-3" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search by name, phone, email, or role..."
-          className="w-full bg-transparent focus:outline-none text-sm text-text-primary placeholder-text-muted"
+          className="w-full bg-transparent focus:outline-none text-xs text-white placeholder-[#3f3f46] font-medium"
         />
-      </div>
+      </motion.div>
 
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-text-primary uppercase tracking-wider text-xs text-text-muted">
-          Users Registry
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.4 }}
+        className="space-y-4"
+      >
+        <h2 className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#52525b]">
+          Users Registry ({filteredUsers.length})
         </h2>
         {loading ? (
           <SkeletonLoader variant="table" />
         ) : (
           <DataTable columns={columns} data={filteredUsers} emptyMessage="No users found matching query." />
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

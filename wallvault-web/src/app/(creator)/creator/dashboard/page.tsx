@@ -254,39 +254,48 @@ export default function CreatorDashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex items-center justify-between"
+      >
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">
+          <h1 className="text-3xl font-black tracking-tight text-white">
             Dashboard
           </h1>
-          <p className="mt-1 text-xs text-text-secondary">Welcome back! Here is how your portfolio is doing in real-time.</p>
+          <p className="mt-1 text-xs text-[#52525b] font-medium">Welcome back! Real-time portfolio performance.</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard
-          label="Total Earnings (70% Split)"
+          label="Earnings (70%)"
           value={`₹${totalEarnings}`}
           icon={DollarSign}
           glowColor="gold"
+          index={0}
         />
         <KPICard
-          label="Total Downloads"
-          value={totalDownloads.toString()}
+          label="Downloads"
+          value={totalDownloads}
           icon={Download}
           glowColor="purple"
+          index={1}
         />
         <KPICard
-          label="Total Wallpapers"
-          value={totalWallpapers.toString()}
+          label="Wallpapers"
+          value={totalWallpapers}
           icon={ImageIcon}
           glowColor="cyan"
+          index={2}
         />
         <KPICard
-          label="Estimated Followers"
-          value={Math.round(totalDownloads * 0.15).toString()} // estimated at 15% download rate
+          label="Est. Followers"
+          value={Math.round(totalDownloads * 0.15)}
           icon={Users}
+          index={3}
         />
       </div>
 

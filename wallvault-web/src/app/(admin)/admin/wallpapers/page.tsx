@@ -235,35 +235,41 @@ export default function AdminWallpapers() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <h1 className="text-3xl font-black tracking-tight text-white">
           Wallpaper Management
         </h1>
-        <p className="mt-1 text-xs text-text-secondary">Moderate wallpaper submissions, search assets database, edit properties, or delete items.</p>
-      </div>
+        <p className="mt-1 text-xs text-[#52525b] font-medium">Moderate submissions, search assets, edit properties, or delete items.</p>
+      </motion.div>
 
       {/* Tabs Layout */}
-      <div className="flex border-b border-border-glass gap-6 text-xs uppercase tracking-wider font-extrabold">
-        <button
-          onClick={() => setActiveTab('pending')}
-          className={`pb-3 border-b-2 transition-colors cursor-pointer ${
-            activeTab === 'pending'
-              ? 'border-white text-white'
-              : 'border-transparent text-text-muted hover:text-text-secondary'
-          }`}
-        >
-          Pending Reviews ({pendingItems.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('active')}
-          className={`pb-3 border-b-2 transition-colors cursor-pointer ${
-            activeTab === 'active'
-              ? 'border-white text-white'
-              : 'border-transparent text-text-muted hover:text-text-secondary'
-          }`}
-        >
-          Live Wallpapers ({wallpapers.filter(w => w.status === 'approved').length})
-        </button>
+      <div className="flex border-b border-white/[0.06] gap-1 p-1 bg-white/[0.01] rounded-xl w-fit">
+        {(['pending', 'active'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`relative px-4 py-2 text-[10px] font-bold uppercase tracking-[0.1em] rounded-lg transition-all duration-200 cursor-pointer ${
+              activeTab === tab
+                ? 'text-white'
+                : 'text-[#52525b] hover:text-[#a1a1aa]'
+            }`}
+          >
+            {activeTab === tab && (
+              <motion.div
+                layoutId="admin-wallpaper-tab"
+                className="absolute inset-0 bg-white/[0.06] border border-white/[0.08] rounded-lg"
+                transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+              />
+            )}
+            <span className="relative z-10">
+              {tab === 'pending' ? `Pending (${pendingItems.length})` : `Live (${wallpapers.filter(w => w.status === 'approved').length})`}
+            </span>
+          </button>
+        ))}
       </div>
 
       {/* Search Input for Live tab */}
@@ -292,7 +298,7 @@ export default function AdminWallpapers() {
       {/* Custom Detail modal & Edit properties sheet */}
       <AnimatePresence>
         {selectedWallpaper && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" onClick={(e) => { if (e.target === e.currentTarget) setSelectedWallpaper(null); }}>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}

@@ -213,8 +213,11 @@ export default function CreatorBulkUpload() {
     }
 
     setIsUploading(false);
+    const totalCount = fileItems.length;
+    setFileItems([]);
+    setOverallProgress(0);
     setMessage({
-      text: `Bulk upload completed! ${completedCount} of ${fileItems.length} wallpapers uploaded successfully to folder "${selectedFolder}".`,
+      text: `Bulk upload completed! ${completedCount} of ${totalCount} wallpapers uploaded successfully to folder "${selectedFolder}". Queue container cleared for new batch!`,
       type: 'success',
     });
   };

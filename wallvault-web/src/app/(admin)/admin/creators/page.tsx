@@ -162,17 +162,26 @@ export default function AdminCreators() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <h1 className="text-3xl font-black tracking-tight text-white">
           Creator Accounts
         </h1>
-        <p className="mt-1 text-xs text-text-secondary">Approve creator enrollments, manage levels, and monitor earnings in real-time.</p>
-      </div>
+        <p className="mt-1 text-xs text-[#52525b] font-medium">Approve enrollments, manage levels, and monitor earnings in real-time.</p>
+      </motion.div>
 
-      <div className="space-y-4">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-text-muted">Creators Portfolio</h2>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.4 }}
+        className="space-y-4"
+      >
+        <h2 className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#52525b]">Creators Portfolio</h2>
         <DataTable columns={columns} data={creators} emptyMessage="No registered creators found." />
-      </div>
+      </motion.div>
 
       {/* Creator Detail Profile Modal */}
       <AnimatePresence>
