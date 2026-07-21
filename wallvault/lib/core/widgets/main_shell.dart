@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../theme/app_colors.dart';
-import '../theme/app_spacing.dart';
 import '../router/routes.dart';
 
-/// Main app shell with CRED-inspired bottom navigation.
+/// Floating Liquid Glass Pill Navigation Bar
 class MainShell extends StatelessWidget {
   final Widget child;
   const MainShell({super.key, required this.child});
@@ -33,60 +32,85 @@ class MainShell extends StatelessWidget {
     final currentIndex = _currentIndex(context);
 
     return Scaffold(
-      body: child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppColors.bgSecondary,
-          border: const Border(
-            top: BorderSide(color: AppColors.bgElevated, width: 0.5),
+      backgroundColor: AppColors.bgPrimary,
+      body: Stack(
+        children: [
+          // Screen content extending under floating nav bar
+          Positioned.fill(
+            child: child,
           ),
-        ),
-        child: SafeArea(
-          child: SizedBox(
-            height: AppSpacing.bottomNavHeight,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavItem(
-                  icon: Icons.home_rounded,
-                  label: 'Home',
-                  isSelected: currentIndex == 0,
-                  onTap: () => _onTap(context, 0),
+
+          // Floating Pill Navigation Bar
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(context).padding.bottom + 12,
+            child: Container(
+              height: 64,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xEB0E0E16),
+                borderRadius: BorderRadius.circular(36),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  width: 1.2,
                 ),
-                _NavItem(
-                  icon: Icons.search_rounded,
-                  label: 'Search',
-                  isSelected: currentIndex == 1,
-                  onTap: () => _onTap(context, 1),
-                ),
-                _NavItem(
-                  icon: Icons.bookmark_rounded,
-                  label: 'Saved',
-                  isSelected: currentIndex == 2,
-                  onTap: () => _onTap(context, 2),
-                ),
-                _NavItem(
-                  icon: Icons.person_rounded,
-                  label: 'Profile',
-                  isSelected: currentIndex == 3,
-                  onTap: () => _onTap(context, 3),
-                ),
-              ],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
+                  ),
+                  BoxShadow(
+                    color: AppColors.accentPurple.withValues(alpha: 0.15),
+                    blurRadius: 16,
+                    spreadRadius: -4,
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  _PillNavItem(
+                    icon: Icons.home_rounded,
+                    label: 'Home',
+                    isSelected: currentIndex == 0,
+                    onTap: () => _onTap(context, 0),
+                  ),
+                  _PillNavItem(
+                    icon: Icons.search_rounded,
+                    label: 'Search',
+                    isSelected: currentIndex == 1,
+                    onTap: () => _onTap(context, 1),
+                  ),
+                  _PillNavItem(
+                    icon: Icons.bookmark_rounded,
+                    label: 'Saved',
+                    isSelected: currentIndex == 2,
+                    onTap: () => _onTap(context, 2),
+                  ),
+                  _PillNavItem(
+                    icon: Icons.person_rounded,
+                    label: 'Profile',
+                    isSelected: currentIndex == 3,
+                    onTap: () => _onTap(context, 3),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _PillNavItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _NavItem({
+  const _PillNavItem({
     required this.icon,
     required this.label,
     required this.isSelected,
@@ -95,43 +119,59 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 64,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.accentPurple.withValues(alpha: 0.15)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: isSelected
-                    ? AppColors.accentPurple
-                    : AppColors.textMuted,
-                size: 24,
-              ),
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.accentPurple.withValues(alpha: 0.18)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.accentPurple.withValues(alpha: 0.4)
+                  : Colors.transparent,
+              width: 1,
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected
-                    ? AppColors.accentPurple
-                    : AppColors.textMuted,
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.accentPurple.withValues(alpha: 0.25),
+                      blurRadius: 10,
+                      spreadRadius: -2,
+                    ),
+                  ]
+                : [],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedScale(
+                scale: isSelected ? 1.15 : 1.0,
+                duration: const Duration(milliseconds: 200),
+                child: Icon(
+                  icon,
+                  color: isSelected ? Colors.white : AppColors.textMuted,
+                  size: 20,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 3),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: TextStyle(
+                  color: isSelected ? Colors.white : AppColors.textMuted,
+                  fontSize: 9.5,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                  letterSpacing: isSelected ? 0.3 : 0,
+                ),
+                child: Text(label),
+              ),
+            ],
+          ),
         ),
       ),
     );

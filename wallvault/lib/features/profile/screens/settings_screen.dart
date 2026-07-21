@@ -12,7 +12,7 @@ import '../../../core/widgets/gradient_button.dart';
 import '../../../core/router/routes.dart';
 import '../../../providers/auth_provider.dart';
 
-/// S25 — Settings screen with profile options, support details, and logout confirmations.
+/// S25 — Premium Liquid Glass Settings Screen
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -61,24 +61,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        title: Text('Edit Profile', style: AppTypography.h3),
+        backgroundColor: const Color(0xFA0D0D14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        title: Text('Edit Display Name', style: AppTypography.h3),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Display Name',
-            labelStyle: TextStyle(color: AppColors.textSecondary),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.bgElevated)),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentPurple)),
+            labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.04),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: AppColors.accentPurple, width: 1.5),
+            ),
           ),
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white, fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
           ),
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accentPurple,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             onPressed: () async {
               final newName = controller.text.trim();
               if (newName.isNotEmpty) {
@@ -87,7 +103,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 if (mounted) Navigator.pop(context);
               }
             },
-            child: const Text('Save', style: TextStyle(color: AppColors.accentPurple)),
+            child: const Text('Save Changes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -99,25 +115,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
+        backgroundColor: const Color(0xFA0D0D14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
         title: Text('Change Password', style: AppTypography.h3),
         content: TextField(
           controller: controller,
           obscureText: true,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'New Password',
-            labelStyle: TextStyle(color: AppColors.textSecondary),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.bgElevated)),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentPurple)),
+            labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.04),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: AppColors.accentPurple, width: 1.5),
+            ),
           ),
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white, fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
           ),
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accentPurple,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             onPressed: () async {
               final newPass = controller.text.trim();
               if (newPass.length >= 6) {
@@ -136,13 +168,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     );
                   }
                 }
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Password must be at least 6 characters.')),
-                );
               }
             },
-            child: const Text('Update', style: TextStyle(color: AppColors.accentPurple)),
+            child: const Text('Update', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -152,21 +180,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _showDeleteAccountConfirmation() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.bgCard,
+      backgroundColor: const Color(0xFA0D0D14),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.warning_amber_rounded, color: AppColors.accentError, size: 48),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.accentError.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.warning_amber_rounded, color: AppColors.accentError, size: 36),
+            ),
             const SizedBox(height: 16),
-            Text('Are you absolutely sure?', style: AppTypography.h3),
+            Text('Delete Account Permanently', style: AppTypography.h3),
             const SizedBox(height: 8),
             Text(
-              'This action is permanent and will delete all your downloaded wallpapers, transactions, and profile data.',
+              'This action is irreversible. All your downloads, saved wallpapers, and profile data will be purged.',
               style: AppTypography.bodySmall,
               textAlign: TextAlign.center,
             ),
@@ -208,77 +243,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  void _showLogoutConfirmation() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.bgCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Log Out', style: AppTypography.h3),
-            const SizedBox(height: 8),
-            Text('Are you sure you want to log out of your account?', style: AppTypography.bodySmall),
-            const SizedBox(height: 24),
-            GradientButton(
-              label: 'Log Out',
-              gradient: const LinearGradient(
-                colors: [AppColors.accentError, Colors.redAccent],
-              ),
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await ref.read(authRepositoryProvider).signOut();
-                  if (mounted) {
-                    context.go(AppRoutes.login);
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Logout failed: $e')),
-                    );
-                  }
-                }
-              },
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _showHelpCenter() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        title: Text('Help Center', style: AppTypography.h3),
+        backgroundColor: const Color(0xFA0D0D14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        title: Text('Help Center FAQs', style: AppTypography.h3),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('FAQs', style: AppTypography.bodyMedium.copyWith(color: AppColors.accentPurple, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              _buildFAQItem('How do I apply a wallpaper?', 'Browse and click on any wallpaper. Tap the "Apply" button at the bottom and choose Home Screen, Lock Screen, or both.'),
-              _buildFAQItem('How do downloads work?', 'Tap the download button. The image will be downloaded and saved to your device\'s gallery/photos.'),
-              _buildFAQItem('What is Pro Membership?', 'Pro Membership gives you access to all exclusive premium wallpapers and unlocks them forever.'),
+              _buildFAQItem('How do I set a wallpaper?', 'Tap any wallpaper, press "Apply Wallpaper", and select Home Screen, Lock Screen, or Both.'),
+              _buildFAQItem('How do bulk downloads work?', 'Wallpapers save directly to your phone gallery with 4K UHD resolution preserved.'),
+              _buildFAQItem('How do creators earn money?', 'Creators get a 70% revenue share on all premium wallpaper purchases, withdrawable to UPI/Bank.'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close', style: TextStyle(color: AppColors.textMuted)),
+            child: const Text('Close', style: TextStyle(color: AppColors.accentPurple, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -287,13 +276,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _buildFAQItem(String q, String a) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+      padding: const EdgeInsets.only(bottom: 14.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(q, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
           const SizedBox(height: 4),
-          Text(a, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          Text(a, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
         ],
       ),
     );
@@ -303,23 +292,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
+        backgroundColor: const Color(0xFA0D0D14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
         title: Text('Contact Support', style: AppTypography.h3),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('We\'re here to help! Reach out via email:', style: AppTypography.bodyMedium),
-            const SizedBox(height: 12),
-            const Text('support@wallvault.com', style: TextStyle(color: AppColors.accentPurple, fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 8),
-            Text('Response Time: Within 24 Hours', style: AppTypography.caption),
+            Text('Have questions or custom creator inquiries? Contact us at:', style: AppTypography.bodySmall),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.accentPurple.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.accentPurple.withValues(alpha: 0.3)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.email_rounded, color: AppColors.accentPurple, size: 20),
+                  SizedBox(width: 10),
+                  Text('support@wallvault.com', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text('Average response time: < 2 hours', style: AppTypography.caption),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Dismiss', style: TextStyle(color: AppColors.textMuted)),
+            child: const Text('Dismiss', style: TextStyle(color: AppColors.accentPurple)),
           ),
         ],
       ),
@@ -331,21 +338,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        title: Text('Report a Bug', style: AppTypography.h3),
+        backgroundColor: const Color(0xFA0D0D14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        title: Text('Report an Issue', style: AppTypography.h3),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Help us improve! Describe the issue you encountered below:', style: AppTypography.bodySmall),
+            Text('Describe what went wrong and we will resolve it immediately:', style: AppTypography.bodySmall),
             const SizedBox(height: 12),
             TextField(
               controller: controller,
               maxLines: 4,
-              decoration: const InputDecoration(
-                hintText: 'Describe the bug here...',
-                hintStyle: TextStyle(color: AppColors.textMuted),
-                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: AppColors.bgElevated)),
-                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: AppColors.accentPurple)),
+              decoration: InputDecoration(
+                hintText: 'Describe issue here...',
+                hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.04),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: AppColors.accentPurple),
+                ),
               ),
               style: const TextStyle(color: Colors.white, fontSize: 13),
             ),
@@ -356,11 +375,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
           ),
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accentPurple,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             onPressed: () async {
               final bugDesc = controller.text.trim();
               if (bugDesc.isEmpty) return;
-
               final user = ref.read(userProfileProvider).value;
               try {
                 await FirebaseFirestore.instance.collection('reports').add({
@@ -368,7 +390,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   'description': bugDesc,
                   'createdAt': FieldValue.serverTimestamp(),
                 });
-                
                 if (mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -378,56 +399,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to submit report: $e')),
+                    SnackBar(content: Text('Failed: $e')),
                   );
                 }
               }
             },
-            child: const Text('Submit', style: TextStyle(color: AppColors.accentPurple)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showTermsOfService() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        title: Text('Terms of Service', style: AppTypography.h3),
-        content: const SingleChildScrollView(
-          child: Text(
-            'Welcome to WallVault! By accessing or using our application, you agree to comply with and be bound by these Terms of Service. All wallpapers provided are the intellectual property of their respective creators. You may download and use wallpapers for personal, non-commercial use only. Commercial redistribution is strictly prohibited.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Done', style: TextStyle(color: AppColors.accentPurple)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPrivacyPolicy() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        title: Text('Privacy Policy', style: AppTypography.h3),
-        content: const SingleChildScrollView(
-          child: Text(
-            'We value your privacy. WallVault does not sell or distribute your personal data. We collect minimal registration details (email, phone, display name) and anonymous app usage analytics to deliver and improve our wallpaper download and subscription services. Payments are securely processed via Razorpay.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Done', style: TextStyle(color: AppColors.accentPurple)),
+            child: const Text('Submit Report', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -440,12 +417,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: AppColors.bgCard,
+          backgroundColor: const Color(0xFA0D0D14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          ),
           title: Center(child: Text('Rate WallVault', style: AppTypography.h3)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Enjoying WallVault? Let us know your thoughts!', style: AppTypography.bodySmall),
+              Text('Your feedback helps us create better wallpapers!', style: AppTypography.bodySmall),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -455,7 +436,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     icon: Icon(
                       starIndex <= selectedStars ? Icons.star_rounded : Icons.star_border_rounded,
                       color: AppColors.accentGold,
-                      size: 32,
+                      size: 34,
                     ),
                     onPressed: () {
                       setDialogState(() {
@@ -472,14 +453,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onPressed: () => Navigator.pop(context),
               child: const Text('Not Now', style: TextStyle(color: AppColors.textMuted)),
             ),
-            TextButton(
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accentGold,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
               onPressed: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Thank you for rating!'), backgroundColor: AppColors.accentSuccess),
                 );
               },
-              child: const Text('Submit', style: TextStyle(color: AppColors.accentPurple)),
+              child: const Text('Submit', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -488,7 +473,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _shareApp() {
-    Share.share('Check out WallVault for premium custom wallpapers! Download now to browse hand-crafted assets by digital artists.');
+    Share.share('Check out WallVault for 4K UHD liquid glass wallpapers & digital art! Download now: https://wallvault.com');
   }
 
   @override
@@ -496,108 +481,312 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       appBar: AppBar(
-        title: const Text('Settings'),
+        backgroundColor: AppColors.bgPrimary,
+        elevation: 0,
+        centerTitle: true,
+        title: Text('Settings & Preferences', style: AppTypography.h3),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Colors.white),
           onPressed: () => context.pop(),
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.screenPadding),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: 12),
         children: [
-          // Account Section
-          _buildHeader('Account'),
-          _buildItem(Icons.person_outline_rounded, 'Edit Profile', onTap: _showEditProfileDialog),
-          _buildItem(Icons.lock_outline_rounded, 'Change Password', onTap: _showChangePasswordDialog),
-          _buildItem(
-            Icons.delete_outline_rounded,
-            'Delete Account',
-            color: AppColors.accentError,
-            onTap: _showDeleteAccountConfirmation,
+          // Header Hero Banner
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.accentPurple.withValues(alpha: 0.18),
+                  AppColors.accentCyan.withValues(alpha: 0.08),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentPurple.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.accentPurple.withValues(alpha: 0.4)),
+                  ),
+                  child: const Icon(Icons.tune_rounded, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('App Configuration', style: AppTypography.h4),
+                      const SizedBox(height: 2),
+                      Text('Manage security, storage, and notifications', style: AppTypography.caption),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
+
+          // Account Section
+          _buildSectionHeader('Account & Security', Icons.shield_rounded),
+          _buildGlassCard([
+            _buildSettingTile(
+              icon: Icons.person_outline_rounded,
+              title: 'Edit Display Name',
+              subtitle: 'Update your public creator profile name',
+              onTap: _showEditProfileDialog,
+            ),
+            _buildDivider(),
+            _buildSettingTile(
+              icon: Icons.lock_outline_rounded,
+              title: 'Change Password',
+              subtitle: 'Update your login password',
+              onTap: _showChangePasswordDialog,
+            ),
+            _buildDivider(),
+            _buildSettingTile(
+              icon: Icons.delete_outline_rounded,
+              title: 'Delete Account',
+              subtitle: 'Permanently remove account & data',
+              color: AppColors.accentError,
+              onTap: _showDeleteAccountConfirmation,
+            ),
+          ]),
+          const SizedBox(height: 20),
 
           // Preferences Section
-          _buildHeader('Preferences'),
-          SwitchListTile(
-            title: Row(
-              children: [
-                const Icon(Icons.notifications_outlined, color: AppColors.accentPurple),
-                const SizedBox(width: 16),
-                Text('Push Notifications', style: AppTypography.bodyMedium),
-              ],
+          _buildSectionHeader('App Preferences', Icons.tune_rounded),
+          _buildGlassCard([
+            _buildSwitchTile(
+              icon: Icons.notifications_active_outlined,
+              title: 'Push Notifications',
+              subtitle: 'Alerts for new wallpaper drops & rewards',
+              value: _pushNotifications,
+              onChanged: _setPushNotifications,
             ),
-            value: _pushNotifications,
-            activeColor: AppColors.accentPurple,
-            contentPadding: EdgeInsets.zero,
-            onChanged: _setPushNotifications,
-          ),
-          SwitchListTile(
-            title: Row(
-              children: [
-                const Icon(Icons.wifi_rounded, color: AppColors.accentPurple),
-                const SizedBox(width: 16),
-                Text('Auto-Download on WiFi Only', style: AppTypography.bodyMedium),
-              ],
+            _buildDivider(),
+            _buildSwitchTile(
+              icon: Icons.wifi_rounded,
+              title: 'Download on WiFi Only',
+              subtitle: 'Conserve mobile cellular data',
+              value: _wifiOnly,
+              onChanged: _setWifiOnly,
             ),
-            value: _wifiOnly,
-            activeColor: AppColors.accentPurple,
-            contentPadding: EdgeInsets.zero,
-            onChanged: _setWifiOnly,
-          ),
-          const SizedBox(height: 24),
+          ]),
+          const SizedBox(height: 20),
 
           // Support Section
-          _buildHeader('Support'),
-          _buildItem(Icons.help_outline_rounded, 'Help Center', onTap: _showHelpCenter),
-          _buildItem(Icons.chat_bubble_outline_rounded, 'Contact Us', onTap: _showContactUs),
-          _buildItem(Icons.bug_report_outlined, 'Report a Bug', onTap: _showReportBug),
-          _buildItem(Icons.description_outlined, 'Terms of Service', onTap: _showTermsOfService),
-          _buildItem(Icons.shield_outlined, 'Privacy Policy', onTap: _showPrivacyPolicy),
-          const SizedBox(height: 24),
+          _buildSectionHeader('Support & Legal', Icons.help_outline_rounded),
+          _buildGlassCard([
+            _buildSettingTile(
+              icon: Icons.quiz_outlined,
+              title: 'Help Center FAQs',
+              subtitle: 'Common questions & download guides',
+              onTap: _showHelpCenter,
+            ),
+            _buildDivider(),
+            _buildSettingTile(
+              icon: Icons.headset_mic_outlined,
+              title: 'Contact Support',
+              subtitle: 'Direct email support team',
+              onTap: _showContactUs,
+            ),
+            _buildDivider(),
+            _buildSettingTile(
+              icon: Icons.bug_report_outlined,
+              title: 'Report a Bug',
+              subtitle: 'Feedback & feature requests',
+              onTap: _showReportBug,
+            ),
+          ]),
+          const SizedBox(height: 20),
 
           // About Section
-          _buildHeader('About'),
-          _buildItem(Icons.star_outline_rounded, 'Rate App', onTap: _showRateApp),
-          _buildItem(Icons.share_outlined, 'Share App', onTap: _shareApp),
-          ListTile(
-            leading: const Icon(Icons.info_outline_rounded, color: AppColors.textMuted),
-            title: Text('Version', style: AppTypography.bodyMedium),
-            trailing: Text('1.0.0 (1)', style: AppTypography.bodySmall),
-            contentPadding: EdgeInsets.zero,
-          ),
-          const SizedBox(height: 32),
+          _buildSectionHeader('About WallVault', Icons.info_outline_rounded),
+          _buildGlassCard([
+            _buildSettingTile(
+              icon: Icons.star_outline_rounded,
+              title: 'Rate App',
+              subtitle: 'Support WallVault on App Store / Play Store',
+              onTap: _showRateApp,
+            ),
+            _buildDivider(),
+            _buildSettingTile(
+              icon: Icons.share_outlined,
+              title: 'Share App',
+              subtitle: 'Invite friends & creators',
+              onTap: _shareApp,
+            ),
+            _buildDivider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('App Version', style: AppTypography.bodyMedium),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    ),
+                    child: const Text('v1.0.0 (Build 1)', style: TextStyle(color: AppColors.accentCyan, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          ]),
+          const SizedBox(height: 40),
         ],
       ),
     );
   }
 
-  Widget _buildHeader(String title) {
+  Widget _buildSectionHeader(String title, IconData icon) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title.toUpperCase(),
-        style: AppTypography.caption.copyWith(
-          letterSpacing: 1.5,
-          fontWeight: FontWeight.bold,
-          color: AppColors.accentPurple,
+      padding: const EdgeInsets.only(left: 4, bottom: 10),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: AppColors.accentPurple),
+          const SizedBox(width: 6),
+          Text(
+            title.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.4,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGlassCard(List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xEB0D0D14),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      color: Colors.white.withValues(alpha: 0.04),
+    );
+  }
+
+  Widget _buildSettingTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    Color color = Colors.white,
+    VoidCallback? onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        splashColor: AppColors.accentPurple.withValues(alpha: 0.1),
+        highlightColor: Colors.white.withValues(alpha: 0.02),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color == AppColors.accentError
+                      ? AppColors.accentError.withValues(alpha: 0.12)
+                      : AppColors.accentPurple.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  size: 18,
+                  color: color == AppColors.accentError ? AppColors.accentError : AppColors.accentPurple,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: AppTypography.bodyMedium.copyWith(color: color, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: AppTypography.caption.copyWith(color: AppColors.textMuted)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.textMuted),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildItem(
-    IconData icon,
-    String label, {
-    Color color = AppColors.textPrimary,
-    VoidCallback? onTap,
+  Widget _buildSwitchTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: onTap == null ? AppColors.textMuted : AppColors.accentPurple),
-      title: Text(label, style: AppTypography.bodyMedium.copyWith(color: color)),
-      trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
-      contentPadding: EdgeInsets.zero,
-      onTap: onTap ?? () {},
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.accentPurple.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 18, color: AppColors.accentPurple),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text(subtitle, style: AppTypography.caption.copyWith(color: AppColors.textMuted)),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: value,
+            activeColor: AppColors.accentPurple,
+            activeTrackColor: AppColors.accentPurple.withValues(alpha: 0.4),
+            onChanged: onChanged,
+          ),
+        ],
+      ),
     );
   }
 }

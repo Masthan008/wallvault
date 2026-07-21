@@ -7,13 +7,18 @@ import { collection, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
+import { useCategories } from '@/lib/useCategories';
+
 export default function CreatorUpload() {
   const { user } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { categories, addCategory } = useCategories();
   
   const [name, setName] = useState('');
   const [category, setCategory] = useState('Abstract');
+  const [customCategory, setCustomCategory] = useState('');
+  const [isNewCatMode, setIsNewCatMode] = useState(false);
   const [description, setDescription] = useState('');
   const [isPremium, setIsPremium] = useState(false);
   const [price, setPrice] = useState('49');
@@ -98,11 +103,18 @@ export default function CreatorUpload() {
       }
 
 
+      const finalCategory = isNewCatMode && customCategory.trim() ? customCategory.trim() : category;
+
+      if (isNewCatMode && customCategory.trim()) {
+        await addCategory(customCategory.trim());
+      }
+
       // 2. Save metadata document to Firestore db
       await addDoc(collection(db, 'wallpapers'), {
         name,
         description,
-        category: category.toLowerCase(),
+        category: finalCategory.toLowerCase(),
+        categoryDisplayName: finalCategory,
         creatorId: user.uid,
         creatorName: user.displayName || user.email?.split('@')[0] || 'Unknown Creator',
         imageUrl: uploadedImageUrl,
@@ -194,19 +206,53 @@ export default function CreatorUpload() {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="block text-[10px] font-extrabold uppercase tracking-wider text-text-muted">Category</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-4 py-3.5 glass-input text-sm text-text-secondary cursor-pointer"
-            >
-              <option>Abstract</option>
-              <option>Anime</option>
-              <option>Cars</option>
-              <option>Nature</option>
-              <option>Space</option>
-              <option>Dark</option>
-            </select>
+            <div className="flex items-center justify-between">
+              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-text-muted">Category / Folder</label>
+              {!isNewCatMode ? (
+                <button
+                  type="button"
+                  onClick={() => setIsNewCatMode(true)}
+                  className="text-[10px] font-bold text-accent-purple hover:underline cursor-pointer"
+                >
+                  + Create New Folder
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsNewCatMode(false)}
+                  className="text-[10px] font-bold text-text-muted hover:underline cursor-pointer"
+                >
+                  Select Existing
+                </button>
+              )}
+            </div>
+            {!isNewCatMode ? (
+              <select
+                value={category}
+                onChange={(e) => {
+                  if (e.target.value === '__new__') {
+                    setIsNewCatMode(true);
+                  } else {
+                    setCategory(e.target.value);
+                  }
+                }}
+                className="w-full px-4 py-3.5 glass-input text-sm text-text-secondary cursor-pointer"
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+                <option value="__new__">+ Create New Folder...</option>
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                placeholder="Enter new folder / category name..."
+                required={isNewCatMode}
+                className="w-full px-4 py-3.5 glass-input text-sm"
+              />
+            )}
           </div>
         </div>
 

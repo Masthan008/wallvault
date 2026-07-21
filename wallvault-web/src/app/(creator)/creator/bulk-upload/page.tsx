@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Upload, FolderPlus, Layers, Loader2, CheckCircle2, AlertCircle, Trash2, Tag, DollarSign, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
-import { collection, addDoc, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, arrayUnion, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
@@ -91,13 +91,18 @@ export default function CreatorBulkUpload() {
       setFolders(updated);
       setSelectedFolder(cleanFolderName);
 
-      // Save folder to creator user doc
+      // Save folder to creator user doc and global categories collection
       if (user) {
         try {
           const userRef = doc(db, 'users', user.uid);
           await updateDoc(userRef, {
             folders: arrayUnion(cleanFolderName),
           });
+          const catId = cleanFolderName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+          await setDoc(doc(db, 'categories', catId), {
+            name: cleanFolderName,
+            createdAt: new Date(),
+          }, { merge: true });
         } catch (e) {
           console.error('Failed to save folder to Firestore', e);
         }
