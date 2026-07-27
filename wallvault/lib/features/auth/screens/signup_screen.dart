@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -13,6 +14,7 @@ import '../../../core/router/routes.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../data/models/user_model.dart';
 
+/// S03 — 3D Glassmorphic Sign Up Screen with Lottie Golden Coins Animation & Perspective Tilt
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
@@ -26,6 +28,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  double _tiltX = 0.0;
+  double _tiltY = 0.0;
 
   @override
   void dispose() {
@@ -155,96 +159,211 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
-      appBar: AppBar(
-        title: const Text('Create Account'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.screenPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              Text('Join WallVault', style: AppTypography.h2),
-              const SizedBox(height: 8),
-              Text(
-                'Create your account to start discovering amazing wallpapers.',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+      body: GestureDetector(
+        onPanUpdate: (details) {
+          setState(() {
+            _tiltY += details.delta.dx * 0.001;
+            _tiltX -= details.delta.dy * 0.001;
+            _tiltX = _tiltX.clamp(-0.1, 0.1);
+            _tiltY = _tiltY.clamp(-0.1, 0.1);
+          });
+        },
+        onPanEnd: (_) {
+          setState(() {
+            _tiltX = 0.0;
+            _tiltY = 0.0;
+          });
+        },
+        child: Stack(
+          children: [
+            // Dark Gradient Background
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF0F1A2E), Color(0xFF0A0A0F)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
                 ),
               ),
-              const SizedBox(height: 24),
-              GlowInput(
-                controller: _nameController,
-                hintText: 'Full Name',
-                prefixIcon: Icons.person_rounded,
-              ),
-              const SizedBox(height: 12),
-              GlowInput(
-                controller: _emailController,
-                hintText: 'Email Address',
-                prefixIcon: Icons.email_rounded,
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 12),
-              GlowInput(
-                controller: _phoneController,
-                hintText: 'Phone Number (optional)',
-                prefixIcon: Icons.phone_rounded,
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 12),
-              GlowInput(
-                controller: _passwordController,
-                hintText: 'Password',
-                prefixIcon: Icons.lock_rounded,
-                obscureText: true,
-              ),
-              const SizedBox(height: 24),
-              GradientButton(
-                label: 'Create Account',
-                onPressed: _onCreateAccount,
-                isLoading: _isLoading,
-              ),
+            ),
 
-              const SizedBox(height: 32),
-              Row(
-                children: [
-                  Expanded(child: Divider(color: AppColors.bgElevated)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('or create with', style: AppTypography.caption),
-                  ),
-                  Expanded(child: Divider(color: AppColors.bgElevated)),
-                ],
-              ).animate().fadeIn(delay: 200.ms),
-              const SizedBox(height: 24),
+            // Lottie Golden Coins & Sparkle Background Animations
+            Positioned(
+              top: 20,
+              right: -30,
+              width: 240,
+              height: 240,
+              child: IgnorePointer(
+                child: Opacity(
+                  opacity: 0.45,
+                  child: Lottie.asset('assets/lottie/golden_coins.json', fit: BoxFit.contain),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 40,
+              left: -20,
+              width: 180,
+              height: 180,
+              child: IgnorePointer(
+                child: Opacity(
+                  opacity: 0.35,
+                  child: Lottie.asset('assets/lottie/sparkle_stars.json', fit: BoxFit.contain),
+                ),
+              ),
+            ),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: _SocialButton(
-                      icon: Icons.g_mobiledata_rounded,
-                      label: 'Google',
-                      onTap: _handleGoogleSignIn,
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Back button & header
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.08),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                            ),
+                            child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+                          ),
+                          onPressed: () => context.pop(),
+                        ),
+                        const SizedBox(width: 12),
+                        Text('Create Account', style: AppTypography.h2),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _SocialButton(
-                      icon: Icons.apple_rounded,
-                      label: 'Apple',
-                      onTap: _handleAppleSignIn,
+                    const SizedBox(height: 24),
+
+                    // 3D Glassmorphic Signup Form Card
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      transform: Matrix4.identity()
+                        ..setEntry(3, 2, 0.001)
+                        ..rotateX(_tiltX)
+                        ..rotateY(_tiltY),
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: AppColors.bgCard.withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.6),
+                            blurRadius: 30,
+                            offset: const Offset(0, 15),
+                          ),
+                          BoxShadow(
+                            color: AppColors.accentCyan.withValues(alpha: 0.15),
+                            blurRadius: 40,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accentCyan.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.person_add_rounded, color: AppColors.accentCyan, size: 22),
+                              ),
+                              const SizedBox(width: 12),
+                              Text('Join WallVault Community', style: AppTypography.h3.copyWith(fontSize: 16)),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text('Unlock free HD downloads, join the creator marketplace, and track your streaks.', style: AppTypography.caption),
+                          const SizedBox(height: 24),
+
+                          GlowInput(
+                            controller: _nameController,
+                            hintText: 'Full Name',
+                            prefixIcon: Icons.person_rounded,
+                          ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
+                          const SizedBox(height: 14),
+                          GlowInput(
+                            controller: _emailController,
+                            hintText: 'Email Address',
+                            prefixIcon: Icons.email_rounded,
+                            keyboardType: TextInputType.emailAddress,
+                          ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
+                          const SizedBox(height: 14),
+                          GlowInput(
+                            controller: _phoneController,
+                            hintText: 'Phone Number (optional)',
+                            prefixIcon: Icons.phone_rounded,
+                            keyboardType: TextInputType.phone,
+                          ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
+                          const SizedBox(height: 14),
+                          GlowInput(
+                            controller: _passwordController,
+                            hintText: 'Password',
+                            prefixIcon: Icons.lock_rounded,
+                            obscureText: true,
+                          ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1),
+                          const SizedBox(height: 24),
+
+                          GradientButton(
+                            label: 'Create Free Account',
+                            onPressed: _onCreateAccount,
+                            isLoading: _isLoading,
+                          ).animate().fadeIn(delay: 500.ms),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ).animate().fadeIn(delay: 300.ms),
-            ],
-          ),
+                    const SizedBox(height: 28),
+
+                    // Divider
+                    Row(
+                      children: [
+                        Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.1))),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text('OR CREATE WITH', style: AppTypography.caption.copyWith(fontSize: 10, fontWeight: FontWeight.bold)),
+                        ),
+                        Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.1))),
+                      ],
+                    ).animate().fadeIn(delay: 600.ms),
+                    const SizedBox(height: 20),
+
+                    // 3D Social Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _SocialButton(
+                            icon: Icons.g_mobiledata_rounded,
+                            label: 'Google',
+                            onTap: _handleGoogleSignIn,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _SocialButton(
+                            icon: Icons.apple_rounded,
+                            label: 'Apple',
+                            onTap: _handleAppleSignIn,
+                          ),
+                        ),
+                      ],
+                    ).animate().fadeIn(delay: 700.ms),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -271,7 +390,14 @@ class _SocialButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.bgCard,
           borderRadius: BorderRadius.circular(AppSpacing.radiusButton),
-          border: Border.all(color: AppColors.bgElevated),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
