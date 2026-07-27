@@ -21,32 +21,33 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _activeTab = 0;
-  final List<String> _tabs = ['For You', 'Trending', 'Nature', 'Anime', 'Abstract'];
-  
-  // Maps tab names directly to database query parameters
-  String? get _currentCategoryFilter {
-    if (_activeTab == 2) return 'nature';
-    if (_activeTab == 3) return 'anime';
-    if (_activeTab == 4) return 'abstract';
-    return null;
-  }
-
-  static const _categories = ['All', 'Anime', 'Abstract', 'Nature', 'Space', 'Cars', 'Cyberpunk', '3D', 'Dark', 'Minimalist'];
+  final List<String> _tabs = ['Trending'];
+  String _selectedCategory = 'All';
 
   @override
   Widget build(BuildContext context) {
-    // Read category parameter dynamically from active tab selection
-    final categoryFilter = _currentCategoryFilter;
+    // Dynamic categories from Firestore StreamProvider (includes Admin and Creator created categories)
+    final categoriesAsync = ref.watch(categoriesStreamProvider);
+    final categoriesList = categoriesAsync.value ?? [
+      'All', 'Anime', 'Abstract', 'Nature', 'Space', 'Cars', 'Cyberpunk', '3D', 'Dark', 'Minimalist'
+    ];
+
+    // Filter by selected category or fetch top trending wallpapers sorted by downloads
+    final categoryFilter = (_selectedCategory != 'All' && _selectedCategory != 'Trending')
+        ? _selectedCategory
+        : null;
+
     final AsyncValue<List<WallpaperModel>> wallpapersAsync = categoryFilter != null
         ? ref.watch(categoryWallpapersProvider(categoryFilter))
         : ref.watch(trendingWallpapersProvider);
+        
     final userAsync = ref.watch(userProfileProvider);
 
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: CustomScrollView(
         slivers: [
-          // ── Header Bar (S08: greeting, streak, search, profile avatar) ───────────────────
+          // ── Header Bar (greeting, streak, search, profile avatar) ───────────────────
           SliverAppBar(
             floating: true,
             backgroundColor: AppColors.bgPrimary,
@@ -123,7 +124,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
 
-          // ── Horizontal Tabs (S08: tab bar with morph purple indicator) ──────────────────
+          // ── Top Tab Bar (Trending filter tab) ──────────────────
           SliverToBoxAdapter(
             child: Container(
               height: 48,
@@ -135,25 +136,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 itemBuilder: (context, index) {
                   final isActive = _activeTab == index;
                   return GestureDetector(
-                    onTap: () => setState(() => _activeTab = index),
+                    onTap: () {
+                      setState(() {
+                        _activeTab = index;
+                        _selectedCategory = 'All';
+                      });
+                    },
                     child: Container(
                       margin: const EdgeInsets.only(right: 16),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            _tabs[index],
-                            style: TextStyle(
-                              color: isActive ? AppColors.textPrimary : AppColors.textMuted,
-                              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                              fontSize: 15,
-                            ),
+                          Row(
+                            children: [
+                              const Text('🔥 ', style: TextStyle(fontSize: 14)),
+                              Text(
+                                _tabs[index],
+                                style: TextStyle(
+                                  color: isActive ? AppColors.textPrimary : AppColors.textMuted,
+                                  fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 6),
                           // Indicator bar
                           Container(
                             height: 3,
-                            width: 30,
+                            width: 36,
                             decoration: BoxDecoration(
                               color: isActive ? AppColors.accentPurple : Colors.transparent,
                               borderRadius: BorderRadius.circular(2),
@@ -169,22 +180,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
-          // ── S08: Horizontal Featured Slides (from Firestore database collection query) ─────────
+          // ── Horizontal Featured Slides (Most Downloaded / Premium Highlights) ─────────
           SliverToBoxAdapter(
             child: wallpapersAsync.when(
               data: (wallpapers) {
                 final featured = wallpapers.where((w) => w.isPremium).toList();
-                if (featured.isEmpty) return const SizedBox.shrink();
+                final displayItems = featured.isNotEmpty ? featured : wallpapers.take(5).toList();
+                if (displayItems.isEmpty) return const SizedBox.shrink();
                 
                 return SizedBox(
                   height: 320,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                    itemCount: featured.length,
+                    itemCount: displayItems.length,
                     separatorBuilder: (_, __) => const SizedBox(width: 16),
                     itemBuilder: (context, index) {
-                      final item = featured[index];
+                      final item = displayItems[index];
                       return GestureDetector(
                         onTap: () => context.push(AppRoutes.wallpaperDetailPath(item.id)),
                         child: Container(
@@ -194,7 +206,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.4),
+                                color: Colors.black.withValues(alpha: 0.4),
                                 blurRadius: 16,
                                 offset: const Offset(0, 8),
                               )
@@ -226,12 +238,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: AppColors.accentGold,
+                                    color: item.isPremium ? AppColors.accentGold : AppColors.accentPurple,
                                     borderRadius: BorderRadius.circular(20),
                                   ),
-                                  child: const Text(
-                                    'PREMIUM',
-                                    style: TextStyle(
+                                  child: Text(
+                                    item.isPremium ? 'PREMIUM' : 'TRENDING',
+                                    style: const TextStyle(
                                       fontSize: 9,
                                       color: Colors.black,
                                       fontWeight: FontWeight.bold,
@@ -263,7 +275,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
-          // ── S08: Categories List (Liquid Glass Pill Design) ─────────────────────────────────
+          // ── Categories List (Dynamic Firestore Pills) ─────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.only(top: 24, bottom: 8),
@@ -276,7 +288,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Explore Categories', style: AppTypography.h3),
-                        Text('Swipe', style: TextStyle(fontSize: 11, color: AppColors.textMuted.withOpacity(0.7))),
+                        Text('Swipe', style: TextStyle(fontSize: 11, color: AppColors.textMuted.withValues(alpha: 0.7))),
                       ],
                     ),
                   ),
@@ -286,24 +298,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                      itemCount: _categories.length,
+                      itemCount: categoriesList.length,
                       separatorBuilder: (_, _) => const SizedBox(width: 10),
                       itemBuilder: (context, index) {
-                        final catName = _categories[index];
-                        final tabIndex = _tabs.indexWhere((t) => t.toLowerCase() == catName.toLowerCase());
-                        final isActive = (_activeTab == tabIndex) || (_activeTab == 0 && index == 0);
+                        final catName = categoriesList[index];
+                        final isActive = _selectedCategory.toLowerCase() == catName.toLowerCase();
 
                         return GestureDetector(
                           onTap: () {
-                            if (tabIndex != -1) {
-                              setState(() {
-                                _activeTab = tabIndex;
-                              });
-                            } else {
-                              setState(() {
-                                _activeTab = 0;
-                              });
-                            }
+                            setState(() {
+                              _selectedCategory = catName;
+                            });
                           },
                           child: AnimatedScale(
                             scale: isActive ? 1.05 : 1.0,
@@ -314,19 +319,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                               decoration: BoxDecoration(
                                 color: isActive
-                                    ? AppColors.accentPurple.withOpacity(0.28)
-                                    : Colors.white.withOpacity(0.04),
+                                    ? AppColors.accentPurple.withValues(alpha: 0.28)
+                                    : Colors.white.withValues(alpha: 0.04),
                                 borderRadius: BorderRadius.circular(30),
                                 border: Border.all(
                                   color: isActive
                                       ? AppColors.accentPurple
-                                      : Colors.white.withOpacity(0.12),
+                                      : Colors.white.withValues(alpha: 0.12),
                                   width: isActive ? 1.5 : 1.0,
                                 ),
                                 boxShadow: isActive
                                     ? [
                                         BoxShadow(
-                                          color: AppColors.accentPurple.withOpacity(0.4),
+                                          color: AppColors.accentPurple.withValues(alpha: 0.4),
                                           blurRadius: 16,
                                           spreadRadius: 1,
                                         ),
@@ -361,7 +366,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, 32, AppSpacing.screenPadding, 12),
               child: Row(
                 children: [
-                  Text(_activeTab == 0 ? 'Trending Wallpapers' : '${_tabs[_activeTab]} Wallpapers', style: AppTypography.h3),
+                  Text(
+                    (_selectedCategory == 'All' || _selectedCategory == 'Trending')
+                        ? 'Trending Wallpapers 🔥'
+                        : '$_selectedCategory Wallpapers',
+                    style: AppTypography.h3,
+                  ),
                   const Spacer(),
                   const Text('See all', style: TextStyle(fontSize: 12, color: AppColors.accentCyan)),
                 ],

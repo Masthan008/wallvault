@@ -99,7 +99,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
     ]).animate(
       CurvedAnimation(
         parent: _lockController,
-        curve: const Interval(0.4, 0.8, curve: Curves.easeOutBack),
+        curve: const Interval(0.4, 0.8, curve: Curves.easeInOut),
       ),
     );
 

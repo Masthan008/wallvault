@@ -116,6 +116,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
 
   void _triggerParticleBurst() {
     final rand = Random();
+    if (!mounted) return;
     setState(() {
       _burstTriggered = true;
       for (int i = 0; i < 40; i++) {
@@ -133,18 +134,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
     // Particle update animation loop
     Future.doWhile(() async {
       await Future.delayed(const Duration(milliseconds: 16));
-      if (!mounted) return false;
+      if (!mounted || !_burstTriggered) return false;
       setState(() {
         for (var p in _particles) {
           p.update();
         }
       });
-      return _burstTriggered;
+      return mounted && _burstTriggered;
     });
   }
 
   @override
   void dispose() {
+    _burstTriggered = false;
     _drawController.dispose();
     _fillController.dispose();
     _textController.dispose();

@@ -13,20 +13,33 @@ void main() async {
   try {
     await Firebase.initializeApp();
 
-    // Pass all uncaught fatal errors from the framework to Crashlytics
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    // Pass all uncaught fatal errors from the framework to Crashlytics if available
+    FlutterError.onError = (details) {
+      try {
+        FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+      } catch (e) {
+        FlutterError.presentError(details);
+      }
+    };
 
     // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework
     PlatformDispatcher.instance.onError = (error, stack) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      try {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      } catch (_) {}
       return true;
     };
 
     // Enable performance collection
-    await FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
+    try {
+      await FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
+    } catch (e) {
+      debugPrint("Firebase Performance init non-fatal note: $e");
+    }
   } catch (e) {
     debugPrint("Firebase initialization failed / unconfigured: $e");
   }
+
   runApp(
     const ProviderScope(
       child: WallVaultApp(),
