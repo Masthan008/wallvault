@@ -739,20 +739,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
   Widget _buildPage3() {
     return Stack(
       children: [
-        // ── Lottie Premium Crown Overlay ──
-        Positioned(
-          top: 60,
-          left: 0,
-          right: 0,
-          height: 300,
+        // ── Lottie Premium Crown Overlay Centered ──
+        Positioned.fill(
           child: IgnorePointer(
-            child: Opacity(
-              opacity: 0.45,
-              child: Lottie.asset(
-                'assets/lottie/premium_crown.json',
-                repeat: true,
-                animate: _currentPage == 2,
-                fit: BoxFit.contain,
+            child: Center(
+              child: Opacity(
+                opacity: 0.35,
+                child: Lottie.asset(
+                  'assets/lottie/premium_crown.json',
+                  repeat: true,
+                  animate: _currentPage == 2,
+                  fit: BoxFit.contain,
+                  width: 320,
+                  height: 320,
+                ),
               ),
             ),
           ),
@@ -766,122 +766,135 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
 
         Positioned.fill(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(
-                        fontSize: 34,
-                        fontWeight: FontWeight.w900,
-                        height: 1.15,
-                        color: Colors.white,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        style: const TextStyle(
+                          fontSize: 34,
+                          fontWeight: FontWeight.w900,
+                          height: 1.15,
+                          color: Colors.white,
+                        ),
+                        children: [
+                          const TextSpan(text: 'Go '),
+                          WidgetSpan(
+                            child: ShaderMask(
+                              shaderCallback: (bounds) => const LinearGradient(
+                                colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                              ).createShader(bounds),
+                              child: const Text(
+                                'Premium',
+                                style: TextStyle(
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Unlock exclusive wallpapers, remove ads, and support the community',
+                      style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.6), height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Spacer(),
+
+              // Golden Padlock with Key Turning Animation (Perfectly Centered)
+              Center(
+                child: AnimatedBuilder(
+                  animation: _lockController,
+                  builder: (context, child) {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        const TextSpan(text: 'Go '),
-                        WidgetSpan(
-                          child: ShaderMask(
-                            shaderCallback: (bounds) => const LinearGradient(
-                              colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                            ).createShader(bounds),
+                        Transform.scale(
+                          scale: _lockScaleAnimation.value,
+                          child: Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFFD700).withOpacity(0.6),
+                                  blurRadius: 40,
+                                  spreadRadius: 4,
+                                )
+                              ],
+                            ),
+                            child: Center(
+                              child: Transform.rotate(
+                                angle: _keyRotationAnimation.value,
+                                child: Icon(
+                                  _isLockOpen ? Icons.lock_open_rounded : Icons.lock_rounded,
+                                  size: 70,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 300),
+                          opacity: _isLockOpen ? 1.0 : 0.0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFD700).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: const Color(0xFFFFD700), width: 1.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFFD700).withOpacity(0.3),
+                                  blurRadius: 16,
+                                )
+                              ],
+                            ),
                             child: const Text(
-                              'Premium',
+                              '⭐ VIP Premium Unlocked ⭐',
                               style: TextStyle(
-                                fontSize: 34,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
+                                color: Color(0xFFFFD700),
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
                               ),
                             ),
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Unlock exclusive wallpapers, remove ads, and support the community',
-                    style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.6), height: 1.4),
-                  ),
-                ],
+                    );
+                  },
+                ),
               ),
-            ),
 
-            const Spacer(),
-
-            // Golden Padlock with Key Turning Animation
-            AnimatedBuilder(
-              animation: _lockController,
-              builder: (context, child) {
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Transform.scale(
-                      scale: _lockScaleAnimation.value,
-                      child: Container(
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                          ),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFFD700).withOpacity(0.6),
-                              blurRadius: 40,
-                              spreadRadius: 4,
-                            )
-                          ],
-                        ),
-                        child: Center(
-                          child: Transform.rotate(
-                            angle: _keyRotationAnimation.value,
-                            child: Icon(
-                              _isLockOpen ? Icons.lock_open_rounded : Icons.lock_rounded,
-                              size: 70,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    AnimatedOpacity(
-                      duration: const Duration(milliseconds: 300),
-                      opacity: _isLockOpen ? 1.0 : 0.0,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFD700).withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFFFD700)),
-                        ),
-                        child: const Text(
-                          '⭐ VIP Premium Unlocked ⭐',
-                          style: TextStyle(
-                            color: Color(0xFFFFD700),
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-
-            const Spacer(),
-          ],
+              const Spacer(),
+            ],
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   // Helper widget to construct phone frame card matching Attached UI
   Widget _buildPhoneCard(String imagePath, {required double width, required double height, bool isHero = false}) {
