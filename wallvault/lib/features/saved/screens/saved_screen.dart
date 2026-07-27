@@ -7,7 +7,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/router/routes.dart';
 import '../../../providers/wallpaper_provider.dart';
-import '../../../providers/auth_provider.dart';
+import '../../../core/widgets/app_cached_image.dart';
 
 /// S26 — Saved/Favorites screen.
 class SavedScreen extends ConsumerWidget {
@@ -53,15 +53,17 @@ class SavedScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: AppColors.bgCard,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-                    image: DecorationImage(
-                      image: item.imageUrl.startsWith('assets/')
-                          ? AssetImage(item.imageUrl) as ImageProvider
-                          : NetworkImage(item.imageUrl) as ImageProvider,
-                      fit: BoxFit.cover,
-                    ),
                   ),
-                  child: Stack(
-                    children: [
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: AppCachedImage(
+                            imageUrl: item.imageUrl,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(

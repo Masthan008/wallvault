@@ -11,6 +11,8 @@ import '../../../core/widgets/glow_input.dart';
 import '../../../core/router/routes.dart';
 import '../../../providers/wallpaper_provider.dart';
 
+import '../../../core/widgets/app_cached_image.dart';
+
 /// S11 — Search screen with real Firestore query filters.
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -198,44 +200,48 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             final w = filteredList[index];
                             final heights = [240.0, 290.0, 220.0, 270.0];
                             return GestureDetector(
-                              onTap: () => context.push(AppRoutes.wallpaperDetailPath('grid_$index')),
+                              onTap: () => context.push(AppRoutes.wallpaperDetailPath(w.id)),
                               child: Container(
                                 height: heights[index % heights.length],
                                 decoration: BoxDecoration(
                                   color: AppColors.bgCard,
                                   borderRadius: BorderRadius.circular(16),
-                                  image: DecorationImage(
-                                    image: AssetImage(w.imageUrl),
-                                    fit: BoxFit.cover,
-                                  ),
                                 ),
-                                child: Stack(
-                                  children: [
-                                    Positioned.fill(
-                                      child: Container(
-                                        decoration: const BoxDecoration(
-                                          borderRadius: BorderRadius.all(Radius.circular(16)),
-                                          gradient: LinearGradient(
-                                            colors: [Colors.transparent, Colors.black87],
-                                            begin: Alignment.center,
-                                            end: Alignment.bottomCenter,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Stack(
+                                    children: [
+                                      Positioned.fill(
+                                        child: AppCachedImage(
+                                          imageUrl: w.imageUrl,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      Positioned.fill(
+                                        child: Container(
+                                          decoration: const BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [Colors.transparent, Colors.black87],
+                                              begin: Alignment.center,
+                                              end: Alignment.bottomCenter,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                    Positioned(
-                                      bottom: 12,
-                                      left: 12,
-                                      right: 12,
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(w.name, style: AppTypography.h4),
-                                          Text('by ${w.creatorName}', style: AppTypography.creatorName.copyWith(fontSize: 10)),
-                                        ],
+                                      Positioned(
+                                        bottom: 12,
+                                        left: 12,
+                                        right: 12,
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(w.name, style: AppTypography.h4),
+                                            Text('by ${w.creatorName}', style: AppTypography.creatorName.copyWith(fontSize: 10)),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             );

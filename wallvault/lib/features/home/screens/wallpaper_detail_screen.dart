@@ -22,6 +22,7 @@ import '../../../providers/review_provider.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/services/razorpay_service.dart';
 import '../../../data/models/wallpaper_model.dart';
+import '../../../core/widgets/app_cached_image.dart';
 
 /// S09 — Wallpaper detail with full-screen preview, spring animation overlays, and animated morphing download CTA.
 class WallpaperDetailScreen extends ConsumerStatefulWidget {
@@ -191,9 +192,12 @@ class _WallpaperDetailScreenState extends ConsumerState<WallpaperDetailScreen> {
                       onTap: () {
                         setState(() => _isFullView = !_isFullView);
                       },
-                      child: imagePath.startsWith('assets/')
-                          ? Image.asset(imagePath, fit: BoxFit.cover)
-                          : Image.network(imagePath, fit: BoxFit.cover),
+                      child: AppCachedImage(
+                        imageUrl: imagePath,
+                        fit: BoxFit.cover,
+                        memCacheWidth: 1080,
+                        memCacheHeight: 1920,
+                      ),
                     ),
                   ),
 
