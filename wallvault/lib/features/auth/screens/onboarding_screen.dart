@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -246,22 +247,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
                   ),
 
                   // Skip Glass Pill Button
-                  GestureDetector(
-                    onTap: _completeOnboarding,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.06),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white.withOpacity(0.12)),
-                      ),
-                      child: const Text(
-                        'Skip',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.4,
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _completeOnboarding(),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.06),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white.withOpacity(0.12)),
+                        ),
+                        child: const Text(
+                          'Skip',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.4,
+                          ),
                         ),
                       ),
                     ),
@@ -317,83 +322,82 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
                   ),
                   const SizedBox(height: 24),
 
-                  // Swipe to explore interactive capsule slider / CTA Button
-                  GestureDetector(
-                    onTap: _nextPage,
-                    onHorizontalDragEnd: (details) {
-                      if (details.primaryVelocity != null && details.primaryVelocity! < 0) {
-                        _nextPage();
-                      }
-                    },
-                    child: Container(
-                      height: 64,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10091D).withOpacity(0.85),
-                        borderRadius: BorderRadius.circular(40),
-                        border: Border.all(
-                          color: _currentPage == 2
-                              ? const Color(0xFFFFD700).withOpacity(0.5)
-                              : const Color(0xFF3B1D5C).withOpacity(0.8),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
+                  // Next / Get Started CTA Button
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _nextPage(),
+                      borderRadius: BorderRadius.circular(40),
+                      child: Container(
+                        height: 64,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10091D).withOpacity(0.85),
+                          borderRadius: BorderRadius.circular(40),
+                          border: Border.all(
                             color: _currentPage == 2
-                                ? const Color(0xFFFFD700).withOpacity(0.2)
-                                : const Color(0xFF9D4EDD).withOpacity(0.15),
-                            blurRadius: 20,
-                            spreadRadius: 1,
-                          )
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          // Glowing Action Circle Button with Arrow
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: _currentPage == 2
-                                    ? [const Color(0xFFFFD700), const Color(0xFFFFA500)]
-                                    : [const Color(0xFF7B2CBF), const Color(0xFF9D4EDD)],
+                                ? const Color(0xFFFFD700).withOpacity(0.5)
+                                : const Color(0xFF3B1D5C).withOpacity(0.8),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _currentPage == 2
+                                  ? const Color(0xFFFFD700).withOpacity(0.2)
+                                  : const Color(0xFF9D4EDD).withOpacity(0.15),
+                              blurRadius: 20,
+                              spreadRadius: 1,
+                            )
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            // Glowing Action Circle Button with Arrow
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: _currentPage == 2
+                                      ? [const Color(0xFFFFD700), const Color(0xFFFFA500)]
+                                      : [const Color(0xFF7B2CBF), const Color(0xFF9D4EDD)],
+                                ),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: _currentPage == 2
+                                        ? const Color(0xFFFFD700).withOpacity(0.6)
+                                        : const Color(0xFF9D4EDD).withOpacity(0.6),
+                                    blurRadius: 12,
+                                    spreadRadius: 1,
+                                  )
+                                ],
                               ),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: _currentPage == 2
-                                      ? const Color(0xFFFFD700).withOpacity(0.6)
-                                      : const Color(0xFF9D4EDD).withOpacity(0.6),
-                                  blurRadius: 12,
-                                  spreadRadius: 1,
-                                )
-                              ],
+                              child: Icon(
+                                _currentPage == 2 ? Icons.rocket_launch_rounded : Icons.arrow_forward_rounded,
+                                color: _currentPage == 2 ? Colors.black : Colors.white,
+                                size: 22,
+                              ),
                             ),
-                            child: Icon(
-                              _currentPage == 2 ? Icons.rocket_launch_rounded : Icons.arrow_forward_rounded,
-                              color: _currentPage == 2 ? Colors.black : Colors.white,
-                              size: 22,
+                            const Spacer(),
+                            Text(
+                              _currentPage == 2 ? 'Get Started' : 'Next',
+                              style: TextStyle(
+                                color: _currentPage == 2 ? const Color(0xFFFFD700) : Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.3,
+                              ),
                             ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            _currentPage == 2 ? 'Get Started' : 'Swipe to explore',
-                            style: TextStyle(
-                              color: _currentPage == 2 ? const Color(0xFFFFD700) : Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.3,
+                            const Spacer(),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              color: _currentPage == 2 ? const Color(0xFFFFD700) : const Color(0xFF9D4EDD),
+                              size: 20,
                             ),
-                          ),
-                          const Spacer(),
-                          Icon(
-                            Icons.arrow_forward_rounded,
-                            color: _currentPage == 2 ? const Color(0xFFFFD700) : const Color(0xFF9D4EDD),
-                            size: 20,
-                          ),
-                          const SizedBox(width: 16),
-                        ],
+                            const SizedBox(width: 16),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -408,132 +412,156 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
 
   // ── SLIDE 1 (S02): Discover Stunning Walls with Parallax 3D Tilt ───────────────
   Widget _buildPage1() {
-    return Column(
+    return Stack(
       children: [
-        const SizedBox(height: 12),
+        // ── Lottie Sparkle Stars Background Overlay ──
+        Positioned(
+          top: 20,
+          left: 0,
+          right: 0,
+          height: 300,
+          child: IgnorePointer(
+            child: Opacity(
+              opacity: 0.6,
+              child: Lottie.asset(
+                'assets/lottie/sparkle_stars.json',
+                repeat: true,
+                animate: _currentPage == 0,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
 
-        // Floating Header Text
-        AnimatedBuilder(
-          animation: _floatAnimation,
-          builder: (context, child) {
-            return Transform.translate(
-              offset: Offset(0, _floatAnimation.value),
-              child: child,
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 34,
-                      fontWeight: FontWeight.w900,
-                      height: 1.15,
-                      color: Colors.white,
-                    ),
-                    children: [
-                      const TextSpan(text: 'Discover\nStunning '),
-                      WidgetSpan(
-                        child: ShaderMask(
-                          shaderCallback: (bounds) => const LinearGradient(
-                            colors: [Color(0xFFD8B4FE), Color(0xFFC77DFF), Color(0xFF9D4EDD)],
-                          ).createShader(bounds),
-                          child: const Text(
-                            'Walls',
-                            style: TextStyle(
-                              fontSize: 34,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
+            // Floating Header Text
+            AnimatedBuilder(
+              animation: _floatAnimation,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(0, _floatAnimation.value),
+                  child: child,
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 34,
+                          fontWeight: FontWeight.w900,
+                          height: 1.15,
+                          color: Colors.white,
+                        ),
+                        children: [
+                          const TextSpan(text: 'Discover\nStunning '),
+                          WidgetSpan(
+                            child: ShaderMask(
+                              shaderCallback: (bounds) => const LinearGradient(
+                                colors: [Color(0xFFD8B4FE), Color(0xFFC77DFF), Color(0xFF9D4EDD)],
+                              ).createShader(bounds),
+                              child: const Text(
+                                'Walls',
+                                style: TextStyle(
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Tilt phone to parallax wallpapers',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.6),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const Spacer(),
+
+            // 3D Floating Parallax Tilt Phone Cards
+            AnimatedBuilder(
+              animation: _parallaxAnimation,
+              builder: (context, child) {
+                final pVal = _parallaxAnimation.value;
+                return SizedBox(
+                  height: 380,
+                  width: double.infinity,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    children: [
+                      // LEFT PERSPECTIVE CARD (Tilted Left + Parallax Motion)
+                      Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.identity()
+                          ..setEntry(3, 2, 0.002)
+                          ..rotateY(-0.30 + pVal * 0.5)
+                          ..rotateZ(-0.05 + pVal * 0.2)
+                          ..translate(-115.0 + (pVal * 15), 30.0 + (pVal * 10), -10.0),
+                        child: _buildPhoneCard(
+                          'assets/images/prebuilt_03.png',
+                          width: 145,
+                          height: 270,
+                        ),
+                      ),
+
+                      // RIGHT PERSPECTIVE CARD (Tilted Right + Parallax Motion)
+                      Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.identity()
+                          ..setEntry(3, 2, 0.002)
+                          ..rotateY(0.30 - pVal * 0.5)
+                          ..rotateZ(0.05 - pVal * 0.2)
+                          ..translate(115.0 - (pVal * 15), 40.0 - (pVal * 10), -10.0),
+                        child: _buildPhoneCard(
+                          'assets/images/prebuilt_20.png',
+                          width: 145,
+                          height: 270,
+                        ),
+                      ),
+
+                      // CENTER HERO CARD (PREBUILT_34.PNG)
+                      Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.identity()
+                          ..setEntry(3, 2, 0.002)
+                          ..rotateX(0.04 + pVal * 0.3)
+                          ..translate(0.0, -15.0 + (pVal * 8), 30.0),
+                        child: _buildPhoneCard(
+                          'assets/images/prebuilt_34.png',
+                          width: 185,
+                          height: 340,
+                          isHero: true,
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Explore thousands of 4K wallpapers\ncurated just for you',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.6),
-                    height: 1.4,
-                  ),
-                ),
-              ],
+                );
+              },
             ),
+
+              const Spacer(),
+            ],
           ),
         ),
-
-        const Spacer(),
-
-        // 3D Floating Parallax Tilt Phone Cards
-        AnimatedBuilder(
-          animation: _parallaxAnimation,
-          builder: (context, child) {
-            final pVal = _parallaxAnimation.value;
-            return SizedBox(
-              height: 380,
-              width: double.infinity,
-              child: Stack(
-                alignment: Alignment.center,
-                clipBehavior: Clip.none,
-                children: [
-                  // LEFT PERSPECTIVE CARD (Tilted Left + Parallax Motion)
-                  Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()
-                      ..setEntry(3, 2, 0.002)
-                      ..rotateY(-0.30 + pVal * 0.5)
-                      ..rotateZ(-0.05 + pVal * 0.2)
-                      ..translate(-115.0 + (pVal * 15), 30.0 + (pVal * 10), -10.0),
-                    child: _buildPhoneCard(
-                      'assets/images/prebuilt_03.png',
-                      width: 145,
-                      height: 270,
-                    ),
-                  ),
-
-                  // RIGHT PERSPECTIVE CARD (Tilted Right + Parallax Motion)
-                  Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()
-                      ..setEntry(3, 2, 0.002)
-                      ..rotateY(0.30 - pVal * 0.5)
-                      ..rotateZ(0.05 - pVal * 0.2)
-                      ..translate(115.0 - (pVal * 15), 40.0 - (pVal * 10), -10.0),
-                    child: _buildPhoneCard(
-                      'assets/images/prebuilt_20.png',
-                      width: 145,
-                      height: 270,
-                    ),
-                  ),
-
-                  // CENTER HERO CARD (PREBUILT_34.PNG)
-                  Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()
-                      ..setEntry(3, 2, 0.002)
-                      ..rotateX(0.04 + pVal * 0.3)
-                      ..translate(0.0, -15.0 + (pVal * 8), 30.0),
-                    child: _buildPhoneCard(
-                      'assets/images/prebuilt_34.png',
-                      width: 185,
-                      height: 340,
-                      isHero: true,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-
-        const Spacer(),
       ],
     );
   }
@@ -557,9 +585,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
           ),
         ),
 
-        Column(
-          children: [
-            const SizedBox(height: 12),
+        // ── Lottie Golden Coins Overlay ──
+        Positioned(
+          top: 40,
+          left: 0,
+          right: 0,
+          height: 350,
+          child: IgnorePointer(
+            child: Opacity(
+              opacity: 0.5,
+              child: Lottie.asset(
+                'assets/lottie/golden_coins.json',
+                repeat: true,
+                animate: _currentPage == 1,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ),
+
+        Positioned.fill(
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
@@ -679,8 +727,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
               },
             ),
 
-            const Spacer(),
-          ],
+              const Spacer(),
+            ],
+          ),
         ),
       ],
     );
@@ -690,15 +739,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
   Widget _buildPage3() {
     return Stack(
       children: [
+        // ── Lottie Premium Crown Overlay ──
+        Positioned(
+          top: 60,
+          left: 0,
+          right: 0,
+          height: 300,
+          child: IgnorePointer(
+            child: Opacity(
+              opacity: 0.45,
+              child: Lottie.asset(
+                'assets/lottie/premium_crown.json',
+                repeat: true,
+                animate: _currentPage == 2,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ),
+
         // Confetti particles overlay
         if (_isLockOpen)
           Positioned.fill(
             child: _ConfettiPainterWidget(particles: _confettiParticles),
           ),
 
-        Column(
-          children: [
-            const SizedBox(height: 12),
+        Positioned.fill(
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
@@ -809,9 +878,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
             const Spacer(),
           ],
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   // Helper widget to construct phone frame card matching Attached UI
   Widget _buildPhoneCard(String imagePath, {required double width, required double height, bool isHero = false}) {
