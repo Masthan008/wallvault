@@ -24,13 +24,20 @@ import '../../../data/services/razorpay_service.dart';
 import '../../../data/models/wallpaper_model.dart';
 
 /// S09 — Wallpaper detail with full-screen preview, spring animation overlays, and animated morphing download CTA.
-class WallpaperDetailScreen extends ConsumerWidget {
+class WallpaperDetailScreen extends ConsumerStatefulWidget {
   final String wallpaperId;
   const WallpaperDetailScreen({super.key, required this.wallpaperId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final wallpaperAsync = ref.watch(wallpaperDetailProvider(wallpaperId));
+  ConsumerState<WallpaperDetailScreen> createState() => _WallpaperDetailScreenState();
+}
+
+class _WallpaperDetailScreenState extends ConsumerState<WallpaperDetailScreen> {
+  bool _isFullView = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final wallpaperAsync = ref.watch(wallpaperDetailProvider(widget.wallpaperId));
     final userAsync = ref.watch(userProfileProvider);
 
     return wallpaperAsync.when(
@@ -68,232 +75,303 @@ class WallpaperDetailScreen extends ConsumerWidget {
             body: Center(child: Text('Error: $err', style: const TextStyle(color: Colors.white))),
           ),
           data: (user) {
-            final isSaved = user?.favorites.contains(wallpaperId) ?? false;
+            final isSaved = user?.favorites.contains(widget.wallpaperId) ?? false;
 
             return Scaffold(
               backgroundColor: AppColors.bgPrimary,
               extendBodyBehindAppBar: true,
-              appBar: AppBar(
-                backgroundColor: Colors.transparent,
-                leading: IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.4),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.arrow_back_rounded,
-                        color: Colors.white, size: 20),
-                  ),
-                  onPressed: () => context.pop(),
-                ),
-                actions: [
-                  IconButton(
-                    icon: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.4),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.share_rounded,
-                          color: Colors.white, size: 20),
-                    ),
-                    onPressed: () {
-                      Share.share('Check out this amazing wallpaper: ${wallpaper.name} on WallVault!\n\n${wallpaper.imageUrl}');
-                    },
-                  ),
-                  IconButton(
-                    icon: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.4),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                        color: isSaved ? AppColors.accentPurple : Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    onPressed: () {
-                      if (user != null) {
-                        final userRepo = ref.read(userRepositoryProvider);
-                        final wallpaperRepo = ref.read(wallpaperRepositoryProvider);
-                        final updatedFavorites = List<String>.from(user.favorites);
-                        final willBeSaved = !isSaved;
-
-                        if (isSaved) {
-                          updatedFavorites.remove(wallpaperId);
-                        } else {
-                          updatedFavorites.add(wallpaperId);
-                        }
-
-                        // Immediate feedback Toast
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              willBeSaved ? 'Saved to collection ❤️' : 'Removed from Saved',
-                            ),
-                            duration: const Duration(seconds: 1),
+              appBar: _isFullView
+                  ? null
+                  : AppBar(
+                      backgroundColor: Colors.transparent,
+                      leading: IconButton(
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.4),
+                            shape: BoxShape.circle,
                           ),
-                        );
+                          child: const Icon(Icons.arrow_back_rounded,
+                              color: Colors.white, size: 20),
+                        ),
+                        onPressed: () => context.pop(),
+                      ),
+                      actions: [
+                        // Toggle Full View Clean Wallpaper Mode
+                        IconButton(
+                          tooltip: 'Toggle Clean Image View',
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              _isFullView ? Icons.visibility_off_rounded : Icons.remove_red_eye_rounded,
+                              color: AppColors.accentCyan,
+                              size: 20,
+                            ),
+                          ),
+                          onPressed: () {
+                            setState(() => _isFullView = !_isFullView);
+                          },
+                        ),
+                        IconButton(
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.share_rounded,
+                                color: Colors.white, size: 20),
+                          ),
+                          onPressed: () {
+                            Share.share('Check out this amazing wallpaper: ${wallpaper.name} on WallVault!\n\n${wallpaper.imageUrl}');
+                          },
+                        ),
+                        IconButton(
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isSaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                              color: isSaved ? AppColors.accentPurple : Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          onPressed: () {
+                            if (user != null) {
+                              final userRepo = ref.read(userRepositoryProvider);
+                              final wallpaperRepo = ref.read(wallpaperRepositoryProvider);
+                              final updatedFavorites = List<String>.from(user.favorites);
+                              final willBeSaved = !isSaved;
 
-                        // Fire and forget asynchronous background updates
-                        Future.microtask(() async {
-                          if (isSaved) {
-                            await wallpaperRepo.decrementLikes(wallpaperId);
-                          } else {
-                            await wallpaperRepo.incrementLikes(wallpaperId);
-                          }
-                          await userRepo.updateUser(user.uid, {'favorites': updatedFavorites});
-                          ref.invalidate(userProfileProvider);
-                          ref.invalidate(savedWallpapersProvider);
-                          ref.invalidate(wallpaperDetailProvider(wallpaperId));
-                        });
-                      }
-                    },
-                  ),
-                ],
-              ),
+                              if (isSaved) {
+                                updatedFavorites.remove(widget.wallpaperId);
+                              } else {
+                                updatedFavorites.add(widget.wallpaperId);
+                              }
+
+                              // Immediate feedback Toast
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    willBeSaved ? 'Saved to collection ❤️' : 'Removed from Saved',
+                                  ),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+
+                              // Fire and forget asynchronous background updates
+                              Future.microtask(() async {
+                                if (isSaved) {
+                                  await wallpaperRepo.decrementLikes(widget.wallpaperId);
+                                } else {
+                                  await wallpaperRepo.incrementLikes(widget.wallpaperId);
+                                }
+                                await userRepo.updateUser(user.uid, {'favorites': updatedFavorites});
+                                ref.invalidate(userProfileProvider);
+                                ref.invalidate(savedWallpapersProvider);
+                                ref.invalidate(wallpaperDetailProvider(widget.wallpaperId));
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
               body: Stack(
                 children: [
-                  // Full-screen image preview
+                  // Full-screen image preview (Tap to toggle full clean mode)
                   Positioned.fill(
-                    child: imagePath.startsWith('assets/')
-                        ? Image.asset(imagePath, fit: BoxFit.cover)
-                        : Image.network(imagePath, fit: BoxFit.cover),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _isFullView = !_isFullView);
+                      },
+                      child: imagePath.startsWith('assets/')
+                          ? Image.asset(imagePath, fit: BoxFit.cover)
+                          : Image.network(imagePath, fit: BoxFit.cover),
+                    ),
                   ),
 
                   // Scrollable Content Overlay with Glassmorphic Bottom Card
                   Positioned.fill(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        children: [
-                          // Top transparent spacer allowing full wallpaper preview
-                          SizedBox(height: MediaQuery.of(context).size.height * 0.45),
+                    child: IgnorePointer(
+                      ignoring: _isFullView,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 250),
+                        opacity: _isFullView ? 0.0 : 1.0,
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            children: [
+                              // Top transparent spacer allowing 60% full wallpaper preview
+                              SizedBox(height: MediaQuery.of(context).size.height * 0.58),
 
-                          // Main Details & Reviews Container
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.screenPadding,
-                              vertical: 24,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.bgPrimary.withValues(alpha: 0.95),
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.6),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, -6),
-                                )
-                              ],
-                            ),
-                            child: SafeArea(
-                              top: false,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(wallpaper.name, style: AppTypography.h2),
-                                  const SizedBox(height: 4),
-                                  GestureDetector(
-                                    onTap: () {
-                                      context.push(AppRoutes.creatorProfilePath(wallpaper.creatorId));
-                                    },
-                                    child: Row(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 11,
-                                          backgroundColor: AppColors.bgElevated,
-                                          backgroundImage: wallpaper.creatorAvatarUrl.isNotEmpty
-                                              ? NetworkImage(wallpaper.creatorAvatarUrl)
-                                              : null,
-                                          child: wallpaper.creatorAvatarUrl.isEmpty
-                                              ? Text(
-                                                  wallpaper.creatorName.isNotEmpty ? wallpaper.creatorName[0].toUpperCase() : 'C',
-                                                  style: const TextStyle(fontSize: 10, color: Colors.white),
-                                                )
-                                              : null,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Flexible(
-                                          child: Text(
-                                            'by ${wallpaper.creatorName}',
-                                            style: AppTypography.creatorName.copyWith(
-                                              decoration: TextDecoration.underline,
-                                              decorationColor: AppColors.accentCyan,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        if (wallpaper.isCreatorVerified) ...[
-                                          const SizedBox(width: 4),
-                                          const Icon(Icons.verified_rounded, color: AppColors.accentCyan, size: 14),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Row(
+                              // Main Details & Reviews Container
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.screenPadding,
+                                  vertical: 24,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.bgPrimary.withValues(alpha: 0.95),
+                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.6),
+                                      blurRadius: 24,
+                                      offset: const Offset(0, -6),
+                                    )
+                                  ],
+                                ),
+                                child: SafeArea(
+                                  top: false,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      _InfoChip(Icons.photo_size_select_actual_rounded, wallpaper.resolution),
-                                      const SizedBox(width: 8),
-                                      _InfoChip(Icons.aspect_ratio_rounded, '9:16'),
-                                      const SizedBox(width: 8),
-                                      _InfoChip(Icons.download_rounded, '${wallpaper.downloads}'),
-                                      const SizedBox(width: 8),
+                                      Text(wallpaper.name, style: AppTypography.h2),
+                                      const SizedBox(height: 4),
                                       GestureDetector(
                                         onTap: () {
-                                          if (user != null) {
-                                            _showRatingDialog(context, ref, wallpaper);
-                                          } else {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(content: Text('Please log in to rate wallpapers')),
-                                            );
-                                          }
+                                          context.push(AppRoutes.creatorProfilePath(wallpaper.creatorId));
                                         },
-                                        child: _InfoChip(Icons.star_rounded, '${wallpaper.rating.toStringAsFixed(1)} (${wallpaper.ratingCount})'),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 20),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: GradientButton(
-                                          label: 'Apply Wallpaper',
-                                          icon: Icons.wallpaper_rounded,
-                                          onPressed: () {
-                                            showModalBottomSheet(
-                                              context: context,
-                                              isScrollControlled: true,
-                                              builder: (context) => ApplyWallpaperSheet(
-                                                wallpaperId: wallpaperId,
-                                                imageUrl: wallpaper.imageUrl,
+                                        child: Row(
+                                          children: [
+                                            CircleAvatar(
+                                              radius: 11,
+                                              backgroundColor: AppColors.bgElevated,
+                                              backgroundImage: wallpaper.creatorAvatarUrl.isNotEmpty
+                                                  ? NetworkImage(wallpaper.creatorAvatarUrl)
+                                                  : null,
+                                              child: wallpaper.creatorAvatarUrl.isEmpty
+                                                  ? Text(
+                                                      wallpaper.creatorName.isNotEmpty ? wallpaper.creatorName[0].toUpperCase() : 'C',
+                                                      style: const TextStyle(fontSize: 10, color: Colors.white),
+                                                    )
+                                                  : null,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Flexible(
+                                              child: Text(
+                                                'by ${wallpaper.creatorName}',
+                                                style: AppTypography.creatorName.copyWith(
+                                                  decoration: TextDecoration.underline,
+                                                  decorationColor: AppColors.accentCyan,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                            );
-                                          },
+                                            ),
+                                            if (wallpaper.isCreatorVerified) ...[
+                                              const SizedBox(width: 4),
+                                              const Icon(Icons.verified_rounded, color: AppColors.accentCyan, size: 14),
+                                            ],
+                                          ],
                                         ),
                                       ),
-                                      const SizedBox(width: 12),
-                                      AnimatedDownloadButton(
-                                        wallpaper: wallpaper,
+                                      const SizedBox(height: 12),
+                                      Row(
+                                        children: [
+                                          _InfoChip(Icons.photo_size_select_actual_rounded, wallpaper.resolution),
+                                          const SizedBox(width: 8),
+                                          _InfoChip(Icons.aspect_ratio_rounded, '9:16'),
+                                          const SizedBox(width: 8),
+                                          _InfoChip(Icons.download_rounded, '${wallpaper.downloads}'),
+                                          const SizedBox(width: 8),
+                                          GestureDetector(
+                                            onTap: () {
+                                              if (user != null) {
+                                                _showRatingDialog(context, ref, wallpaper);
+                                              } else {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('Please log in to rate wallpapers')),
+                                                );
+                                              }
+                                            },
+                                            child: _InfoChip(Icons.star_rounded, '${wallpaper.rating.toStringAsFixed(1)} (${wallpaper.ratingCount})'),
+                                          ),
+                                        ],
                                       ),
+                                      const SizedBox(height: 20),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: GradientButton(
+                                              label: 'Apply Wallpaper',
+                                              icon: Icons.wallpaper_rounded,
+                                              onPressed: () {
+                                                showModalBottomSheet(
+                                                  context: context,
+                                                  isScrollControlled: true,
+                                                  builder: (context) => ApplyWallpaperSheet(
+                                                    wallpaperId: widget.wallpaperId,
+                                                    imageUrl: wallpaper.imageUrl,
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          AnimatedDownloadButton(
+                                            wallpaper: wallpaper,
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 28),
+                                      WallpaperReviewsSection(wallpaperId: widget.wallpaperId),
                                     ],
                                   ),
-                                  const SizedBox(height: 28),
-                                  WallpaperReviewsSection(wallpaperId: wallpaperId),
-                                ],
+                                ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
+
+                  // Floating Clean View Indicator Pill (Visible when in full clean mode)
+                  if (_isFullView)
+                    Positioned(
+                      bottom: 36,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _isFullView = false),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.75),
+                              borderRadius: BorderRadius.circular(25),
+                              border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.5), width: 1.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.6),
+                                  blurRadius: 20,
+                                )
+                              ],
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.remove_red_eye_rounded, color: AppColors.accentCyan, size: 18),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Clean View Mode — Tap to restore details',
+                                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             );
@@ -781,6 +859,7 @@ class _WallpaperReviewsSectionState extends ConsumerState<WallpaperReviewsSectio
   int _selectedRating = 5;
   String? _replyingToId;
   bool _isSubmitting = false;
+  bool _isExpanded = true;
 
   @override
   void dispose() {
@@ -856,14 +935,46 @@ class _WallpaperReviewsSectionState extends ConsumerState<WallpaperReviewsSectio
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Icon(Icons.rate_review_rounded, color: AppColors.accentPurple, size: 20),
-            const SizedBox(width: 8),
-            Text('Reviews & Comments', style: AppTypography.h3),
-          ],
+        GestureDetector(
+          onTap: () => setState(() => _isExpanded = !_isExpanded),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.rate_review_rounded, color: AppColors.accentPurple, size: 20),
+                  const SizedBox(width: 8),
+                  Text('Reviews & Comments', style: AppTypography.h3),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.bgElevated,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      _isExpanded ? 'Collapse' : 'Expand',
+                      style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                      color: Colors.white70,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
+
+        if (_isExpanded) ...[
 
         // Review Input Form
         Container(
@@ -1091,6 +1202,7 @@ class _WallpaperReviewsSectionState extends ConsumerState<WallpaperReviewsSectio
           },
         ),
       ],
+    ],
     );
   }
 
