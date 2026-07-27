@@ -7,7 +7,9 @@ class UserModel {
   final String email;
   final String displayName;
   final String avatarUrl;
+  final String bio;
   final bool isCreator;
+  final bool isCreatorVerified;
   final String creatorStatus; // pending | approved | rejected
   final SubscriptionInfo subscription;
   final StreakInfo streak;
