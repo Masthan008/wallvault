@@ -7,6 +7,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/router/routes.dart';
 import '../../../providers/wallpaper_provider.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../core/widgets/app_cached_image.dart';
 
 /// S26 — Saved/Favorites screen.
@@ -64,63 +65,64 @@ class SavedScreen extends ConsumerWidget {
                             fit: BoxFit.cover,
                           ),
                         ),
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-                            gradient: const LinearGradient(
-                              colors: [Colors.transparent, Colors.black87],
-                              begin: Alignment.center,
-                              end: Alignment.bottomCenter,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: GestureDetector(
-                          onTap: () async {
-                            if (user != null) {
-                              final updatedFavorites = List<String>.from(user.favorites)
-                                ..remove(item.id);
-                              await userRepo.updateUser(user.uid, {'favorites': updatedFavorites});
-                              ref.invalidate(userProfileProvider);
-                              ref.invalidate(savedWallpapersProvider);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Removed from Saved')),
-                              );
-                            }
-                          },
+                        Positioned.fill(
                           child: Container(
-                            padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.favorite_rounded,
-                              color: AppColors.accentPurple,
-                              size: 16,
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
+                              gradient: const LinearGradient(
+                                colors: [Colors.transparent, Colors.black87],
+                                begin: Alignment.center,
+                                end: Alignment.bottomCenter,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      Positioned(
-                        left: 12,
-                        right: 12,
-                        bottom: 12,
-                        child: Text(
-                          item.name,
-                          style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: GestureDetector(
+                            onTap: () async {
+                              if (user != null) {
+                                final updatedFavorites = List<String>.from(user.favorites)
+                                  ..remove(item.id);
+                                await userRepo.updateUser(user.uid, {'favorites': updatedFavorites});
+                                ref.invalidate(userProfileProvider);
+                                ref.invalidate(savedWallpapersProvider);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Removed from Saved')),
+                                );
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.favorite_rounded,
+                                color: AppColors.accentPurple,
+                                size: 16,
+                              ),
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
+                        Positioned(
+                          left: 12,
+                          right: 12,
+                          bottom: 12,
+                          child: Text(
+                            item.name,
+                            style: AppTypography.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
