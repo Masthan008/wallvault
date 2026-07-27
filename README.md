@@ -20,10 +20,10 @@
 
 ## 📌 Executive Summary
 
-**WallVault** is a full-stack, enterprise-grade wallpaper platform featuring a cross-platform mobile experience for iOS/Android and a high-performance web dashboard for Creators and Platform Administrators. Designed with modern CRED-inspired liquid glass aesthetics, WallVault empowers creators to monetize high-resolution wallpapers, track real-time analytics, bulk-upload collections, and manage earnings while delivering a smooth 60fps experience for end users.
+**WallVault** is a full-stack, enterprise-grade wallpaper platform featuring a cross-platform mobile experience for iOS/Android and a high-performance web dashboard for Creators and Platform Administrators. Designed with modern CRED-inspired liquid glass aesthetics, WallVault empowers creators to monetize high-resolution wallpapers, track real-time analytics, bulk-upload collections, manage reviews, and customize categories while delivering a smooth 120fps experience for end users.
 
 > [!NOTE]
-> **Key Highlight**: Built with custom **Liquid Glass UI**, 3D Parallax tilt onboarding, real-time Firebase telemetry (Analytics, Crashlytics, Performance Monitoring), Razorpay integration, and automated creator payout pipelines.
+> **Key Highlight**: Built with custom **Liquid Glass UI**, `nav_bar: ^0.1.1` liquid navigation engine, live phone OS mockup previewer, real-time reviews & nested replies, 3D Parallax tilt onboarding, real-time Firebase telemetry (Analytics, Crashlytics, Performance Monitoring), Razorpay integration, and automated creator payout pipelines.
 
 ---
 
@@ -39,10 +39,12 @@ graph TD
     
     subgraph Web Portals
         B1[🎨 Creator Hub]
-        B2[🛡️ Admin Control Center]
+        B2[🛡️ Admin Control Center & Moderation]
+        B3[🗂️ Categories & Reviews Management]
     end
     B --> B1
     B --> B2
+    B --> B3
 ```
 
 ---
@@ -50,25 +52,30 @@ graph TD
 ## ✨ Key Features & Capabilities
 
 ### 📱 1. Mobile App (Flutter)
-- **Liquid Glass Categories**: Pill-shaped translucent glass filters with smooth glowing border states.
-- **3D Parallax Onboarding**: 3-slide interactive tutorial featuring 3D phone tilt, staggered creator avatar pop-ins, coin rain, golden key-turn lock opening animation, and confetti bursts.
+- **🚀 Futuristic `nav_bar: ^0.1.1` Liquid Navigation Engine**: Skia/Impeller low-level rendering with liquid ripple physics, neon glow accents, magnetic icon animations, and fluid transitions.
+- **📲 Live Phone OS Mockup & Preview Engine**: Real wallpaper preview inside phone screen frames. Features an interactive **Live Mockup Preview** overlay simulating:
+  - **Lock Screen**: Real status bar, date banner, `09:41` lock clock, torch/camera quick buttons over the wallpaper.
+  - **Home Screen**: Status bar, 4x2 app launcher icon grid, and glassmorphic bottom dock.
+- **👤 Public Creator Profile Screen**: Tapping on any creator avatar opens their public creator card displaying total wallpapers count, combined downloads, active category badges, public bio, verification badge, and public wallpapers grid (**Zero private details exposed**).
+- **💬 Real-Time Reviews, Ratings & Nested Replies**: 5-star interactive rating system, written reviews, and threaded/nested replies synced in real time via Firestore streams.
+- **🔥 Dynamic Trending Feed**: Backend query featuring top downloaded wallpapers (`orderBy('downloads', descending: true)`).
+- **Liquid Glass Categories**: Pill-shaped translucent glass filters with real-time Firestore category sync.
+- **3D Parallax Onboarding**: Interactive tutorial featuring 3D phone tilt, creator avatar pop-ins, coin rain, golden key-turn lock opening animation, and confetti bursts.
 - **Creator Gamification**: Leveling, XP progress bars, daily streak counters, and reward metrics displayed exclusively for registered creators.
-- **Dynamic Pricing Engine**: Creators set custom pricing for individual wallpapers (Free vs Premium INR pricing).
-- **Interactive Glassmorphic Rating System**: Visual star ratings with dynamic verbal feedback labels ("Masterpiece!", "Stunning!").
-- **Live Wallpaper Telemetry**: Firebase Performance Monitoring and Crashlytics pre-configured for automated runtime telemetry.
-- **Seamless Downloads**: One-tap background asset saving, download counting, and offline preference caching.
 
 ### 🎨 2. Creator Hub Web Portal (Next.js)
-- **Bulk Asset Uploading**: Process up to **100 wallpapers simultaneously** with Cloudinary direct integration, progress bars, and container cleanup.
+- **⚙️ Public/Private Profile Controls**: Toggle settings allowing creators to enable/disable public profile visibility and show/hide bio text in the mobile application.
+- **Bulk Asset Uploading**: Process up to **100 wallpapers simultaneously** with Cloudinary direct integration, progress bars, and automatic container cleanup upon completion.
 - **Real-Time Analytics Dashboard**: Real Firebase data visualization including daily download counts, monthly revenue graphs (70/30 creator revenue split), category distribution pie charts, and date range filters (7d, 30d, All time).
 - **Asset Management**: Edit wallpaper titles, categories, pricing mode (Free vs Premium), and replace preview images live.
 - **Payout Management**: Request earnings withdrawals to UPI or Bank accounts with real-time status tracking.
-- **Profile Synchronization**: Update creator avatar and display name across Web, App, and Admin consoles instantaneously.
 
-### 🛡️ 3. Admin Control Center (Next.js)
-- **Real-time Submission Moderation**: One-click approval/rejection queue for pending creator uploads with preview inspection.
+### 🛡️ 3. Admin Control Center & Moderation (Next.js)
+- **🗂️ Category & Sub-Category Management (`/admin/categories`)**: Create new categories (Name, Description, Color Accent, Sub-Categories) and add sub-categories (e.g. `Arabic Qalb` → `Calligraphy`; `Anime` → `Cyberpunk Anime`).
+  - **Real-Time App Sync**: Additions and deletions automatically update the Mobile App (`home_screen.dart`) and Creator Hub in real time.
+- **💬 Review & Comment Moderation (`/admin/reviews`)**: Monitor all platform reviews and comments in real time with search filters. Admins can delete misbehaving reviews, which immediately removes them from the platform and mobile app.
+- **Submission Moderation Queue**: One-click approval/rejection queue for pending creator uploads with preview inspection.
 - **Platform Analytics**: Live overview of total platform revenue, total downloads, registered creators, active users, and pending payouts.
-- **Asset Control**: Search, filter, edit, or delete any wallpaper asset in the platform database.
 - **Creator & User Directory**: View detailed user accounts, daily streak counts, subscription tiers, and creator payout credentials.
 
 ---
@@ -79,6 +86,7 @@ graph TD
 | Component | Tech Stack |
 | :--- | :--- |
 | **Framework** | Flutter 3.29+ / Dart 3.12+ |
+| **Navigation Engine** | `nav_bar: ^0.1.1` (Liquid Physics, Magnetic Animations) |
 | **State Management** | Flutter Riverpod 3.x (`flutter_riverpod`, `riverpod_annotation`) |
 | **Routing** | GoRouter (`go_router`) |
 | **Animations** | Flutter Animate (`flutter_animate`), Lottie (`lottie`), Custom Painters |
@@ -101,7 +109,7 @@ graph TD
 | :--- | :--- |
 | **Database** | Firebase Cloud Firestore |
 | **Authentication** | Firebase Authentication |
-| **Security Rules** | Declarative `firestore.rules` & `storage.rules` |
+| **Security Rules & Indexes** | Declarative `firestore.rules` & `firestore.indexes.json` |
 
 ---
 
@@ -114,29 +122,30 @@ wallvalut/
 │   ├── android/                # Android native project files & Firebase plugins
 │   ├── ios/                    # iOS native project files
 │   ├── assets/                 # App assets (images, prebuilt onboarding wallpapers)
-│   │   └── images/             # prebuilt_03.png, prebuilt_20.png, prebuilt_34.png
 │   └── lib/
-│       ├── core/               # Theme, constants, Liquid Glass UI utilities
-│       ├── data/               # Repositories (Firestore queries, Auth)
+│       ├── core/               # Theme, constants, Liquid Glass UI utilities, main_shell
+│       ├── data/               # Repositories (Firestore queries, Reviews, Auth)
 │       ├── features/
 │       │   ├── auth/           # Onboarding screen, Login, Auth providers
-│       │   ├── home/           # Home screen, Category pills, Wallpaper detail
-│       │   └── profile/        # User/Creator profile, Streaks, Leveling & XP
+│       │   ├── creator/        # Public Creator Profile screen & stats
+│       │   ├── home/           # Home screen, Trending tab, Wallpaper detail, Live Mockup Apply Sheet
+│       │   └── profile/        # User/Creator profile, Streaks, Leveling & XP, Settings
 │       └── main.dart           # App entrypoint & Firebase initialization
 │
 ├── wallvault-web/              # 💻 Next.js Creator Hub & Admin Portal
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── (admin)/admin/  # Admin routes (Overview, Wallpapers, Creators, Users, Payouts)
-│   │   │   ├── (creator)/creator/ # Creator routes (Dashboard, Bulk Upload, Analytics, Profile)
+│   │   │   ├── (admin)/admin/  # Admin routes (Overview, Wallpapers, Categories, Reviews, Creators, Users, Payouts)
+│   │   │   ├── (creator)/creator/ # Creator routes (Dashboard, Bulk Upload, Analytics, Profile Settings)
 │   │   │   └── globals.css     # Glass design system tokens & animation keyframes
 │   │   ├── components/         # Glass panels, Sidebar, KPICard, DataTable, AuthProvider
-│   │   └── lib/                # Firebase Web SDK initialization
+│   │   └── lib/                # Firebase Web SDK initialization & useCategories hook
 │   ├── package.json
 │   └── tailwind.config.ts
 │
 └── wallvault-backend/          # 🔥 Firebase Configuration & Security Rules
-    ├── firestore.rules         # Security rules for collections
+    ├── firestore.rules         # Security rules for collections (categories, reviews, wallpapers, users)
+    ├── firestore.indexes.json  # Composite indexes for trending & review queries
     ├── storage.rules           # Security rules for cloud storage
     └── firebase.json           # Firebase project manifest
 ```
@@ -171,15 +180,6 @@ npm run dev
 # Open browser at http://localhost:3000
 ```
 
-#### Production Web Build
-```bash
-# Verify TypeScript types and build optimized production bundle
-npm run build
-
-# Start production server
-npm run start
-```
-
 ---
 
 ### 2. Mobile App Setup (`wallvault`)
@@ -191,7 +191,7 @@ cd wallvault
 # Fetch dependencies
 flutter pub get
 
-# Clean build artifacts (recommended after configuration updates)
+# Clean build artifacts
 flutter clean
 
 # Run on connected device or emulator
@@ -218,8 +218,8 @@ cd wallvault-backend
 # Login to Firebase
 firebase login
 
-# Deploy Security Rules to Firebase
-firebase deploy --only firestore:rules,storage:rules
+# Deploy Security Rules & Composite Indexes to Firebase
+firebase deploy --only firestore:rules,firestore:indexes
 ```
 
 ---
@@ -230,25 +230,12 @@ firebase deploy --only firestore:rules,storage:rules
 
 | Collection | Description | Access Policy |
 | :--- | :--- | :--- |
-| `users` | User profiles, creator status, levels, XP, streaks, payout details | Read: Authenticated / Write: Self or Admin |
-| `wallpapers` | Uploaded wallpapers, price, status (`pending`, `approved`, `rejected`) | Read: Public (if approved) / Write: Creator or Admin |
+| `users` | User profiles, creator status, levels, XP, streaks, bio, visibility settings | Read: Public/Authenticated / Write: Self or Admin |
+| `wallpapers` | Uploaded wallpapers, price, downloads, rating, status (`approved`, `pending`) | Read: Public / Write: Creator or Admin |
+| `categories` | Main categories & sub-categories lists with color accents | Read: Public / Write: Authenticated Users/Admin |
+| `reviews` | Wallpaper reviews, 5-star ratings, and nested replies | Read: Public / Write: Authenticated / Delete: Owner/Admin |
 | `payouts` | Withdrawal requests submitted by creators | Read: Creator/Admin / Write: Creator/Admin |
 | `transactions` | Purchase logs and Razorpay transaction records | Read: User/Admin / Write: System/Admin |
-
----
-
-## 📊 Analytics & Performance Setup
-
-To verify Firebase Performance Monitoring & Crashlytics on Android:
-
-```bash
-cd wallvault
-flutter build apk --debug
-```
-
-- **Screen Rendering Metrics**: Automatically captured via `firebase_performance`.
-- **Network Request Tracing**: Monitored via HTTP interceptors.
-- **Real-Time Crash Tracking**: Enabled via `firebase_crashlytics`.
 
 ---
 
