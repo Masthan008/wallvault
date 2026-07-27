@@ -164,128 +164,133 @@ class WallpaperDetailScreen extends ConsumerWidget {
                         : Image.network(imagePath, fit: BoxFit.cover),
                   ),
 
-                  // Bottom Vignette overlay
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    height: 340,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.screenPadding,
-                        vertical: 24,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            AppColors.bgPrimary.withValues(alpha: 0.9),
-                            AppColors.bgPrimary,
-                          ],
-                        ),
-                      ),
-                      child: SafeArea(
-                        top: false,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(height: 60),
-                            Text(wallpaper.name, style: AppTypography.h2),
-                            const SizedBox(height: 4),
-                            GestureDetector(
-                              onTap: () {
-                                context.push(AppRoutes.creatorProfilePath(wallpaper.creatorId));
-                              },
-                              child: Row(
+                  // Scrollable Content Overlay with Glassmorphic Bottom Card
+                  Positioned.fill(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        children: [
+                          // Top transparent spacer allowing full wallpaper preview
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.45),
+
+                          // Main Details & Reviews Container
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.screenPadding,
+                              vertical: 24,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.bgPrimary.withValues(alpha: 0.95),
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.6),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, -6),
+                                )
+                              ],
+                            ),
+                            child: SafeArea(
+                              top: false,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  CircleAvatar(
-                                    radius: 10,
-                                    backgroundColor: AppColors.bgElevated,
-                                    backgroundImage: wallpaper.creatorAvatarUrl.isNotEmpty
-                                        ? NetworkImage(wallpaper.creatorAvatarUrl)
-                                        : null,
-                                    child: wallpaper.creatorAvatarUrl.isEmpty
-                                        ? Text(
-                                            wallpaper.creatorName.isNotEmpty ? wallpaper.creatorName[0].toUpperCase() : 'C',
-                                            style: const TextStyle(fontSize: 10, color: Colors.white),
-                                          )
-                                        : null,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Flexible(
-                                    child: Text('by ${wallpaper.creatorName}',
-                                        style: AppTypography.creatorName.copyWith(
-                                          decoration: TextDecoration.underline,
-                                          decorationColor: AppColors.accentCyan,
+                                  Text(wallpaper.name, style: AppTypography.h2),
+                                  const SizedBox(height: 4),
+                                  GestureDetector(
+                                    onTap: () {
+                                      context.push(AppRoutes.creatorProfilePath(wallpaper.creatorId));
+                                    },
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 11,
+                                          backgroundColor: AppColors.bgElevated,
+                                          backgroundImage: wallpaper.creatorAvatarUrl.isNotEmpty
+                                              ? NetworkImage(wallpaper.creatorAvatarUrl)
+                                              : null,
+                                          child: wallpaper.creatorAvatarUrl.isEmpty
+                                              ? Text(
+                                                  wallpaper.creatorName.isNotEmpty ? wallpaper.creatorName[0].toUpperCase() : 'C',
+                                                  style: const TextStyle(fontSize: 10, color: Colors.white),
+                                                )
+                                              : null,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis),
+                                        const SizedBox(width: 8),
+                                        Flexible(
+                                          child: Text(
+                                            'by ${wallpaper.creatorName}',
+                                            style: AppTypography.creatorName.copyWith(
+                                              decoration: TextDecoration.underline,
+                                              decorationColor: AppColors.accentCyan,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        if (wallpaper.isCreatorVerified) ...[
+                                          const SizedBox(width: 4),
+                                          const Icon(Icons.verified_rounded, color: AppColors.accentCyan, size: 14),
+                                        ],
+                                      ],
+                                    ),
                                   ),
-                                  if (wallpaper.isCreatorVerified) ...[
-                                    const SizedBox(width: 4),
-                                    const Icon(Icons.verified_rounded, color: AppColors.accentCyan, size: 14),
-                                  ],
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      _InfoChip(Icons.photo_size_select_actual_rounded, wallpaper.resolution),
+                                      const SizedBox(width: 8),
+                                      _InfoChip(Icons.aspect_ratio_rounded, '9:16'),
+                                      const SizedBox(width: 8),
+                                      _InfoChip(Icons.download_rounded, '${wallpaper.downloads}'),
+                                      const SizedBox(width: 8),
+                                      GestureDetector(
+                                        onTap: () {
+                                          if (user != null) {
+                                            _showRatingDialog(context, ref, wallpaper);
+                                          } else {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text('Please log in to rate wallpapers')),
+                                            );
+                                          }
+                                        },
+                                        child: _InfoChip(Icons.star_rounded, '${wallpaper.rating.toStringAsFixed(1)} (${wallpaper.ratingCount})'),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: GradientButton(
+                                          label: 'Apply Wallpaper',
+                                          icon: Icons.wallpaper_rounded,
+                                          onPressed: () {
+                                            showModalBottomSheet(
+                                              context: context,
+                                              isScrollControlled: true,
+                                              builder: (context) => ApplyWallpaperSheet(
+                                                wallpaperId: wallpaperId,
+                                                imageUrl: wallpaper.imageUrl,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      AnimatedDownloadButton(
+                                        wallpaper: wallpaper,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 28),
+                                  WallpaperReviewsSection(wallpaperId: wallpaperId),
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                _InfoChip(Icons.photo_size_select_actual_rounded,
-                                    wallpaper.resolution),
-                                const SizedBox(width: 8),
-                                _InfoChip(Icons.aspect_ratio_rounded, '9:16'),
-                                const SizedBox(width: 8),
-                                _InfoChip(Icons.download_rounded, '${wallpaper.downloads}'),
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: () {
-                                    if (user != null) {
-                                      _showRatingDialog(context, ref, wallpaper);
-                                    } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Please log in to rate wallpapers')),
-                                      );
-                                    }
-                                  },
-                                  child: _InfoChip(Icons.star_rounded, '${wallpaper.rating.toStringAsFixed(1)} (${wallpaper.ratingCount})'),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: GradientButton(
-                                    label: 'Apply Wallpaper',
-                                    icon: Icons.wallpaper_rounded,
-                                    onPressed: () {
-                                      showModalBottomSheet(
-                                        context: context,
-                                        isScrollControlled: true,
-                                        builder: (context) => ApplyWallpaperSheet(
-                                          wallpaperId: wallpaperId,
-                                          imageUrl: wallpaper.imageUrl,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                
-                                // S09: Morphing download button with confetti burst simulator
-                                AnimatedDownloadButton(
-                                  wallpaper: wallpaper,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                            WallpaperReviewsSection(wallpaperId: wallpaperId),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
