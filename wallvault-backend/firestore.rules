@@ -90,6 +90,14 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // ── REVIEWS COLLECTION ──────────────────────────────────
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isLoggedIn();
+      allow update: if isLoggedIn() && (isOwner(resource.data.userId) || isAdmin());
+      allow delete: if isLoggedIn() && (isOwner(resource.data.userId) || isAdmin());
+    }
+
     // ── ADMIN SYSTEM COLLECTION ─────────────────────────────
     match /admin/{document=**} {
       allow read, write: if isAdmin();

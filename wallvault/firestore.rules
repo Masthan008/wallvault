@@ -43,5 +43,13 @@ service cloud.firestore {
       allow create, update: if isAuthenticated();
       allow delete: if isAuthenticated();
     }
+
+    // Reviews & Comments Collection
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
   }
 }

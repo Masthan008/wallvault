@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Shield, ImageIcon, Users, CheckSquare, IndianRupee, UsersRound, Loader2 } from 'lucide-react';
+import { Shield, ImageIcon, Users, CheckSquare, IndianRupee, UsersRound, Loader2, MessageSquare } from 'lucide-react';
 import { Sidebar } from '@/components/Sidebar';
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const adminNavItems = [
   { label: 'Overview', href: '/admin/overview', icon: Shield },
   { label: 'Moderation', href: '/admin/wallpapers', icon: ImageIcon },
+  { label: 'Reviews & Comments', href: '/admin/reviews', icon: MessageSquare },
   { label: 'Creators', href: '/admin/creators', icon: UsersRound },
   { label: 'Payout Requests', href: '/admin/payouts', icon: CheckSquare },
   { label: 'User Directory', href: '/admin/users', icon: Users },

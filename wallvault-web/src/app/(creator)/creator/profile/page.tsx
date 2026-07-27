@@ -13,7 +13,12 @@ export default function CreatorProfileSettings() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [bio, setBio] = useState('');
   
+  // Public vs Private Profile Visibility Settings
+  const [isPublicProfile, setIsPublicProfile] = useState(true);
+  const [showBio, setShowBio] = useState(true);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -34,6 +39,9 @@ export default function CreatorProfileSettings() {
           setEmail(data.email || user.email || '');
           setPhone(data.phone || data.phoneNumber || '');
           setAvatarUrl(data.avatarUrl || data.photoURL || '');
+          setBio(data.bio || '');
+          setIsPublicProfile(data.isPublicProfile !== false);
+          setShowBio(data.showBio !== false);
         }
       } catch (err) {
         console.error("Error loading profile:", err);
@@ -108,12 +116,15 @@ export default function CreatorProfileSettings() {
         }
       }
 
-      // 2. Update user profile in Firestore
+      // 2. Update user profile in Firestore (public visibility toggles & bio)
       await updateDoc(doc(db, 'users', user.uid), {
         displayName: displayName.trim(),
-        name: displayName.trim(), // sync both fields for safety
+        name: displayName.trim(),
         avatarUrl: finalAvatarUrl,
         phone: phone.trim(),
+        bio: bio.trim(),
+        isPublicProfile,
+        showBio,
         updatedAt: new Date(),
       });
 
@@ -234,15 +245,61 @@ export default function CreatorProfileSettings() {
             />
           </div>
 
+          {/* Bio Description */}
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-text-secondary">Public Bio / Description</label>
+            <textarea
+              rows={3}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-white/[0.02] border border-border-glass text-white text-sm focus:outline-none focus:border-accent-purple focus:ring-1 focus:ring-accent-purple transition-all duration-200"
+              placeholder="Tell your fans about your art style, tools, and inspirations..."
+            />
+          </div>
+
           {/* Email (Read-only) */}
           <div className="space-y-2 md:col-span-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-text-muted">Registered Email Address (Read-only)</label>
+            <label className="text-xs font-bold uppercase tracking-wider text-text-muted">Registered Email Address (Private — Never Shared Publicly)</label>
             <input
               type="email"
               value={email}
               readOnly
               className="w-full px-4 py-3 rounded-xl bg-white/[0.01] border border-white/[0.03] text-text-muted text-sm cursor-not-allowed"
             />
+          </div>
+        </div>
+
+        {/* ── Public vs Private Visibility Controls ───────────────────────── */}
+        <div className="pt-4 border-t border-white/[0.06] space-y-4">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-white">Public Profile Visibility Controls</h3>
+          <p className="text-xs text-text-muted">Choose which details are displayed publicly on your mobile app creator profile card. Private details like email, phone, and earnings are always protected.</p>
+
+          <div className="space-y-3 pt-2">
+            <label className="flex items-center justify-between p-3.5 bg-white/[0.02] border border-border-glass rounded-xl cursor-pointer">
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-white">Enable Public Creator Profile</span>
+                <span className="text-[11px] text-text-muted">Allow app users to view your public creator card, wallpapers, and wallpaper counts.</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={isPublicProfile}
+                onChange={(e) => setIsPublicProfile(e.target.checked)}
+                className="w-4 h-4 accent-purple-500 rounded cursor-pointer"
+              />
+            </label>
+
+            <label className="flex items-center justify-between p-3.5 bg-white/[0.02] border border-border-glass rounded-xl cursor-pointer">
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-white">Show Bio in Mobile App</span>
+                <span className="text-[11px] text-text-muted">Display your public bio text under your creator avatar in the app.</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={showBio}
+                onChange={(e) => setShowBio(e.target.checked)}
+                className="w-4 h-4 accent-purple-500 rounded cursor-pointer"
+              />
+            </label>
           </div>
         </div>
 

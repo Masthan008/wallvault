@@ -15,8 +15,11 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../widgets/apply_wallpaper_sheet.dart';
+import '../../../core/router/routes.dart';
 import '../../../providers/wallpaper_provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/review_provider.dart';
+import '../../../data/models/review_model.dart';
 import '../../../data/services/razorpay_service.dart';
 import '../../../data/models/wallpaper_model.dart';
 
@@ -192,33 +195,41 @@ class WallpaperDetailScreen extends ConsumerWidget {
                             const SizedBox(height: 60),
                             Text(wallpaper.name, style: AppTypography.h2),
                             const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 10,
-                                  backgroundColor: AppColors.bgElevated,
-                                  backgroundImage: wallpaper.creatorAvatarUrl.isNotEmpty
-                                      ? NetworkImage(wallpaper.creatorAvatarUrl)
-                                      : null,
-                                  child: wallpaper.creatorAvatarUrl.isEmpty
-                                      ? Text(
-                                          wallpaper.creatorName.isNotEmpty ? wallpaper.creatorName[0].toUpperCase() : 'C',
-                                          style: const TextStyle(fontSize: 10, color: Colors.white),
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text('by ${wallpaper.creatorName}',
-                                      style: AppTypography.creatorName,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis),
-                                ),
-                                if (wallpaper.isCreatorVerified) ...[
-                                  const SizedBox(width: 4),
-                                  const Icon(Icons.verified_rounded, color: AppColors.accentCyan, size: 14),
+                            GestureDetector(
+                              onTap: () {
+                                context.push(AppRoutes.creatorProfilePath(wallpaper.creatorId));
+                              },
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 10,
+                                    backgroundColor: AppColors.bgElevated,
+                                    backgroundImage: wallpaper.creatorAvatarUrl.isNotEmpty
+                                        ? NetworkImage(wallpaper.creatorAvatarUrl)
+                                        : null,
+                                    child: wallpaper.creatorAvatarUrl.isEmpty
+                                        ? Text(
+                                            wallpaper.creatorName.isNotEmpty ? wallpaper.creatorName[0].toUpperCase() : 'C',
+                                            style: const TextStyle(fontSize: 10, color: Colors.white),
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text('by ${wallpaper.creatorName}',
+                                        style: AppTypography.creatorName.copyWith(
+                                          decoration: TextDecoration.underline,
+                                          decorationColor: AppColors.accentCyan,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis),
+                                  ),
+                                  if (wallpaper.isCreatorVerified) ...[
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.verified_rounded, color: AppColors.accentCyan, size: 14),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
                             const SizedBox(height: 12),
                             Row(
@@ -271,6 +282,8 @@ class WallpaperDetailScreen extends ConsumerWidget {
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 24),
+                            WallpaperReviewsSection(wallpaperId: wallpaperId),
                           ],
                         ),
                       ),
@@ -747,5 +760,341 @@ void _showRatingDialog(BuildContext context, WidgetRef ref, dynamic wallpaper) {
       );
     },
   );
+}
+
+class WallpaperReviewsSection extends ConsumerStatefulWidget {
+  final String wallpaperId;
+  const WallpaperReviewsSection({super.key, required this.wallpaperId});
+
+  @override
+  ConsumerState<WallpaperReviewsSection> createState() => _WallpaperReviewsSectionState();
+}
+
+class _WallpaperReviewsSectionState extends ConsumerState<WallpaperReviewsSection> {
+  final TextEditingController _commentController = TextEditingController();
+  final TextEditingController _replyController = TextEditingController();
+  int _selectedRating = 5;
+  String? _replyingToId;
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    _replyController.dispose();
+    super.dispose();
+  }
+
+  void _submitReview({String? parentId}) async {
+    final user = ref.read(userProfileProvider).value;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in to post a review')),
+      );
+      return;
+    }
+
+    final text = (parentId != null ? _replyController.text : _commentController.text).trim();
+    if (text.isEmpty) return;
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final reviewRepo = ref.read(reviewRepositoryProvider);
+      final newReview = ReviewModel(
+        id: '',
+        wallpaperId: widget.wallpaperId,
+        userId: user.uid,
+        userName: user.displayName.isNotEmpty ? user.displayName : 'Anonymous User',
+        userAvatar: user.avatarUrl,
+        rating: parentId != null ? 0.0 : _selectedRating.toDouble(),
+        comment: text,
+        parentId: parentId,
+        createdAt: DateTime.now(),
+      );
+
+      await reviewRepo.addReview(newReview);
+
+      if (parentId != null) {
+        _replyController.clear();
+        _replyingToId = null;
+      } else {
+        _commentController.clear();
+        _selectedRating = 5;
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(parentId != null ? 'Reply posted!' : 'Review posted successfully!'),
+            backgroundColor: AppColors.accentSuccess,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to post review: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reviewsAsync = ref.watch(wallpaperReviewsStreamProvider(widget.wallpaperId));
+    final user = ref.watch(userProfileProvider).value;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.rate_review_rounded, color: AppColors.accentPurple, size: 20),
+            const SizedBox(width: 8),
+            Text('Reviews & Comments', style: AppTypography.h3),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Review Input Form
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.bgCard,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Rate this wallpaper:', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Row(
+                children: List.generate(5, (index) {
+                  final starIndex = index + 1;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedRating = starIndex),
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 6.0),
+                      child: Icon(
+                        starIndex <= _selectedRating ? Icons.star_rounded : Icons.star_border_rounded,
+                        color: starIndex <= _selectedRating ? AppColors.accentGold : Colors.white24,
+                        size: 26,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _commentController,
+                maxLines: 2,
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+                decoration: InputDecoration(
+                  hintText: user != null ? 'Share your thoughts or appreciation...' : 'Log in to leave a review...',
+                  hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                  filled: true,
+                  fillColor: AppColors.bgElevated,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: GradientButton(
+                  label: _isSubmitting ? 'Posting...' : 'Post Review',
+                  height: 38,
+                  width: 130,
+                  onPressed: _isSubmitting ? () {} : () => _submitReview(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Real-time Reviews List & Nested Replies
+        reviewsAsync.when(
+          loading: () => const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator(color: AppColors.accentPurple))),
+          error: (e, s) => Text('Error loading reviews: $e', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+          data: (allReviews) {
+            final topLevel = allReviews.where((r) => r.parentId == null).toList();
+
+            if (topLevel.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                child: Center(
+                  child: Text('No reviews yet. Be the first to rate & comment!', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                ),
+              );
+            }
+
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: topLevel.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final review = topLevel[index];
+                final replies = allReviews.where((r) => r.parentId == review.id).toList();
+
+                return Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgCard.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 14,
+                            backgroundColor: AppColors.bgElevated,
+                            backgroundImage: review.userAvatar.isNotEmpty ? NetworkImage(review.userAvatar) : null,
+                            child: review.userAvatar.isEmpty
+                                ? Text(review.userName.isNotEmpty ? review.userName[0].toUpperCase() : 'U',
+                                    style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold))
+                                : null,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(review.userName, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                Row(
+                                  children: [
+                                    if (review.rating > 0) ...[
+                                      Text('${review.rating.toInt()} ⭐ ', style: const TextStyle(fontSize: 10, color: AppColors.accentGold)),
+                                      const Text('• ', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
+                                    ],
+                                    Text(_timeAgo(review.createdAt), style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          TextButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _replyingToId = _replyingToId == review.id ? null : review.id;
+                              });
+                            },
+                            icon: const Icon(Icons.reply_rounded, size: 14, color: AppColors.accentCyan),
+                            label: const Text('Reply', style: TextStyle(fontSize: 11, color: AppColors.accentCyan)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(review.comment, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+
+                      // Nested Replies Section
+                      if (replies.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 20.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: replies.map((reply) {
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: AppColors.bgElevated.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 10,
+                                          backgroundColor: AppColors.bgCard,
+                                          backgroundImage: reply.userAvatar.isNotEmpty ? NetworkImage(reply.userAvatar) : null,
+                                          child: reply.userAvatar.isEmpty
+                                              ? Text(reply.userName.isNotEmpty ? reply.userName[0].toUpperCase() : 'U',
+                                                  style: const TextStyle(fontSize: 9, color: Colors.white))
+                                              : null,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(reply.userName, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                        const Spacer(),
+                                        Text(_timeAgo(reply.createdAt), style: const TextStyle(fontSize: 9, color: AppColors.textMuted)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(reply.comment, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ],
+
+                      // Reply Input Form
+                      if (_replyingToId == review.id) ...[
+                        const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _replyController,
+                                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                                  decoration: InputDecoration(
+                                    hintText: 'Write a reply to ${review.userName}...',
+                                    hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                                    filled: true,
+                                    fillColor: AppColors.bgElevated,
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.send_rounded, color: AppColors.accentPurple, size: 20),
+                                onPressed: () => _submitReview(parentId: review.id),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  String _timeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inDays > 0) return '${diff.inDays}d ago';
+    if (diff.inHours > 0) return '${diff.inHours}h ago';
+    if (diff.inMinutes > 0) return '${diff.inMinutes}m ago';
+    return 'Just now';
+  }
 }
 
