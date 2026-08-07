@@ -5,16 +5,18 @@ import { User, Loader2, CheckCircle, Upload, AlertCircle, Camera } from 'lucide-
 import { useAuth } from '@/components/AuthProvider';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { motion, AnimatePresence } from 'framer-motion';
+import { PageHeader } from '@/components/motion/PageHeader';
 
 export default function CreatorProfileSettings() {
   const { user } = useAuth();
-  
+
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [bio, setBio] = useState('');
-  
+
   // Public vs Private Profile Visibility Settings
   const [isPublicProfile, setIsPublicProfile] = useState(true);
   const [showBio, setShowBio] = useState(true);
@@ -23,7 +25,7 @@ export default function CreatorProfileSettings() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -147,6 +149,7 @@ export default function CreatorProfileSettings() {
       }
 
       setSuccess(true);
+      setTimeout(() => setSuccess(false), 4000);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'An error occurred while updating profile.');
@@ -158,40 +161,74 @@ export default function CreatorProfileSettings() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] text-white">
-        <Loader2 className="w-8 h-8 animate-spin text-accent-purple" />
+        <div className="relative">
+          <Loader2 className="w-8 h-8 animate-spin text-accent-purple" />
+          <span className="absolute inset-0 rounded-full animate-ping bg-accent-purple/20" />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white">Profile Settings</h1>
-        <p className="text-sm text-text-muted mt-2">Update your creator profile info, upload avatar, and configure details.</p>
-      </div>
+      <PageHeader
+        title="Profile Settings"
+        subtitle="Update your creator profile info, upload avatar, and configure details."
+        badge="Identity"
+        badgeColor="#a855f7"
+      />
 
-      {success && (
-        <div className="p-4 bg-accent-success/10 border border-accent-success/20 rounded-xl flex items-center space-x-3 text-accent-success text-sm">
-          <CheckCircle className="w-5 h-5 flex-shrink-0" />
-          <span>Profile settings updated successfully! Changes will reflect in admin and mobile applications.</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="p-4 bg-accent-success/10 border border-accent-success/20 rounded-xl flex items-center space-x-3 text-accent-success text-sm"
+          >
+            <CheckCircle className="w-5 h-5 flex-shrink-0" />
+            <span>Profile settings updated successfully! Changes will reflect in admin and mobile applications.</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {error && (
-        <div className="p-4 bg-accent-error/10 border border-accent-error/20 rounded-xl flex items-center space-x-3 text-accent-error text-sm">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="p-4 bg-accent-error/10 border border-accent-error/20 rounded-xl flex items-center space-x-3 text-accent-error text-sm"
+          >
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <span>{error}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <form onSubmit={handleSubmit} className="bg-white/[0.02] border border-border-glass rounded-2xl p-8 space-y-6 relative overflow-hidden backdrop-blur-md">
+      <motion.form
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        onSubmit={handleSubmit}
+        className="bg-white/[0.02] border border-border-glass rounded-2xl p-8 space-y-6 relative overflow-hidden backdrop-blur-md"
+      >
         {/* Glow */}
-        <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-accent-purple/5 blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-accent-purple/5 blur-3xl pointer-events-none animate-float-slow" />
 
         {/* Avatar Section */}
         <div className="flex flex-col items-center space-y-4">
-          <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
-            <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-border-glass bg-white/[0.04] flex items-center justify-center transition-all duration-300 group-hover:border-accent-purple/50">
+          <motion.div
+            className="relative group cursor-pointer"
+            onClick={handleAvatarClick}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+          >
+            <motion.div
+              animate={{ boxShadow: ['0 0 0px rgba(168,85,247,0)', '0 0 24px rgba(168,85,247,0.2)', '0 0 0px rgba(168,85,247,0)'] }}
+              transition={{ duration: 3, repeat: Infinity }}
+              className="w-24 h-24 rounded-full overflow-hidden border-2 border-border-glass bg-white/[0.04] flex items-center justify-center transition-all duration-300 group-hover:border-accent-purple/50"
+            >
               {previewUrl ? (
                 <img src={previewUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
               ) : avatarUrl ? (
@@ -199,21 +236,21 @@ export default function CreatorProfileSettings() {
               ) : (
                 <User className="w-8 h-8 text-text-muted" />
               )}
-            </div>
+            </motion.div>
             <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <Camera className="w-6 h-6 text-white" />
             </div>
-          </div>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileChange} 
-            className="hidden" 
-            accept="image/*" 
+          </motion.div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/*"
           />
-          <button 
-            type="button" 
-            onClick={handleAvatarClick} 
+          <button
+            type="button"
+            onClick={handleAvatarClick}
             className="text-xs font-bold text-accent-purple uppercase tracking-wider hover:underline"
           >
             Change Profile Picture
@@ -275,40 +312,72 @@ export default function CreatorProfileSettings() {
           <p className="text-xs text-text-muted">Choose which details are displayed publicly on your mobile app creator profile card. Private details like email, phone, and earnings are always protected.</p>
 
           <div className="space-y-3 pt-2">
-            <label className="flex items-center justify-between p-3.5 bg-white/[0.02] border border-border-glass rounded-xl cursor-pointer">
+            <motion.label
+              whileHover={{ x: 3 }}
+              className="flex items-center justify-between p-3.5 bg-white/[0.02] border border-border-glass rounded-xl cursor-pointer group"
+            >
               <div className="flex flex-col">
                 <span className="text-xs font-bold text-white">Enable Public Creator Profile</span>
                 <span className="text-[11px] text-text-muted">Allow app users to view your public creator card, wallpapers, and wallpaper counts.</span>
               </div>
-              <input
-                type="checkbox"
-                checked={isPublicProfile}
-                onChange={(e) => setIsPublicProfile(e.target.checked)}
-                className="w-4 h-4 accent-purple-500 rounded cursor-pointer"
-              />
-            </label>
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={isPublicProfile}
+                  onChange={(e) => setIsPublicProfile(e.target.checked)}
+                  className="peer sr-only"
+                />
+                <motion.div
+                  animate={{ backgroundColor: isPublicProfile ? '#a855f7' : '#27272a' }}
+                  className="w-11 h-6 rounded-full relative transition-colors"
+                >
+                  <motion.div
+                    animate={{ x: isPublicProfile ? 22 : 2 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className="absolute top-1 w-4 h-4 rounded-full bg-white shadow-md"
+                  />
+                </motion.div>
+              </div>
+            </motion.label>
 
-            <label className="flex items-center justify-between p-3.5 bg-white/[0.02] border border-border-glass rounded-xl cursor-pointer">
+            <motion.label
+              whileHover={{ x: 3 }}
+              className="flex items-center justify-between p-3.5 bg-white/[0.02] border border-border-glass rounded-xl cursor-pointer group"
+            >
               <div className="flex flex-col">
                 <span className="text-xs font-bold text-white">Show Bio in Mobile App</span>
                 <span className="text-[11px] text-text-muted">Display your public bio text under your creator avatar in the app.</span>
               </div>
-              <input
-                type="checkbox"
-                checked={showBio}
-                onChange={(e) => setShowBio(e.target.checked)}
-                className="w-4 h-4 accent-purple-500 rounded cursor-pointer"
-              />
-            </label>
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={showBio}
+                  onChange={(e) => setShowBio(e.target.checked)}
+                  className="peer sr-only"
+                />
+                <motion.div
+                  animate={{ backgroundColor: showBio ? '#a855f7' : '#27272a' }}
+                  className="w-11 h-6 rounded-full relative transition-colors"
+                >
+                  <motion.div
+                    animate={{ x: showBio ? 22 : 2 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className="absolute top-1 w-4 h-4 rounded-full bg-white shadow-md"
+                  />
+                </motion.div>
+              </div>
+            </motion.label>
           </div>
         </div>
 
         {/* Action Button */}
         <div className="pt-4 flex justify-end">
-          <button
+          <motion.button
+            whileHover={{ y: -1.5 }}
+            whileTap={{ scale: 0.96 }}
             type="submit"
             disabled={saving}
-            className="px-6 py-3 bg-white text-black font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-white/90 disabled:opacity-50 transition-all duration-200 flex items-center space-x-2 cursor-pointer shadow-md"
+            className="btn-shine px-6 py-3 bg-white text-black font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-white/90 disabled:opacity-50 transition-all duration-200 flex items-center space-x-2 cursor-pointer shadow-md"
           >
             {saving ? (
               <>
@@ -318,9 +387,9 @@ export default function CreatorProfileSettings() {
             ) : (
               <span>Save Profile Settings</span>
             )}
-          </button>
+          </motion.button>
         </div>
-      </form>
+      </motion.form>
     </div>
   );
 }

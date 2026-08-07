@@ -2,12 +2,14 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
-import { Loader2, Download, TrendingUp, Image as ImageIcon, Star, Calendar } from 'lucide-react';
+import { Download, TrendingUp, Image as ImageIcon, Star, Calendar, Layers } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { KPICard } from '@/components/KPICard';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { PageHeader } from '@/components/motion/PageHeader';
+import { SkeletonLoader } from '@/components/SkeletonLoader';
 
 type DateRange = '7d' | '30d' | 'all';
 
@@ -23,6 +25,14 @@ interface WallpaperDoc {
 }
 
 const CHART_COLORS = ['#a855f7', '#06b6d4', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6'];
+
+const tooltipStyle = {
+  backgroundColor: 'rgba(9,9,11,0.92)',
+  border: '1px solid #27272a',
+  borderRadius: 12,
+  fontSize: 12,
+  backdropFilter: 'blur(8px)',
+};
 
 export default function CreatorAnalytics() {
   const { user } = useAuth();
@@ -118,50 +128,53 @@ export default function CreatorAnalytics() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#a855f7]" />
+      <div className="space-y-6">
+        <SkeletonLoader variant="card" count={4} />
+        <SkeletonLoader variant="table" />
       </div>
     );
   }
 
   const dateRangeOptions: { key: DateRange; label: string }[] = [
-    { key: '7d', label: 'Last 7 days' },
-    { key: '30d', label: 'Last 30 days' },
-    { key: 'all', label: 'All time' },
+    { key: '7d', label: '7D' },
+    { key: '30d', label: '30D' },
+    { key: 'all', label: 'All' },
   ];
 
   return (
     <div className="space-y-8">
       {/* ── Header ─────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex flex-col sm:flex-row sm:items-end justify-between gap-4"
-      >
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-white">Analytics</h1>
-          <p className="mt-1 text-xs text-[#52525b] font-medium">
-            Real-time portfolio insights from your uploaded wallpapers.
-          </p>
-        </div>
-        {/* Date Range Filter */}
-        <div className="flex gap-1.5 p-1 bg-white/[0.02] border border-white/[0.06] rounded-xl">
-          {dateRangeOptions.map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => setDateRange(opt.key)}
-              className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all duration-200 cursor-pointer ${
-                dateRange === opt.key
-                  ? 'bg-[#a855f7]/12 text-[#a855f7] border border-[#a855f7]/20'
-                  : 'text-[#52525b] hover:text-[#a1a1aa] border border-transparent'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </motion.div>
+      <PageHeader
+        title="Analytics"
+        subtitle="Real-time portfolio insights from your uploaded wallpapers."
+        badge="Live Metrics"
+        badgeColor="#a855f7"
+        actions={
+          <div className="flex gap-1.5 p-1 bg-white/[0.02] border border-white/[0.06] rounded-xl relative">
+            {dateRangeOptions.map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setDateRange(opt.key)}
+                className={`relative px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors duration-200 cursor-pointer z-10 ${
+                  dateRange === opt.key
+                    ? 'text-white'
+                    : 'text-[#52525b] hover:text-[#a1a1aa]'
+                }`}
+              >
+                {dateRange === opt.key && (
+                  <motion.div
+                    layoutId="analytics-range-pill"
+                    className="absolute inset-0 rounded-lg"
+                    style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.2)' }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+                  />
+                )}
+                <span className="relative z-10">{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        }
+      />
 
       {/* ── KPI Cards ──────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -175,9 +188,9 @@ export default function CreatorAnalytics() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Top Wallpapers Bar Chart */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.45 }}
+          transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="glass-panel p-5 rounded-2xl space-y-4"
         >
           <div className="flex items-center justify-between">
@@ -190,15 +203,17 @@ export default function CreatorAnalytics() {
             {analytics.topWallpapers.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analytics.topWallpapers}>
+                  <defs>
+                    <linearGradient id="creatorBar" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#a855f7" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#a855f7" stopOpacity={0.45} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#18181b" />
-                  <XAxis dataKey="name" stroke="#52525b" tick={{ fontSize: 10 }} />
-                  <YAxis stroke="#52525b" tick={{ fontSize: 10 }} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: 12, fontSize: 12 }}
-                    labelStyle={{ color: '#fff', fontWeight: 700 }}
-                    itemStyle={{ color: '#a1a1aa' }}
-                  />
-                  <Bar dataKey="downloads" fill="#a855f7" radius={[6, 6, 0, 0]} />
+                  <XAxis dataKey="name" stroke="#52525b" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#52525b" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} width={40} />
+                  <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: '#fff', fontWeight: 700 }} itemStyle={{ color: '#a1a1aa' }} />
+                  <Bar dataKey="downloads" fill="url(#creatorBar)" radius={[6, 6, 0, 0]} animationDuration={1100} animationEasing="ease-out" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -211,14 +226,17 @@ export default function CreatorAnalytics() {
 
         {/* Revenue Area Chart */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.45 }}
+          transition={{ delay: 0.4, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="glass-panel p-5 rounded-2xl space-y-4"
         >
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-white">Monthly Revenue (70% Share)</h3>
-            <span className="text-[9px] font-bold uppercase tracking-wider text-[#52525b]">INR</span>
+            <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-[#52525b]">
+              <Calendar className="w-3 h-3" />
+              INR
+            </div>
           </div>
           <div className="h-64 w-full">
             {analytics.revenueData.length > 0 ? (
@@ -231,14 +249,14 @@ export default function CreatorAnalytics() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#18181b" />
-                  <XAxis dataKey="name" stroke="#52525b" tick={{ fontSize: 10 }} />
-                  <YAxis stroke="#52525b" tick={{ fontSize: 10 }} />
+                  <XAxis dataKey="name" stroke="#52525b" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#52525b" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} width={40} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: 12, fontSize: 12 }}
+                    contentStyle={tooltipStyle}
                     labelStyle={{ color: '#fff', fontWeight: 700 }}
                     formatter={(val) => [`₹${val}`, 'Revenue']}
                   />
-                  <Area type="monotone" dataKey="earnings" stroke="#06b6d4" strokeWidth={2} fillOpacity={1} fill="url(#colorEarnings)" />
+                  <Area type="monotone" dataKey="earnings" stroke="#06b6d4" strokeWidth={2.5} fillOpacity={1} fill="url(#colorEarnings)" animationDuration={1100} animationEasing="ease-out" />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
@@ -251,14 +269,17 @@ export default function CreatorAnalytics() {
 
         {/* Category Distribution Pie Chart */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.45 }}
+          transition={{ delay: 0.5, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="glass-panel p-5 rounded-2xl space-y-4 lg:col-span-2"
         >
-          <h3 className="text-sm font-bold text-white">Downloads by Category</h3>
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-accent-purple" />
+            <h3 className="text-sm font-bold text-white">Downloads by Category</h3>
+          </div>
           <div className="flex flex-col sm:flex-row items-center gap-6">
-            <div className="h-56 w-56">
+            <div className="h-56 w-56 relative">
               {analytics.categoryData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -270,13 +291,16 @@ export default function CreatorAnalytics() {
                       outerRadius={80}
                       dataKey="value"
                       stroke="none"
+                      paddingAngle={3}
+                      cornerRadius={4}
+                      animationDuration={1100}
                     >
                       {analytics.categoryData.map((_, idx) => (
                         <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: 12, fontSize: 12 }}
+                      contentStyle={tooltipStyle}
                       labelStyle={{ color: '#fff' }}
                     />
                   </PieChart>
@@ -289,11 +313,18 @@ export default function CreatorAnalytics() {
             </div>
             <div className="flex flex-wrap gap-3">
               {analytics.categoryData.map((cat, idx) => (
-                <div key={cat.name} className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.02] border border-white/[0.05] rounded-lg">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: CHART_COLORS[idx % CHART_COLORS.length] }} />
+                <motion.div
+                  key={cat.name}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 + idx * 0.06 }}
+                  whileHover={{ y: -2, scale: 1.03 }}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.02] border border-white/[0.05] rounded-lg cursor-default"
+                >
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: CHART_COLORS[idx % CHART_COLORS.length], boxShadow: `0 0 6px ${CHART_COLORS[idx % CHART_COLORS.length]}80` }} />
                   <span className="text-[11px] font-semibold text-[#a1a1aa]">{cat.name}</span>
                   <span className="text-[10px] font-bold text-white">{cat.value}</span>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>

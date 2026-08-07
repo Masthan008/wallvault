@@ -8,11 +8,16 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { motion } from 'framer-motion';
+import { PageHeader } from '@/components/motion/PageHeader';
+import { LiveDot } from '@/components/motion/LiveDot';
+import { StaggerGroup } from '@/components/motion/Reveal';
 
 interface ChartPoint {
   name: string;
   revenue: number;
 }
+
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 export default function AdminOverview() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -103,23 +108,31 @@ export default function AdminOverview() {
     );
   }
 
+  const tooltipStyle = {
+    backgroundColor: 'rgba(9,9,11,0.92)',
+    border: '1px solid #27272a',
+    borderRadius: 12,
+    fontSize: 12,
+    backdropFilter: 'blur(8px)',
+  };
+
   return (
     <div className="space-y-8">
       {/* ── Header ─────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#10b981]">Live</span>
-        </div>
-        <h1 className="text-3xl font-black tracking-tight text-white">Admin Control Center</h1>
-        <p className="mt-1 text-xs text-[#52525b] font-medium">
-          Platform-wide metrics, moderation, and real-time analytics.
-        </p>
-      </motion.div>
+      <PageHeader
+        badge="Live"
+        badgeColor="#10b981"
+        title="Admin Control Center"
+        subtitle="Platform-wide metrics, moderation, and real-time analytics."
+        actions={
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+            <LiveDot color="#10b981" size={7} />
+            <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#10b981]">
+              Real-time sync
+            </span>
+          </div>
+        }
+      />
 
       {/* ── KPI Grid ───────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -135,13 +148,16 @@ export default function AdminOverview() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Revenue Chart */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.45 }}
+          transition={{ delay: 0.4, duration: 0.6, ease: EASE }}
           className="glass-panel p-5 rounded-2xl space-y-4"
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white">Weekly Revenue</h3>
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              Weekly Revenue
+              <LiveDot color="#a855f7" size={5} />
+            </h3>
             <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-[#52525b]">
               <TrendingUp className="w-3 h-3" />
               INR
@@ -157,14 +173,23 @@ export default function AdminOverview() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#18181b" />
-                <XAxis dataKey="name" stroke="#52525b" tick={{ fontSize: 10 }} tickLine={false} />
-                <YAxis stroke="#52525b" tick={{ fontSize: 10 }} tickLine={false} />
+                <XAxis dataKey="name" stroke="#52525b" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                <YAxis stroke="#52525b" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} width={40} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: 12, fontSize: 12 }}
+                  contentStyle={tooltipStyle}
                   labelStyle={{ color: '#fff', fontWeight: 700 }}
                   formatter={(val) => [`₹${val}`, 'Revenue']}
                 />
-                <Area type="monotone" dataKey="revenue" stroke="#a855f7" strokeWidth={2} fillOpacity={1} fill="url(#colorAdminRev)" />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#a855f7"
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#colorAdminRev)"
+                  animationDuration={1200}
+                  animationEasing="ease-out"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -172,13 +197,16 @@ export default function AdminOverview() {
 
         {/* Downloads by Category Chart */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.45 }}
+          transition={{ delay: 0.5, duration: 0.6, ease: EASE }}
           className="glass-panel p-5 rounded-2xl space-y-4"
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white">Downloads by Category</h3>
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              Downloads by Category
+              <LiveDot color="#06b6d4" size={5} />
+            </h3>
             <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-[#52525b]">
               <Activity className="w-3 h-3" />
               Live
@@ -188,14 +216,26 @@ export default function AdminOverview() {
             {downloadsChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={downloadsChartData}>
+                  <defs>
+                    <linearGradient id="colorCatBar" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#06b6d4" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.5} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#18181b" />
-                  <XAxis dataKey="name" stroke="#52525b" tick={{ fontSize: 10 }} tickLine={false} />
-                  <YAxis stroke="#52525b" tick={{ fontSize: 10 }} tickLine={false} />
+                  <XAxis dataKey="name" stroke="#52525b" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#52525b" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} width={40} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: 12, fontSize: 12 }}
+                    contentStyle={tooltipStyle}
                     labelStyle={{ color: '#fff', fontWeight: 700 }}
                   />
-                  <Bar dataKey="downloads" fill="#06b6d4" radius={[6, 6, 0, 0]} />
+                  <Bar
+                    dataKey="downloads"
+                    radius={[6, 6, 0, 0]}
+                    fill="url(#colorCatBar)"
+                    animationDuration={1200}
+                    animationEasing="ease-out"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -206,6 +246,21 @@ export default function AdminOverview() {
           </div>
         </motion.div>
       </div>
+
+      {/* ── Bottom marquee strip ───────────────────────────── */}
+      <StaggerGroup stagger={0.08} direction="up">
+        {[
+          { label: 'Total Wallpapers', value: totalWallpapers },
+          { label: 'Total Downloads', value: totalDownloads },
+          { label: 'Registered Creators', value: registeredCreators },
+          { label: 'Active Users', value: activeUsers },
+        ].map((s) => (
+          <div key={s.label} className="flex items-center justify-between px-5 py-3.5 rounded-xl border border-white/[0.05] bg-white/[0.015]">
+            <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#52525b]">{s.label}</span>
+            <span className="text-sm font-black text-white font-mono">{s.value}</span>
+          </div>
+        ))}
+      </StaggerGroup>
     </div>
   );
 }

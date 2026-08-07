@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { DollarSign, Download, Image as ImageIcon, Users, X, Eye, Tag, Calendar, ExternalLink, Save, Trash2, Upload, AlertCircle } from 'lucide-react';
+import { DollarSign, Download, Image as ImageIcon, Users, X, ExternalLink, Save, Trash2, Upload, AlertCircle } from 'lucide-react';
 import { KPICard } from '@/components/KPICard';
 import { DataTable } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -9,7 +9,9 @@ import { useAuth } from '@/components/AuthProvider';
 import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { PageHeader } from '@/components/motion/PageHeader';
+import { AnimatedModal } from '@/components/motion/AnimatedModal';
 
 interface WallpaperRow {
   id: string;
@@ -37,11 +39,11 @@ export default function CreatorDashboard() {
   const [editCategory, setEditCategory] = useState('');
   const [editIsPremium, setEditIsPremium] = useState(false);
   const [editPrice, setEditPrice] = useState('49');
-  
+
   // New image file replacement state
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
   const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
-  
+
   const [savingEdit, setSavingEdit] = useState(false);
   const [deletingEdit, setDeletingEdit] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -206,11 +208,11 @@ export default function CreatorDashboard() {
     {
       header: 'Wallpaper',
       accessor: (row: WallpaperRow) => (
-        <div 
+        <div
           onClick={() => setSelectedWallpaper(row)}
           className="flex items-center space-x-3 cursor-pointer group"
         >
-          <div className="w-12 h-16 rounded overflow-hidden bg-white/[0.02] flex items-center justify-center border border-white/[0.05] shadow-sm transition-transform group-hover:scale-105">
+          <div className="w-12 h-16 rounded overflow-hidden bg-white/[0.02] flex items-center justify-center border border-white/[0.05] shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:border-accent-purple/40 group-hover:shadow-[0_0_16px_rgba(168,85,247,0.15)]">
             {row.imageUrl ? (
               <img src={row.imageUrl} alt={row.name} className="w-full h-full object-cover" />
             ) : (
@@ -224,7 +226,9 @@ export default function CreatorDashboard() {
     {
       header: 'Type / Price',
       accessor: (row: WallpaperRow) => (
-        <span className="text-text-secondary text-xs uppercase tracking-wider font-extrabold">{row.price}</span>
+        <span className={`text-xs uppercase tracking-wider font-extrabold ${row.isPremium ? 'text-accent-gold' : 'text-text-secondary'}`}>
+          {row.price}
+        </span>
       ),
     },
     {
@@ -254,19 +258,12 @@ export default function CreatorDashboard() {
 
   return (
     <div className="space-y-8">
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex items-center justify-between"
-      >
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-white">
-            Dashboard
-          </h1>
-          <p className="mt-1 text-xs text-[#52525b] font-medium">Welcome back! Real-time portfolio performance.</p>
-        </div>
-      </motion.div>
+      <PageHeader
+        title="Dashboard"
+        subtitle="Welcome back! Real-time portfolio performance."
+        badge="Creator Hub"
+        badgeColor="#a855f7"
+      />
 
       {/* KPI Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -301,210 +298,224 @@ export default function CreatorDashboard() {
 
       {/* Recent uploads */}
       <div className="space-y-4">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-text-muted">Your Uploads</h2>
+        <motion.h2
+          initial={{ opacity: 0, x: -8 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="text-xs font-bold uppercase tracking-wider text-text-muted"
+        >
+          Your Uploads
+        </motion.h2>
         {uploads.length === 0 ? (
-          <div className="p-12 text-center text-text-muted border border-white/[0.05] rounded-2xl bg-white/[0.01]">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-12 text-center text-text-muted border border-white/[0.05] rounded-2xl bg-white/[0.01]"
+          >
+            <div className="w-12 h-12 rounded-full bg-white/[0.02] border border-white/[0.06] flex items-center justify-center mx-auto mb-3 animate-float">
+              <ImageIcon className="w-5 h-5 text-text-muted" />
+            </div>
             <p className="text-sm font-semibold">No wallpapers uploaded yet.</p>
             <p className="text-xs text-text-muted mt-1 font-normal">Go to "Upload Wallpaper" to submit your first creation!</p>
-          </div>
+          </motion.div>
         ) : (
           <DataTable columns={columns} data={uploads} />
         )}
       </div>
 
       {/* Creator Wallpaper Detail Preview & Edit Modal */}
-      <AnimatePresence>
+      <AnimatedModal open={!!selectedWallpaper} onClose={() => setSelectedWallpaper(null)} maxWidthClass="max-w-3xl">
         {selectedWallpaper && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="w-full max-w-3xl bg-bg-card border border-border-glass rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[550px]"
-            >
-              {/* Wallpaper Preview Container */}
-              <div className="flex-1 bg-black flex items-center justify-center relative group min-h-[250px] md:min-h-0">
-                {newImagePreview ? (
-                  <img
-                    src={newImagePreview}
-                    alt="Replacement Preview"
-                    className="absolute inset-0 w-full h-full object-contain border-2 border-dashed border-accent-cyan"
-                  />
-                ) : selectedWallpaper.imageUrl ? (
-                  <img
-                    src={selectedWallpaper.imageUrl}
-                    alt={selectedWallpaper.name}
-                    className="absolute inset-0 w-full h-full object-contain"
-                  />
-                ) : (
-                  <ImageIcon className="w-12 h-12 text-text-muted animate-pulse" />
+          <div className="bg-bg-card border border-border-glass rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[550px]">
+            {/* Wallpaper Preview Container */}
+            <div className="flex-1 bg-black flex items-center justify-center relative group min-h-[250px] md:min-h-0">
+              <motion.img
+                key={newImagePreview || selectedWallpaper.imageUrl}
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4 }}
+                src={newImagePreview || selectedWallpaper.imageUrl || ''}
+                alt={selectedWallpaper.name}
+                className="absolute inset-0 w-full h-full object-contain"
+              />
+
+              {/* Upload Image Overlay Trigger */}
+              <label className="absolute bottom-4 left-4 p-2 bg-black/60 hover:bg-black/90 text-white rounded-lg border border-white/10 transition-colors flex items-center gap-1.5 text-xs font-bold uppercase cursor-pointer">
+                <Upload className="w-3.5 h-3.5" />
+                <span>Change Image</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
+
+              <a
+                href={newImagePreview || selectedWallpaper.imageUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="absolute bottom-4 right-4 p-2 bg-black/60 hover:bg-black/90 text-white rounded-lg border border-white/10 transition-colors flex items-center gap-1.5 text-xs font-bold uppercase"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>View Full Size</span>
+              </a>
+            </div>
+
+            {/* Wallpaper Details & Edit Form Column */}
+            <div className="w-full md:w-96 p-6 flex flex-col justify-between border-t md:border-t-0 md:border-l border-border-glass bg-bg-primary overflow-y-auto">
+              <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-white leading-tight">Edit Wallpaper</h3>
+                    <p className="text-[10px] text-text-muted mt-1 uppercase font-bold tracking-wider font-mono">ID: {selectedWallpaper.id.slice(0, 12)}</p>
+                  </div>
+                  <motion.button
+                    whileHover={{ rotate: 90 }}
+                    whileTap={{ scale: 0.85 }}
+                    onClick={() => setSelectedWallpaper(null)}
+                    className="p-1.5 text-text-muted hover:text-white rounded transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </motion.button>
+                </div>
+
+                {errorMsg && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="p-3 bg-accent-error/10 border border-accent-error/20 text-accent-error text-[10px] rounded-xl flex items-center gap-2"
+                  >
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{errorMsg}</span>
+                  </motion.div>
                 )}
-                
-                {/* Upload Image Overlay Trigger */}
-                <label className="absolute bottom-4 left-4 p-2 bg-black/60 hover:bg-black/90 text-white rounded-lg border border-white/10 transition-colors flex items-center gap-1.5 text-xs font-bold uppercase cursor-pointer">
-                  <Upload className="w-3.5 h-3.5" />
-                  <span>Change Image</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
 
-                <a
-                  href={newImagePreview || selectedWallpaper.imageUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="absolute bottom-4 right-4 p-2 bg-black/60 hover:bg-black/90 text-white rounded-lg border border-white/10 transition-colors flex items-center gap-1.5 text-xs font-bold uppercase"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>View Full Size</span>
-                </a>
-              </div>
-
-              {/* Wallpaper Details & Edit Form Column */}
-              <div className="w-full md:w-96 p-6 flex flex-col justify-between border-t md:border-t-0 md:border-l border-border-glass bg-bg-primary overflow-y-auto">
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-base font-bold text-white leading-tight">Edit Wallpaper</h3>
-                      <p className="text-[10px] text-text-muted mt-1 uppercase font-bold tracking-wider">ID: {selectedWallpaper.id}</p>
-                    </div>
-                    <button
-                      onClick={() => setSelectedWallpaper(null)}
-                      className="p-1 text-text-muted hover:text-white rounded transition-colors cursor-pointer"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
+                <form onSubmit={handleSaveChanges} className="space-y-3 pt-3 border-t border-white/[0.04] text-xs">
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-bold uppercase tracking-wider text-text-muted">Wallpaper Name</label>
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      required
+                      className="w-full px-2.5 py-2 glass-input text-xs"
+                    />
                   </div>
 
-                  {errorMsg && (
-                    <div className="p-3 bg-accent-error/10 border border-accent-error/20 text-accent-error text-[10px] rounded-xl flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>{errorMsg}</span>
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-bold uppercase tracking-wider text-text-muted">Description</label>
+                    <textarea
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      rows={2}
+                      className="w-full px-2.5 py-2 glass-input text-xs"
+                      placeholder="Write something about your artwork..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-text-muted">Category</label>
+                      <select
+                        value={editCategory}
+                        onChange={(e) => setEditCategory(e.target.value)}
+                        className="w-full px-2.5 py-2 glass-input text-xs text-text-secondary cursor-pointer"
+                      >
+                        <option value="abstract">Abstract</option>
+                        <option value="anime">Anime</option>
+                        <option value="cars">Cars</option>
+                        <option value="nature">Nature</option>
+                        <option value="space">Space</option>
+                        <option value="dark">Dark</option>
+                      </select>
                     </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-text-muted">Review Status</label>
+                      <div className="py-2.5">
+                        <StatusBadge status={selectedWallpaper.status as any} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-[9px] font-bold uppercase tracking-wider text-text-muted">Pricing Option</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <motion.button
+                        type="button"
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setEditIsPremium(false)}
+                        className={`py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                          !editIsPremium
+                            ? 'bg-white text-black'
+                            : 'bg-[#18181b] border border-[#27272a] text-text-muted'
+                        }`}
+                      >
+                        Free
+                      </motion.button>
+                      <motion.button
+                        type="button"
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setEditIsPremium(true)}
+                        className={`py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                          editIsPremium
+                            ? 'bg-white text-black'
+                            : 'bg-[#18181b] border border-[#27272a] text-text-muted'
+                        }`}
+                      >
+                        Premium
+                      </motion.button>
+                    </div>
+                  </div>
+
+                  {editIsPremium && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="space-y-1 overflow-hidden"
+                    >
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-text-muted">Price (INR)</label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-text-muted" />
+                        <input
+                          type="number"
+                          value={editPrice}
+                          onChange={(e) => setEditPrice(e.target.value)}
+                          required
+                          className="w-full pl-8 pr-2.5 py-2 glass-input text-xs"
+                        />
+                      </div>
+                    </motion.div>
                   )}
-
-                  <form onSubmit={handleSaveChanges} className="space-y-3 pt-3 border-t border-white/[0.04] text-xs">
-                    <div className="space-y-1">
-                      <label className="block text-[9px] font-bold uppercase tracking-wider text-text-muted">Wallpaper Name</label>
-                      <input
-                        type="text"
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        required
-                        className="w-full px-2.5 py-2 glass-input text-xs"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-[9px] font-bold uppercase tracking-wider text-text-muted">Description</label>
-                      <textarea
-                        value={editDescription}
-                        onChange={(e) => setEditDescription(e.target.value)}
-                        rows={2}
-                        className="w-full px-2.5 py-2 glass-input text-xs"
-                        placeholder="Write something about your artwork..."
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="block text-[9px] font-bold uppercase tracking-wider text-text-muted">Category</label>
-                        <select
-                          value={editCategory}
-                          onChange={(e) => setEditCategory(e.target.value)}
-                          className="w-full px-2.5 py-2 glass-input text-xs text-text-secondary cursor-pointer"
-                        >
-                          <option value="abstract">Abstract</option>
-                          <option value="anime">Anime</option>
-                          <option value="cars">Cars</option>
-                          <option value="nature">Nature</option>
-                          <option value="space">Space</option>
-                          <option value="dark">Dark</option>
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="block text-[9px] font-bold uppercase tracking-wider text-text-muted">Review Status</label>
-                        <div className="py-2.5">
-                          <StatusBadge status={selectedWallpaper.status as any} />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-[9px] font-bold uppercase tracking-wider text-text-muted">Pricing Option</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setEditIsPremium(false)}
-                          className={`py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                            !editIsPremium
-                              ? 'bg-white text-black'
-                              : 'bg-[#18181b] border border-[#27272a] text-text-muted'
-                          }`}
-                        >
-                          Free
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditIsPremium(true)}
-                          className={`py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                            editIsPremium
-                              ? 'bg-white text-black'
-                              : 'bg-[#18181b] border border-[#27272a] text-text-muted'
-                          }`}
-                        >
-                          Premium
-                        </button>
-                      </div>
-                    </div>
-
-                    {editIsPremium && (
-                      <div className="space-y-1">
-                        <label className="block text-[9px] font-bold uppercase tracking-wider text-text-muted">Price (INR)</label>
-                        <div className="relative">
-                          <DollarSign className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-text-muted" />
-                          <input
-                            type="number"
-                            value={editPrice}
-                            onChange={(e) => setEditPrice(e.target.value)}
-                            required
-                            className="w-full pl-8 pr-2.5 py-2 glass-input text-xs"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </form>
-                </div>
-
-                <div className="space-y-2 pt-4 border-t border-white/[0.04]">
-                  <button
-                    onClick={handleSaveChanges}
-                    disabled={savingEdit || deletingEdit}
-                    className="w-full py-2 bg-white text-black hover:bg-white/90 font-bold uppercase tracking-wider text-[10px] rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                  >
-                    <Save className="w-4 h-4" />
-                    <span>{savingEdit ? 'Saving Changes...' : 'Save details'}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDeleteWallpaper}
-                    disabled={savingEdit || deletingEdit}
-                    className="w-full py-2 bg-accent-error/10 hover:bg-accent-error/20 text-accent-error border border-accent-error/20 font-bold uppercase tracking-wider text-[10px] rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span>{deletingEdit ? 'Deleting...' : 'Delete Wallpaper'}</span>
-                  </button>
-                </div>
+                </form>
               </div>
-            </motion.div>
+
+              <div className="space-y-2 pt-4 border-t border-white/[0.04]">
+                <motion.button
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleSaveChanges}
+                  disabled={savingEdit || deletingEdit}
+                  className="w-full py-2 bg-white text-black hover:bg-white/90 font-bold uppercase tracking-wider text-[10px] rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{savingEdit ? 'Saving Changes...' : 'Save details'}</span>
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={handleDeleteWallpaper}
+                  disabled={savingEdit || deletingEdit}
+                  className="w-full py-2 bg-accent-error/10 hover:bg-accent-error/20 text-accent-error border border-accent-error/20 font-bold uppercase tracking-wider text-[10px] rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>{deletingEdit ? 'Deleting...' : 'Delete Wallpaper'}</span>
+                </motion.button>
+              </div>
+            </div>
           </div>
         )}
-      </AnimatePresence>
+      </AnimatedModal>
     </div>
   );
 }

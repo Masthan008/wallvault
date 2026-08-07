@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { LucideIcon } from 'lucide-react';
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { TiltCard } from '@/components/motion/TiltCard';
+import { AnimatedNumber } from '@/components/motion/AnimatedNumber';
 
 interface KPICardProps {
   label: string;
-  value: string | number;
+  value: React.ReactNode;
   icon: LucideIcon;
   trend?: {
     value: number;
@@ -14,25 +16,6 @@ interface KPICardProps {
   };
   glowColor?: 'purple' | 'cyan' | 'gold';
   index?: number;
-}
-
-// Animated counter component
-function AnimatedNumber({ value }: { value: number }) {
-  const motionVal = useMotionValue(0);
-  const rounded = useTransform(motionVal, (latest) => {
-    if (latest >= 1000) return `${(latest / 1000).toFixed(1)}k`;
-    return Math.round(latest).toLocaleString();
-  });
-
-  useEffect(() => {
-    const controls = animate(motionVal, value, {
-      duration: 1.2,
-      ease: [0.16, 1, 0.3, 1],
-    });
-    return controls.stop;
-  }, [value, motionVal]);
-
-  return <motion.span>{rounded}</motion.span>;
 }
 
 export const KPICard: React.FC<KPICardProps> = ({
@@ -57,64 +40,90 @@ export const KPICard: React.FC<KPICardProps> = ({
 
   const accent = glowColor ? accentColors[glowColor] : { text: '#fafafa', bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.06)' };
 
-  const numericValue = typeof value === 'string' ? parseFloat(value.replace(/[₹,k%]/g, '')) || 0 : value;
-  const isNumeric = typeof value === 'number' || /^[\d₹,k.%]+$/.test(String(value));
+  const isPlainValue = typeof value === 'string' || typeof value === 'number';
+  const numericValue = isPlainValue ? (typeof value === 'string' ? parseFloat(value.replace(/[₹,k%]/g, '')) || 0 : value) : 0;
+  const isNumeric = isPlainValue && (typeof value === 'number' || /^[\d₹,k.%]+$/.test(String(value)));
   const prefix = typeof value === 'string' && value.startsWith('₹') ? '₹' : '';
+
+  const moneyFormat = (v: number) => {
+    if (prefix === '₹') {
+      if (v >= 100000) return `${(v / 100000).toFixed(1)}L`;
+      if (v >= 1000) return `${(v / 1000).toFixed(1)}k`;
+      return Math.round(v).toLocaleString();
+    }
+    if (v >= 1000) return `${(v / 1000).toFixed(1)}k`;
+    return Math.round(v).toLocaleString();
+  };
 
   return (
     <motion.div
-      whileHover={{ y: -3, scale: 1.01 }}
-      initial={{ opacity: 0, y: 20, scale: 0.96 }}
+      initial={{ opacity: 0, y: 24, scale: 0.94 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: index * 0.08, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      className={`relative p-5 glass-panel rounded-2xl flex flex-col justify-between overflow-hidden ${
-        glowColor ? glowClasses[glowColor] : 'hover:border-white/[0.12]'
-      }`}
+      transition={{ delay: 0.06 + index * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
     >
-      {/* Top accent gradient line */}
-      <div
-        className="absolute top-0 left-0 right-0 h-[2px] opacity-60"
-        style={{ background: `linear-gradient(90deg, transparent, ${accent.text}, transparent)` }}
-      />
+      <TiltCard
+        maxTilt={7}
+        className={`relative p-5 glass-panel rounded-2xl flex flex-col justify-between overflow-hidden h-full ${
+          glowColor ? glowClasses[glowColor] : 'hover:border-white/[0.12]'
+        }`}
+      >
+        {/* Top accent gradient line */}
+        <div
+          className="absolute top-0 left-0 right-0 h-[2px] opacity-70"
+          style={{
+            background: `linear-gradient(90deg, transparent, ${accent.text}, transparent)`,
+            backgroundSize: '200% 100%',
+            animation: 'gradientShift 4s ease infinite',
+          }}
+        />
 
-      <div>
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#71717a]">{label}</span>
+        <div>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#71717a]">{label}</span>
+            <motion.div
+              whileHover={{ rotate: 12, scale: 1.12 }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+              className="p-2 rounded-xl"
+              style={{ background: accent.bg, border: `1px solid ${accent.border}` }}
+            >
+              <Icon className="w-4 h-4" style={{ color: accent.text }} />
+            </motion.div>
+          </div>
+          <div className="mt-4">
+            <h3 className="text-2xl font-black text-white tracking-tight font-mono">
+              {isNumeric ? (
+                <>
+                  {prefix}
+                  <AnimatedNumber value={numericValue} format={moneyFormat} />
+                </>
+              ) : (
+                value
+              )}
+            </h3>
+          </div>
+        </div>
+
+        {trend && (
           <motion.div
-            whileHover={{ rotate: 12, scale: 1.1 }}
-            className="p-2 rounded-xl"
-            style={{ background: accent.bg, border: `1px solid ${accent.border}` }}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 + index * 0.08 }}
+            className="flex items-center mt-3 space-x-2"
           >
-            <Icon className="w-4 h-4" style={{ color: accent.text }} />
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                trend.isPositive
+                  ? 'bg-[#10b981]/8 text-[#10b981] border-[#10b981]/15'
+                  : 'bg-[#ef4444]/8 text-[#ef4444] border-[#ef4444]/15'
+              }`}
+            >
+              {trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%
+            </span>
+            <span className="text-[9px] text-[#52525b] uppercase tracking-wider font-bold">vs last month</span>
           </motion.div>
-        </div>
-        <div className="mt-4">
-          <h3 className="text-2xl font-black text-white tracking-tight font-mono">
-            {isNumeric ? (
-              <>
-                {prefix}<AnimatedNumber value={numericValue} />
-              </>
-            ) : (
-              value
-            )}
-          </h3>
-        </div>
-      </div>
-      
-      {trend && (
-        <div className="flex items-center mt-3 space-x-2">
-          <span
-            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-              trend.isPositive
-                ? 'bg-[#10b981]/8 text-[#10b981] border-[#10b981]/15'
-                : 'bg-[#ef4444]/8 text-[#ef4444] border-[#ef4444]/15'
-            }`}
-          >
-            {trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%
-          </span>
-          <span className="text-[9px] text-[#52525b] uppercase tracking-wider font-bold">vs last month</span>
-        </div>
-      )}
+        )}
+      </TiltCard>
     </motion.div>
   );
 };

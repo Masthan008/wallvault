@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { Upload, Loader2, CheckCircle } from 'lucide-react';
+import React, { useState, useRef, useCallback } from 'react';
+import { Upload, Loader2, CheckCircle, ImagePlus, Sparkles } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { PageHeader } from '@/components/motion/PageHeader';
+import { GradientButton } from '@/components/motion/GradientButton';
 
 import { useCategories } from '@/lib/useCategories';
 
@@ -14,7 +17,8 @@ export default function CreatorUpload() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { categories, addCategory } = useCategories();
-  
+  const reduce = useReducedMotion();
+
   const [name, setName] = useState('');
   const [category, setCategory] = useState('Abstract');
   const [customCategory, setCustomCategory] = useState('');
@@ -22,10 +26,11 @@ export default function CreatorUpload() {
   const [description, setDescription] = useState('');
   const [isPremium, setIsPremium] = useState(false);
   const [price, setPrice] = useState('49');
-  
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [dragging, setDragging] = useState(false);
 
   // Real file selection states
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -43,6 +48,16 @@ export default function CreatorUpload() {
       setPreviewUrl(URL.createObjectURL(file));
     }
   };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +117,6 @@ export default function CreatorUpload() {
         uploadedImageUrl = 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=800';
       }
 
-
       const finalCategory = isNewCatMode && customCategory.trim() ? customCategory.trim() : category;
 
       if (isNewCatMode && customCategory.trim()) {
@@ -142,57 +156,139 @@ export default function CreatorUpload() {
 
   if (success) {
     return (
-      <div className="max-w-md mx-auto my-12 text-center p-8 glass-panel rounded-3xl space-y-4">
-        <CheckCircle className="w-16 h-16 text-accent-success mx-auto animate-bounce" />
-        <h2 className="text-2xl font-extrabold text-white">Upload Successful!</h2>
+      <motion.div
+        initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+        className="max-w-md mx-auto my-12 text-center p-10 glass-panel rounded-3xl space-y-5 relative overflow-hidden"
+      >
+        <div className="absolute top-0 left-0 right-0 h-[2px] accent-line" style={{ ['--accent-line-color' as string]: '#10b981' }} />
+        <motion.div
+          animate={{ y: [0, -8, 0] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+          className="w-20 h-20 mx-auto rounded-full bg-accent-success/10 border border-accent-success/25 flex items-center justify-center"
+        >
+          <CheckCircle className="w-10 h-10 text-accent-success" />
+        </motion.div>
+        <motion.h2
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-2xl font-extrabold text-white"
+        >
+          Upload Successful!
+        </motion.h2>
         <p className="text-text-secondary text-xs">Your wallpaper was submitted for review. Redirecting to your dashboard...</p>
-      </div>
+        <div className="h-1 w-full bg-white/[0.04] rounded-full overflow-hidden mt-2">
+          <motion.div
+            initial={{ width: '0%' }}
+            animate={{ width: '100%' }}
+            transition={{ duration: 1.5, ease: 'easeInOut' }}
+            className="h-full bg-gradient-to-r from-accent-purple to-accent-cyan rounded-full"
+          />
+        </div>
+      </motion.div>
     );
   }
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-text-secondary bg-clip-text text-transparent">
-          Upload Wallpaper
-        </h1>
-        <p className="mt-1 text-sm text-text-secondary">Submit your artwork to the WallVault review panel.</p>
-      </div>
+      <PageHeader
+        title="Upload Wallpaper"
+        subtitle="Submit your artwork to the WallVault review panel."
+        badge="Creator Studio"
+        badgeColor="#a855f7"
+      />
 
-      {error && (
-        <div className="p-4 bg-accent-error/10 border border-accent-error/20 rounded-xl text-accent-error text-xs font-semibold">
-          {error}
-        </div>
-      )}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="p-4 bg-accent-error/10 border border-accent-error/20 rounded-xl text-accent-error text-xs font-semibold"
+          >
+            {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Hidden File Input */}
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-        className="hidden" 
-        accept="image/*" 
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+        accept="image/*"
       />
 
       {/* Visual File Selector Dropzone */}
-      <div 
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.5 }}
         onClick={handleFileClick}
-        className="p-8 border-2 border-dashed rounded-2xl border-white/[0.05] bg-white/[0.01] hover:bg-white/[0.02] flex flex-col items-center justify-center text-center cursor-pointer hover:border-accent-purple/50 transition-all duration-300 h-80 overflow-hidden"
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        whileHover={{ scale: 1.005 }}
+        className={`relative p-8 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 h-80 overflow-hidden group ${
+          dragging
+            ? 'border-accent-purple/70 bg-accent-purple/5 shadow-[0_0_40px_rgba(168,85,247,0.12)]'
+            : previewUrl
+              ? 'border-accent-purple/30 bg-white/[0.01]'
+              : 'border-white/[0.05] bg-white/[0.01] hover:border-accent-purple/40 hover:bg-white/[0.02]'
+        }`}
       >
+        {dragging && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute inset-0 flex items-center justify-center z-10 bg-black/70 backdrop-blur-sm"
+          >
+            <div className="text-center space-y-2">
+              <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 1, repeat: Infinity }}>
+                <ImagePlus className="w-12 h-12 text-accent-purple mx-auto" />
+              </motion.div>
+              <p className="text-sm font-bold text-white uppercase tracking-wider">Drop to upload</p>
+            </div>
+          </motion.div>
+        )}
+
         {previewUrl ? (
-          <img src={previewUrl} alt="Preview" className="h-full object-contain rounded-xl border border-white/[0.08]" />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="h-full w-full"
+          >
+            <img src={previewUrl} alt="Preview" className="h-full w-full object-contain rounded-xl border border-white/[0.08] transition-transform duration-500 group-hover:scale-[1.02]" />
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/70 border border-white/10 text-[9px] font-bold uppercase tracking-wider text-white">
+              {selectedFile?.name} • Click to change
+            </div>
+          </motion.div>
         ) : (
           <>
-            <div className="p-4 rounded-2xl bg-accent-purple/10 text-accent-purple border border-accent-purple/20">
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="p-4 rounded-2xl bg-accent-purple/10 text-accent-purple border border-accent-purple/20"
+            >
               <Upload className="w-8 h-8" />
-            </div>
+            </motion.div>
             <h3 className="mt-4 text-sm font-bold uppercase tracking-wider text-white">Select wallpaper image</h3>
             <p className="mt-1.5 text-xs text-text-muted">JPG, PNG or WebP up to 50MB (Recommended: 4K+ Resolution, 9:16 Ratio)</p>
+            <p className="mt-2 text-[9px] text-[#3f3f46] font-semibold uppercase tracking-wider">or drag & drop here</p>
           </>
         )}
-      </div>
+      </motion.div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 glass-panel p-8 rounded-3xl">
+      <motion.form
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25, duration: 0.55 }}
+        onSubmit={handleSubmit}
+        className="space-y-6 glass-panel p-8 rounded-3xl"
+      >
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="space-y-1.5">
             <label className="block text-[10px] font-extrabold uppercase tracking-wider text-text-muted">Wallpaper Name</label>
@@ -226,33 +322,45 @@ export default function CreatorUpload() {
                 </button>
               )}
             </div>
-            {!isNewCatMode ? (
-              <select
-                value={category}
-                onChange={(e) => {
-                  if (e.target.value === '__new__') {
-                    setIsNewCatMode(true);
-                  } else {
-                    setCategory(e.target.value);
-                  }
-                }}
-                className="w-full px-4 py-3.5 glass-input text-sm text-text-secondary cursor-pointer"
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-                <option value="__new__">+ Create New Folder...</option>
-              </select>
-            ) : (
-              <input
-                type="text"
-                value={customCategory}
-                onChange={(e) => setCustomCategory(e.target.value)}
-                placeholder="Enter new folder / category name..."
-                required={isNewCatMode}
-                className="w-full px-4 py-3.5 glass-input text-sm"
-              />
-            )}
+            <AnimatePresence mode="wait">
+              {!isNewCatMode ? (
+                <motion.select
+                  key="select"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2 }}
+                  value={category}
+                  onChange={(e) => {
+                    if (e.target.value === '__new__') {
+                      setIsNewCatMode(true);
+                    } else {
+                      setCategory(e.target.value);
+                    }
+                  }}
+                  className="w-full px-4 py-3.5 glass-input text-sm text-text-secondary cursor-pointer"
+                >
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                  <option value="__new__">+ Create New Folder...</option>
+                </motion.select>
+              ) : (
+                <motion.input
+                  key="input"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2 }}
+                  type="text"
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  placeholder="Enter new folder / category name..."
+                  required={isNewCatMode}
+                  className="w-full px-4 py-3.5 glass-input text-sm"
+                />
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -271,28 +379,49 @@ export default function CreatorUpload() {
           <div className="space-y-1.5">
             <label className="block text-[10px] font-extrabold uppercase tracking-wider text-text-muted">Pricing Model</label>
             <div className="grid grid-cols-2 gap-4">
-              <button
+              <motion.button
                 type="button"
+                whileTap={{ scale: 0.96 }}
                 onClick={() => setIsPremium(false)}
-                className={`py-3 rounded-xl font-bold uppercase tracking-wider text-xs transition-all duration-300 cursor-pointer ${
-                  !isPremium 
+                className={`py-3 rounded-xl font-bold uppercase tracking-wider text-xs transition-all duration-300 cursor-pointer relative overflow-hidden ${
+                  !isPremium
                     ? 'bg-accent-purple/10 border border-accent-purple/40 text-white shadow-md'
                     : 'bg-white/[0.01] border border-white/[0.04] text-text-muted hover:border-white/[0.1] hover:text-text-secondary'
                 }`}
               >
-                Free
-              </button>
-              <button
+                {!isPremium && (
+                  <motion.span
+                    layoutId="pricing-pill"
+                    className="absolute inset-0 rounded-xl border border-accent-purple/30"
+                    style={{ background: 'rgba(168,85,247,0.06)' }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+                  />
+                )}
+                <span className="relative z-10">Free</span>
+              </motion.button>
+              <motion.button
                 type="button"
+                whileTap={{ scale: 0.96 }}
                 onClick={() => setIsPremium(true)}
-                className={`py-3 rounded-xl font-bold uppercase tracking-wider text-xs transition-all duration-300 cursor-pointer ${
-                  isPremium 
+                className={`py-3 rounded-xl font-bold uppercase tracking-wider text-xs transition-all duration-300 cursor-pointer relative overflow-hidden ${
+                  isPremium
                     ? 'bg-accent-purple/10 border border-accent-purple/40 text-white shadow-md'
                     : 'bg-white/[0.01] border border-white/[0.04] text-text-muted hover:border-white/[0.1] hover:text-text-secondary'
                 }`}
               >
-                Premium
-              </button>
+                {isPremium && (
+                  <motion.span
+                    layoutId="pricing-pill"
+                    className="absolute inset-0 rounded-xl border border-accent-purple/30"
+                    style={{ background: 'rgba(168,85,247,0.06)' }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center justify-center gap-1.5">
+                  <Sparkles className="w-3 h-3" />
+                  Premium
+                </span>
+              </motion.button>
             </div>
           </div>
           <div className="space-y-1.5">
@@ -313,17 +442,12 @@ export default function CreatorUpload() {
         </div>
 
         <div className="pt-6 border-t border-white/[0.05] flex justify-end">
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-3.5 bg-gradient-to-r from-accent-purple to-accent-cyan text-white font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg hover:opacity-90 transition-all duration-300 flex items-center cursor-pointer disabled:opacity-50"
-          >
-            {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Submit for Review
-          </button>
+          <GradientButton type="submit" disabled={loading} variant="purple" size="lg" className="min-w-[190px]">
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {loading ? 'Uploading...' : 'Submit for Review'}
+          </GradientButton>
         </div>
-      </form>
+      </motion.form>
     </div>
   );
 }
-

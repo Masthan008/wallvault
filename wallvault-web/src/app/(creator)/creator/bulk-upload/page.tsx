@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Upload, FolderPlus, Layers, Loader2, CheckCircle2, AlertCircle, Trash2, Tag, DollarSign, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Upload, FolderPlus, Loader2, CheckCircle2, AlertCircle, Trash2, Tag, Image as ImageIcon, Wand2 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
-import { collection, addDoc, doc, updateDoc, arrayUnion, getDoc, setDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { useRouter } from 'next/navigation';
 import { useCategories } from '@/lib/useCategories';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { PageHeader } from '@/components/motion/PageHeader';
+import { AnimatedModal } from '@/components/motion/AnimatedModal';
 
 interface BulkFileItem {
   id: string;
@@ -20,11 +22,13 @@ interface BulkFileItem {
   progress: number;
 }
 
+const EASE = [0.16, 1, 0.3, 1] as const;
+
 export default function CreatorBulkUpload() {
   const { user, profile } = useAuth();
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { categories, addCategory } = useCategories();
+  const reduce = useReducedMotion();
 
   // Folders state
   const [folders, setFolders] = useState<string[]>(['General', 'Anime Series 2026', 'Cyberpunk Ultra']);
@@ -44,6 +48,7 @@ export default function CreatorBulkUpload() {
   const [isUploading, setIsUploading] = useState(false);
   const [overallProgress, setOverallProgress] = useState(0);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   // Load user folders from profile
   useEffect(() => {
@@ -84,6 +89,15 @@ export default function CreatorBulkUpload() {
     setFileItems(prev => [...prev, ...newItems]);
     setMessage(null);
   };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const files = Array.from(e.dataTransfer.files || []);
+    if (files.length === 0) return;
+    const evt = { target: { files } } as unknown as React.ChangeEvent<HTMLInputElement>;
+    handleFileChange(evt);
+  }, [fileItems.length, globalCategory, globalIsPremium, globalPrice]);
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
@@ -232,29 +246,29 @@ export default function CreatorBulkUpload() {
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-12 text-text-primary">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-glass pb-6">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-3">
-            <Layers className="w-7 h-7 text-accent-purple" />
-            Bulk Wallpaper Upload Studio
-          </h1>
-          <p className="text-xs text-text-muted mt-1">
-            Upload up to <span className="text-white font-bold">100 wallpapers</span> simultaneously into custom organized folders.
-          </p>
-        </div>
-
-        {/* Create Folder CTA */}
-        <button
-          onClick={() => setShowNewFolderModal(true)}
-          className="inline-flex items-center px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-xs font-bold uppercase tracking-wider text-white hover:bg-white/[0.08] transition-all"
-        >
-          <FolderPlus className="w-4 h-4 mr-2 text-accent-purple" />
-          Create New Folder
-        </button>
-      </div>
+      <PageHeader
+        title="Bulk Wallpaper Upload Studio"
+        subtitle="Upload up to 100 wallpapers simultaneously into custom organized folders."
+        badge="Power Tool"
+        badgeColor="#a855f7"
+        actions={
+          <button
+            onClick={() => setShowNewFolderModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-xs font-bold uppercase tracking-wider text-white hover:bg-white/[0.08] transition-all cursor-pointer btn-shine"
+          >
+            <FolderPlus className="w-4 h-4 text-accent-purple" />
+            Create New Folder
+          </button>
+        }
+      />
 
       {/* Target Folder Selector Bar */}
-      <div className="p-6 rounded-2xl bg-[#0d0d10] border border-border-glass space-y-4">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5, ease: EASE }}
+        className="p-6 rounded-2xl glass-panel space-y-4"
+      >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-text-secondary">Target Collection / Folder</label>
@@ -263,17 +277,22 @@ export default function CreatorBulkUpload() {
           <select
             value={selectedFolder}
             onChange={(e) => setSelectedFolder(e.target.value)}
-            className="w-full md:w-64 px-4 py-2.5 rounded-xl bg-[#141419] border border-white/[0.1] text-xs font-bold text-white focus:outline-none focus:border-accent-purple"
+            className="w-full md:w-64 px-4 py-2.5 rounded-xl bg-[#141419] border border-white/[0.1] text-xs font-bold text-white focus:outline-none focus:border-accent-purple transition-colors cursor-pointer"
           >
             {folders.map(f => (
               <option key={f} value={f}>{f}</option>
             ))}
           </select>
         </div>
-      </div>
+      </motion.div>
 
       {/* Global Batch Controls */}
-      <div className="p-6 rounded-2xl bg-[#0d0d10] border border-border-glass space-y-4">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.16, duration: 0.5, ease: EASE }}
+        className="p-6 rounded-2xl glass-panel space-y-4"
+      >
         <h3 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
           <Tag className="w-4 h-4 text-accent-cyan" />
           Batch Global Presets
@@ -281,57 +300,71 @@ export default function CreatorBulkUpload() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="text-[11px] font-bold text-text-muted uppercase">Default Category</label>
-            {isNewGlobalCatMode ? (
-              <div className="flex gap-2 mt-1.5">
-                <input
-                  type="text"
-                  value={customGlobalCategory}
-                  onChange={(e) => setCustomGlobalCategory(e.target.value)}
-                  placeholder="Enter new category..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#141419] border border-white/[0.1] text-xs text-white focus:outline-none focus:border-accent-purple"
-                />
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const val = customGlobalCategory.trim();
-                    if (val) {
-                      await addCategory(val);
-                      setGlobalCategory(val);
-                      setFileItems(prev => prev.map(item => ({ ...item, category: val })));
+            <AnimatePresence mode="wait">
+              {isNewGlobalCatMode ? (
+                <motion.div
+                  key="newcat"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex gap-2 mt-1.5"
+                >
+                  <input
+                    type="text"
+                    value={customGlobalCategory}
+                    onChange={(e) => setCustomGlobalCategory(e.target.value)}
+                    placeholder="Enter new category..."
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#141419] border border-white/[0.1] text-xs text-white focus:outline-none focus:border-accent-purple"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const val = customGlobalCategory.trim();
+                      if (val) {
+                        await addCategory(val);
+                        setGlobalCategory(val);
+                        setFileItems(prev => prev.map(item => ({ ...item, category: val })));
+                      }
+                      setIsNewGlobalCatMode(false);
+                      setCustomGlobalCategory('');
+                    }}
+                    className="px-3 rounded-xl bg-accent-purple text-xs font-bold text-white hover:bg-accent-purple/90 cursor-pointer"
+                  >
+                    Add
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsNewGlobalCatMode(false)}
+                    className="px-3 rounded-xl bg-white/[0.04] text-xs font-bold text-text-muted hover:text-white cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.select
+                  key="select"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2 }}
+                  value={globalCategory}
+                  onChange={(e) => {
+                    if (e.target.value === '__new__') {
+                      setIsNewGlobalCatMode(true);
+                    } else {
+                      setGlobalCategory(e.target.value);
                     }
-                    setIsNewGlobalCatMode(false);
-                    setCustomGlobalCategory('');
                   }}
-                  className="px-3 rounded-xl bg-accent-purple text-xs font-bold text-white hover:bg-accent-purple/90 cursor-pointer"
+                  className="mt-1.5 w-full px-3.5 py-2.5 rounded-xl bg-[#141419] border border-white/[0.1] text-xs text-white cursor-pointer"
                 >
-                  Add
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsNewGlobalCatMode(false)}
-                  className="px-3 rounded-xl bg-white/[0.04] text-xs font-bold text-text-muted hover:text-white cursor-pointer"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <select
-                value={globalCategory}
-                onChange={(e) => {
-                  if (e.target.value === '__new__') {
-                    setIsNewGlobalCatMode(true);
-                  } else {
-                    setGlobalCategory(e.target.value);
-                  }
-                }}
-                className="mt-1.5 w-full px-3.5 py-2.5 rounded-xl bg-[#141419] border border-white/[0.1] text-xs text-white cursor-pointer"
-              >
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-                <option value="__new__">+ Create New Category...</option>
-              </select>
-            )}
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                  <option value="__new__">+ Create New Category...</option>
+                </motion.select>
+              )}
+            </AnimatePresence>
           </div>
 
           <div>
@@ -372,14 +405,17 @@ export default function CreatorBulkUpload() {
         </div>
 
         <div className="flex justify-end pt-2">
-          <button
+          <motion.button
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.96 }}
             onClick={handleApplyGlobalSettings}
-            className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-bold uppercase tracking-wider text-white transition-all"
+            className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-bold uppercase tracking-wider text-white transition-all cursor-pointer flex items-center gap-2"
           >
+            <Wand2 className="w-3.5 h-3.5 text-accent-cyan" />
             Apply Presets to All Loaded Items
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
 
       {/* File Dropzone */}
       <input
@@ -391,13 +427,41 @@ export default function CreatorBulkUpload() {
         className="hidden"
       />
 
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.22, duration: 0.5, ease: EASE }}
         onClick={handleSelectFilesClick}
-        className="border-2 border-dashed border-white/[0.12] hover:border-accent-purple/50 rounded-2xl p-10 text-center bg-[#0d0d10] cursor-pointer transition-all hover:bg-white/[0.01] group"
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        className={`relative border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-300 group overflow-hidden ${
+          dragging
+            ? 'border-accent-purple/70 bg-accent-purple/5 shadow-[0_0_50px_rgba(168,85,247,0.15)]'
+            : 'border-white/[0.12] hover:border-accent-purple/50 bg-[#0d0d10] hover:bg-white/[0.01]'
+        }`}
       >
-        <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center mx-auto text-text-muted group-hover:text-accent-purple group-hover:scale-110 transition-all duration-300">
+        {dragging && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          >
+            <div className="text-center space-y-2">
+              <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 0.9, repeat: Infinity }}>
+                <ImageIcon className="w-10 h-10 text-accent-purple mx-auto" />
+              </motion.div>
+              <p className="text-sm font-bold text-white uppercase tracking-wider">Drop to queue</p>
+            </div>
+          </motion.div>
+        )}
+        <motion.div
+          animate={{ y: [0, -5, 0] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+          className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center mx-auto text-text-muted group-hover:text-accent-purple group-hover:scale-110 transition-all duration-300"
+        >
           <Upload className="w-7 h-7" />
-        </div>
+        </motion.div>
         <h3 className="mt-4 text-sm font-bold text-white">
           Click or Drag Wallpapers Here (Max 100 files)
         </h3>
@@ -405,177 +469,248 @@ export default function CreatorBulkUpload() {
         <div className="mt-4 inline-flex items-center px-4 py-2 rounded-xl bg-accent-purple/10 text-accent-purple text-xs font-bold">
           Currently Selected: {fileItems.length} / 100 Wallpapers
         </div>
-      </div>
+      </motion.div>
 
       {/* Status Messages */}
-      {message && (
-        <div className={`p-4 rounded-xl text-xs font-bold flex items-center gap-3 ${
-          message.type === 'success' ? 'bg-accent-success/10 border border-accent-success/30 text-accent-success' : 'bg-red-500/10 border border-red-500/30 text-red-400'
-        }`}>
-          {message.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-          {message.text}
-        </div>
-      )}
+      <AnimatePresence>
+        {message && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className={`p-4 rounded-xl text-xs font-bold flex items-center gap-3 ${
+              message.type === 'success' ? 'bg-accent-success/10 border border-accent-success/30 text-accent-success' : 'bg-red-500/10 border border-red-500/30 text-red-400'
+            }`}
+          >
+            {message.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+            {message.text}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Upload Progress Bar */}
-      {isUploading && (
-        <div className="p-6 rounded-2xl bg-[#0d0d10] border border-border-glass space-y-3">
-          <div className="flex justify-between text-xs font-bold text-white">
-            <span>Uploading Batch to Cloudinary & Firestore...</span>
-            <span>{overallProgress}%</span>
-          </div>
-          <div className="w-full bg-white/[0.05] h-3 rounded-full overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-accent-purple via-accent-cyan to-emerald-400 h-full transition-all duration-300"
-              style={{ width: `${overallProgress}%` }}
-            />
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {isUploading && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="p-6 rounded-2xl glass-panel space-y-3 overflow-hidden"
+          >
+            <div className="flex justify-between text-xs font-bold text-white">
+              <span>Uploading Batch to Cloudinary & Firestore...</span>
+              <span className="font-mono">{overallProgress}%</span>
+            </div>
+            <div className="w-full bg-white/[0.05] h-3 rounded-full overflow-hidden relative">
+              <motion.div
+                className="bg-gradient-to-r from-accent-purple via-accent-cyan to-emerald-400 h-full rounded-full"
+                animate={{ width: `${overallProgress}%` }}
+                transition={{ duration: 0.4, ease: EASE }}
+              />
+              <div className="absolute inset-0 skeleton-shimmer opacity-40" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bulk Items Grid */}
-      {fileItems.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-white">
-              Selected Wallpapers Queue ({fileItems.length})
-            </h3>
-            <button
-              onClick={() => setFileItems([])}
-              className="text-xs font-bold text-red-400 hover:underline"
-            >
-              Clear Queue
-            </button>
-          </div>
+      <AnimatePresence>
+        {fileItems.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-white">
+                Selected Wallpapers Queue ({fileItems.length})
+              </h3>
+              <motion.button
+                whileHover={{ x: 2 }}
+                onClick={() => setFileItems([])}
+                className="text-xs font-bold text-red-400 hover:underline cursor-pointer"
+              >
+                Clear Queue
+              </motion.button>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {fileItems.map((item, idx) => (
-              <div key={item.id} className="p-4 rounded-2xl bg-[#0d0d10] border border-border-glass flex gap-3 relative group">
-                <img
-                  src={item.previewUrl}
-                  alt={item.name}
-                  className="w-20 h-28 object-cover rounded-xl border border-white/[0.08]"
-                />
-                <div className="flex-1 min-w-0 space-y-2">
-                  <input
-                    type="text"
-                    value={item.name}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setFileItems(prev => prev.map(f => f.id === item.id ? { ...f, name: val } : f));
-                    }}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-[#141419] border border-white/[0.08] text-xs font-bold text-white focus:outline-none focus:border-accent-purple"
-                  />
-
-                  <div className="flex gap-2">
-                    <select
-                      value={item.category}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setFileItems(prev => prev.map(f => f.id === item.id ? { ...f, category: val } : f));
-                      }}
-                      className="w-1/2 px-2 py-1 rounded-lg bg-[#141419] border border-white/[0.08] text-[11px] text-text-secondary cursor-pointer"
-                    >
-                      {categories.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFileItems(prev => prev.map(f => f.id === item.id ? { ...f, isPremium: !f.isPremium, price: !f.isPremium ? 2 : 0 } : f));
-                      }}
-                      className={`w-1/2 px-2 py-1 rounded-lg text-[11px] font-bold ${
-                        item.isPremium ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300' : 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400'
-                      }`}
-                    >
-                      {item.isPremium ? `₹${item.price}` : 'Free'}
-                    </button>
-                  </div>
-
-                  {item.status === 'uploading' && (
-                    <div className="flex items-center gap-2 text-[10px] text-accent-cyan font-bold">
-                      <Loader2 className="w-3 h-3 animate-spin" /> Uploading...
-                    </div>
-                  )}
-                  {item.status === 'completed' && (
-                    <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-bold">
-                      <CheckCircle2 className="w-3 h-3" /> Ready Live
-                    </div>
-                  )}
-                </div>
-
-                {!isUploading && (
-                  <button
-                    onClick={() => handleRemoveItem(item.id)}
-                    className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-text-muted hover:text-red-400 transition-colors"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <AnimatePresence mode="popLayout">
+                {fileItems.map((item, idx) => (
+                  <motion.div
+                    key={item.id}
+                    layout={!reduce}
+                    initial={reduce ? false : { opacity: 0, scale: 0.9, y: 14 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.85, x: -30 }}
+                    transition={{ delay: idx * 0.035, type: 'spring', stiffness: 300, damping: 26 }}
+                    className="p-4 rounded-2xl glass-panel flex gap-3 relative group"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+                    <motion.img
+                      src={item.previewUrl}
+                      alt={item.name}
+                      whileHover={{ scale: 1.05 }}
+                      className="w-20 h-28 object-cover rounded-xl border border-white/[0.08] shrink-0"
+                    />
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <input
+                        type="text"
+                        value={item.name}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFileItems(prev => prev.map(f => f.id === item.id ? { ...f, name: val } : f));
+                        }}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-[#141419] border border-white/[0.08] text-xs font-bold text-white focus:outline-none focus:border-accent-purple transition-colors"
+                      />
 
-          {/* Action Bar */}
-          <div className="pt-6 flex justify-end">
-            <button
-              onClick={handleUploadAll}
-              disabled={isUploading || fileItems.length === 0}
-              className="px-8 py-3.5 rounded-xl bg-white text-black font-extrabold text-xs uppercase tracking-widest hover:bg-neutral-200 disabled:opacity-40 transition-all shadow-lg flex items-center gap-2"
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin text-black" />
-                  Processing Bulk Batch...
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 h-4 text-black" />
-                  Publish {fileItems.length} Wallpapers Live
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      )}
+                      <div className="flex gap-2">
+                        <select
+                          value={item.category}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFileItems(prev => prev.map(f => f.id === item.id ? { ...f, category: val } : f));
+                          }}
+                          className="w-1/2 px-2 py-1 rounded-lg bg-[#141419] border border-white/[0.08] text-[11px] text-text-secondary cursor-pointer"
+                        >
+                          {categories.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFileItems(prev => prev.map(f => f.id === item.id ? { ...f, isPremium: !f.isPremium, price: !f.isPremium ? 2 : 0 } : f));
+                          }}
+                          className={`w-1/2 px-2 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
+                            item.isPremium ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300' : 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400'
+                          }`}
+                        >
+                          {item.isPremium ? `₹${item.price}` : 'Free'}
+                        </button>
+                      </div>
+
+                      <AnimatePresence>
+                        {item.status === 'uploading' && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex items-center gap-2 text-[10px] text-accent-cyan font-bold"
+                          >
+                            <Loader2 className="w-3 h-3 animate-spin" /> Uploading...
+                          </motion.div>
+                        )}
+                        {item.status === 'completed' && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-bold"
+                          >
+                            <CheckCircle2 className="w-3 h-3" /> Ready Live
+                          </motion.div>
+                        )}
+                        {item.status === 'error' && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex items-center gap-1.5 text-[10px] text-red-400 font-bold"
+                          >
+                            <AlertCircle className="w-3 h-3" /> Failed
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    <AnimatePresence>
+                      {!isUploading && (
+                        <motion.button
+                          initial={{ opacity: 0, scale: 0.7 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.7 }}
+                          whileHover={{ rotate: 12, scale: 1.1 }}
+                          onClick={() => handleRemoveItem(item.id)}
+                          className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-text-muted hover:text-red-400 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </motion.button>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+
+            {/* Action Bar */}
+            <div className="pt-6 flex justify-end">
+              <motion.button
+                whileHover={{ y: -2, scale: 1.01 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={handleUploadAll}
+                disabled={isUploading || fileItems.length === 0}
+                className="btn-shine px-8 py-3.5 rounded-xl bg-white text-black font-extrabold text-xs uppercase tracking-widest hover:bg-neutral-200 disabled:opacity-40 transition-all shadow-lg flex items-center gap-2 cursor-pointer"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-black" />
+                    Processing Bulk Batch...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 text-black" />
+                    Publish {fileItems.length} Wallpapers Live
+                  </>
+                )}
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* New Folder Modal */}
-      {showNewFolderModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#101014] border border-border-glass rounded-2xl p-6 max-w-md w-full space-y-4">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <FolderPlus className="w-5 h-5 text-accent-purple" />
-              Create Custom Collection Folder
-            </h3>
-            <p className="text-xs text-text-muted">
-              Organize your wallpapers into themed folders visible on the Creator Hub and Mobile App.
-            </p>
-            <input
-              type="text"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              placeholder="Folder Name (e.g. Anime Favorites Vol 1)"
-              className="w-full px-4 py-3 rounded-xl bg-[#181820] border border-white/[0.1] text-xs text-white focus:outline-none focus:border-accent-purple"
-            />
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                onClick={() => setShowNewFolderModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-text-muted hover:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateFolder}
-                className="px-5 py-2 rounded-xl bg-accent-purple text-white text-xs font-bold hover:bg-accent-purple/90"
-              >
-                Save Folder
-              </button>
-            </div>
+      <AnimatedModal open={showNewFolderModal} onClose={() => setShowNewFolderModal(false)} maxWidthClass="max-w-md">
+        <div className="bg-[#101014] border border-border-glass rounded-2xl p-6 space-y-4">
+          <motion.h3
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-lg font-bold text-white flex items-center gap-2"
+          >
+            <FolderPlus className="w-5 h-5 text-accent-purple" />
+            Create Custom Collection Folder
+          </motion.h3>
+          <p className="text-xs text-text-muted">
+            Organize your wallpapers into themed folders visible on the Creator Hub and Mobile App.
+          </p>
+          <input
+            type="text"
+            value={newFolderName}
+            onChange={(e) => setNewFolderName(e.target.value)}
+            placeholder="Folder Name (e.g. Anime Favorites Vol 1)"
+            autoFocus
+            onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+            className="w-full px-4 py-3 rounded-xl bg-[#181820] border border-white/[0.1] text-xs text-white focus:outline-none focus:border-accent-purple transition-colors"
+          />
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              onClick={() => setShowNewFolderModal(false)}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-text-muted hover:text-white transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <motion.button
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={handleCreateFolder}
+              className="btn-shine px-5 py-2 rounded-xl bg-accent-purple text-white text-xs font-bold hover:bg-accent-purple/90 cursor-pointer"
+            >
+              Save Folder
+            </motion.button>
           </div>
         </div>
-      )}
+      </AnimatedModal>
     </div>
   );
 }

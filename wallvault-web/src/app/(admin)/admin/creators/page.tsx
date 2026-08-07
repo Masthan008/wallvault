@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, User, X, Mail, Phone, Landmark, Calendar, Award } from 'lucide-react';
+import { ShieldCheck, User, X, Mail, Phone, Landmark, Calendar, Award, BadgeCheck } from 'lucide-react';
 import { DataTable } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { PageHeader } from '@/components/motion/PageHeader';
+import { AnimatedModal } from '@/components/motion/AnimatedModal';
 
 interface CreatorRow {
   id: string;
@@ -87,11 +89,11 @@ export default function AdminCreators() {
     {
       header: 'Creator Name',
       accessor: (row: CreatorRow) => (
-        <div 
+        <div
           onClick={() => setSelectedCreator(row)}
-          className="flex items-center space-x-3 cursor-pointer"
+          className="flex items-center space-x-3 cursor-pointer group"
         >
-          <div className="w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center border border-white/[0.05] overflow-hidden">
+          <div className="w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center border border-white/[0.05] overflow-hidden transition-all duration-300 group-hover:border-accent-purple/40">
             {row.avatarUrl ? (
               <img src={row.avatarUrl} alt={row.name} className="w-full h-full object-cover" />
             ) : (
@@ -99,7 +101,7 @@ export default function AdminCreators() {
             )}
           </div>
           <div>
-            <span className="font-bold text-white text-sm hover:underline">{row.name}</span>
+            <span className="font-bold text-white text-sm hover:underline group-hover:text-accent-purple transition-colors">{row.name}</span>
             {row.email && <p className="text-[10px] text-text-muted mt-0.5">{row.email}</p>}
           </div>
         </div>
@@ -133,17 +135,19 @@ export default function AdminCreators() {
       header: 'Review Application',
       accessor: (row: CreatorRow) => (
         row.status === 'pending' ? (
-          <button 
+          <motion.button
+            whileHover={{ y: -1, scale: 1.04 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => handleApprove(row.id)}
-            className="px-3 py-1.5 bg-accent-purple text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center space-x-1 cursor-pointer"
+            className="px-3 py-1.5 bg-accent-purple text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center space-x-1 cursor-pointer btn-shine"
           >
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Approve</span>
-          </button>
+          </motion.button>
         ) : (
-          <span 
+          <span
             onClick={() => setSelectedCreator(row)}
-            className="text-xs text-text-secondary hover:text-white font-bold uppercase tracking-wider cursor-pointer"
+            className="text-xs text-text-secondary hover:text-white font-bold uppercase tracking-wider cursor-pointer group-hover:text-accent-purple transition-colors"
           >
             View profile &rarr;
           </span>
@@ -162,16 +166,12 @@ export default function AdminCreators() {
 
   return (
     <div className="space-y-8">
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <h1 className="text-3xl font-black tracking-tight text-white">
-          Creator Accounts
-        </h1>
-        <p className="mt-1 text-xs text-[#52525b] font-medium">Approve enrollments, manage levels, and monitor earnings in real-time.</p>
-      </motion.div>
+      <PageHeader
+        title="Creator Accounts"
+        subtitle="Approve enrollments, manage levels, and monitor earnings in real-time."
+        badge="Creator Network"
+        badgeColor="#a855f7"
+      />
 
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -184,130 +184,171 @@ export default function AdminCreators() {
       </motion.div>
 
       {/* Creator Detail Profile Modal */}
-      <AnimatePresence>
+      <AnimatedModal open={!!selectedCreator} onClose={() => setSelectedCreator(null)} maxWidthClass="max-w-lg">
         {selectedCreator && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="w-full max-w-lg bg-bg-card border border-border-glass rounded-2xl overflow-hidden shadow-2xl flex flex-col p-6 space-y-6"
-            >
-              <div className="flex items-start justify-between pb-3 border-b border-white/[0.04]">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white">
+          <div className="bg-bg-card border border-border-glass rounded-2xl overflow-hidden shadow-2xl flex flex-col p-6 space-y-6">
+            <div className="flex items-start justify-between pb-3 border-b border-white/[0.04]">
+              <div className="flex items-center space-x-3">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                  className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white overflow-hidden"
+                >
+                  {selectedCreator.avatarUrl ? (
+                    <img src={selectedCreator.avatarUrl} alt={selectedCreator.name} className="w-full h-full object-cover" />
+                  ) : (
                     <User className="w-5 h-5" />
-                  </div>
+                  )}
+                </motion.div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-1.5">
+                    {selectedCreator.name}
+                    <BadgeCheck className="w-4 h-4 text-accent-cyan" />
+                  </h3>
+                  <p className="text-[10px] text-text-muted uppercase font-bold tracking-wider font-mono">ID: {selectedCreator.id.slice(0, 12)}</p>
+                </div>
+              </div>
+              <motion.button
+                whileHover={{ rotate: 90 }}
+                whileTap={{ scale: 0.85 }}
+                onClick={() => setSelectedCreator(null)}
+                className="p-1 text-text-muted hover:text-white rounded transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </motion.button>
+            </div>
+
+            {/* Creator details */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="space-y-3">
+                <h4 className="text-[10px] uppercase font-bold text-text-muted tracking-wider">Contact Details</h4>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="flex items-center gap-2 text-text-secondary"
+                >
+                  <Mail className="w-4 h-4 text-text-muted" />
                   <div>
-                    <h3 className="text-base font-bold text-white">{selectedCreator.name}</h3>
-                    <p className="text-[10px] text-text-muted uppercase font-bold tracking-wider">ID: {selectedCreator.id}</p>
+                    <p className="text-[8px] uppercase text-text-muted">Email</p>
+                    <p className="font-semibold text-white">{selectedCreator.email || 'N/A'}</p>
                   </div>
-                </div>
-                <button
-                  onClick={() => setSelectedCreator(null)}
-                  className="p-1 text-text-muted hover:text-white rounded transition-colors"
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex items-center gap-2 text-text-secondary"
                 >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Creator details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div className="space-y-3">
-                  <h4 className="text-[10px] uppercase font-bold text-text-muted tracking-wider">Contact Details</h4>
-                  
-                  <div className="flex items-center gap-2 text-text-secondary">
-                    <Mail className="w-4 h-4 text-text-muted" />
-                    <div>
-                      <p className="text-[8px] uppercase text-text-muted">Email</p>
-                      <p className="font-semibold text-white">{selectedCreator.email || 'N/A'}</p>
-                    </div>
+                  <Phone className="w-4 h-4 text-text-muted" />
+                  <div>
+                    <p className="text-[8px] uppercase text-text-muted">Phone</p>
+                    <p className="font-semibold text-white">{selectedCreator.phone || 'N/A'}</p>
                   </div>
+                </motion.div>
 
-                  <div className="flex items-center gap-2 text-text-secondary">
-                    <Phone className="w-4 h-4 text-text-muted" />
-                    <div>
-                      <p className="text-[8px] uppercase text-text-muted">Phone</p>
-                      <p className="font-semibold text-white">{selectedCreator.phone || 'N/A'}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-text-secondary">
-                    <Calendar className="w-4 h-4 text-text-muted" />
-                    <div>
-                      <p className="text-[8px] uppercase text-text-muted">Joined</p>
-                      <p className="font-semibold text-white">{selectedCreator.createdAt}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <h4 className="text-[10px] uppercase font-bold text-text-muted tracking-wider">Portfolio Metrics</h4>
-
-                  <div className="flex items-center gap-2 text-text-secondary">
-                    <Award className="w-4 h-4 text-text-muted" />
-                    <div>
-                      <p className="text-[8px] uppercase text-text-muted">Tier Status</p>
-                      <p className="font-semibold text-accent-cyan">{selectedCreator.level}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-text-secondary">
-                    <Landmark className="w-4 h-4 text-text-muted" />
-                    <div>
-                      <p className="text-[8px] uppercase text-text-muted">Available Balance</p>
-                      <p className="font-semibold text-white font-mono">{selectedCreator.balance}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-text-secondary">
-                    <Landmark className="w-4 h-4 text-text-muted" />
-                    <div>
-                      <p className="text-[8px] uppercase text-text-muted">Total Sales</p>
-                      <p className="font-semibold text-white font-mono">{selectedCreator.totalSales} items</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Billing Info */}
-              <div className="pt-4 border-t border-white/[0.04] space-y-3">
-                <h4 className="text-[10px] uppercase font-bold text-text-muted tracking-wider">Billing & Payment Configuration</h4>
-                
-                {selectedCreator.upi || selectedCreator.accountNo ? (
-                  <div className="bg-white/[0.01] border border-white/[0.04] rounded-xl p-4 space-y-2 text-xs">
-                    <p><span className="text-text-muted uppercase font-bold text-[9px] mr-2">Legal Payee:</span> <span className="font-semibold text-white">{selectedCreator.payeeName || selectedCreator.name}</span></p>
-                    {selectedCreator.upi && (
-                      <p><span className="text-text-muted uppercase font-bold text-[9px] mr-2">UPI ID:</span> <span className="font-mono text-accent-cyan font-bold">{selectedCreator.upi}</span></p>
-                    )}
-                    {selectedCreator.accountNo && (
-                      <div className="pt-1.5 border-t border-white/[0.02] space-y-1">
-                        <p><span className="text-text-muted uppercase font-bold text-[9px] mr-2">Bank:</span> <span className="font-semibold text-white">{selectedCreator.bankName || 'N/A'}</span></p>
-                        <p><span className="text-text-muted uppercase font-bold text-[9px] mr-2">A/C No:</span> <span className="font-semibold text-white font-mono">{selectedCreator.accountNo}</span></p>
-                        <p><span className="text-text-muted uppercase font-bold text-[9px] mr-2">IFSC:</span> <span className="font-semibold text-white font-mono">{selectedCreator.ifsc}</span></p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-xs text-text-muted italic">No payment configurations saved by the creator yet.</p>
-                )}
-              </div>
-
-              <div className="pt-2 flex justify-end">
-                <button
-                  onClick={() => setSelectedCreator(null)}
-                  className="px-4 py-2 bg-white text-black font-bold uppercase tracking-wider text-[10px] rounded-lg transition-colors cursor-pointer"
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.25 }}
+                  className="flex items-center gap-2 text-text-secondary"
                 >
-                  Close Profile
-                </button>
+                  <Calendar className="w-4 h-4 text-text-muted" />
+                  <div>
+                    <p className="text-[8px] uppercase text-text-muted">Joined</p>
+                    <p className="font-semibold text-white">{selectedCreator.createdAt}</p>
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
+
+              <div className="space-y-3">
+                <h4 className="text-[10px] uppercase font-bold text-text-muted tracking-wider">Portfolio Metrics</h4>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex items-center gap-2 text-text-secondary"
+                >
+                  <Award className="w-4 h-4 text-text-muted" />
+                  <div>
+                    <p className="text-[8px] uppercase text-text-muted">Tier Status</p>
+                    <p className="font-semibold text-accent-cyan">{selectedCreator.level}</p>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.35 }}
+                  className="flex items-center gap-2 text-text-secondary"
+                >
+                  <Landmark className="w-4 h-4 text-text-muted" />
+                  <div>
+                    <p className="text-[8px] uppercase text-text-muted">Available Balance</p>
+                    <p className="font-semibold text-white font-mono">{selectedCreator.balance}</p>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="flex items-center gap-2 text-text-secondary"
+                >
+                  <Landmark className="w-4 h-4 text-text-muted" />
+                  <div>
+                    <p className="text-[8px] uppercase text-text-muted">Total Sales</p>
+                    <p className="font-semibold text-white font-mono">{selectedCreator.totalSales} items</p>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Billing Info */}
+            <div className="pt-4 border-t border-white/[0.04] space-y-3">
+              <h4 className="text-[10px] uppercase font-bold text-text-muted tracking-wider">Billing & Payment Configuration</h4>
+
+              {selectedCreator.upi || selectedCreator.accountNo ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 }}
+                  className="bg-white/[0.01] border border-white/[0.04] rounded-xl p-4 space-y-2 text-xs"
+                >
+                  <p><span className="text-text-muted uppercase font-bold text-[9px] mr-2">Legal Payee:</span> <span className="font-semibold text-white">{selectedCreator.payeeName || selectedCreator.name}</span></p>
+                  {selectedCreator.upi && (
+                    <p><span className="text-text-muted uppercase font-bold text-[9px] mr-2">UPI ID:</span> <span className="font-mono text-accent-cyan font-bold">{selectedCreator.upi}</span></p>
+                  )}
+                  {selectedCreator.accountNo && (
+                    <div className="pt-1.5 border-t border-white/[0.02] space-y-1">
+                      <p><span className="text-text-muted uppercase font-bold text-[9px] mr-2">Bank:</span> <span className="font-semibold text-white">{selectedCreator.bankName || 'N/A'}</span></p>
+                      <p><span className="text-text-muted uppercase font-bold text-[9px] mr-2">A/C No:</span> <span className="font-semibold text-white font-mono">{selectedCreator.accountNo}</span></p>
+                      <p><span className="text-text-muted uppercase font-bold text-[9px] mr-2">IFSC:</span> <span className="font-semibold text-white font-mono">{selectedCreator.ifsc}</span></p>
+                    </div>
+                  )}
+                </motion.div>
+              ) : (
+                <p className="text-xs text-text-muted italic">No payment configurations saved by the creator yet.</p>
+              )}
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <motion.button
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => setSelectedCreator(null)}
+                className="btn-shine px-4 py-2 bg-white text-black font-bold uppercase tracking-wider text-[10px] rounded-lg transition-colors cursor-pointer"
+              >
+                Close Profile
+              </motion.button>
+            </div>
           </div>
         )}
-      </AnimatePresence>
+      </AnimatedModal>
     </div>
   );
 }
-
-
