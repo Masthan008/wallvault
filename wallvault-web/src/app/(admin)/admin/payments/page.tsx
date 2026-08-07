@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { CreditCard, Wallet, CheckCircle2, Hourglass, TrendingUp, IndianRupee } from 'lucide-react';
+import { CreditCard, Wallet, CheckCircle2, Hourglass, TrendingUp, IndianRupee, XCircle } from 'lucide-react';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { DataTable } from '@/components/DataTable';
@@ -24,18 +24,7 @@ interface TransactionItem {
   status: 'pending' | 'approved' | 'rejected' | 'suspended' | 'failed' | 'completed' | 'processing';
 }
 
-const statusColor: Record<string, string> = {
-  completed: '#22c55e',
-  approved: '#06b6d4',
-  processing: '#eab308',
-  pending: '#eab308',
-  failed: '#ef4444',
-  rejected: '#ef4444',
-  suspended: '#f97316',
-};
-
-export default function AdminPayments() {
-  const [transactions, setTransactions] = useState<TransactionItem[]>([]);
+export default function AdminPayments() {  const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -170,30 +159,30 @@ export default function AdminPayments() {
         <KPICard
           label="Total Volume"
           value={<><span className="text-text-muted text-lg mr-0.5">₹</span><AnimatedNumber value={stats.total} format={(n) => n.toLocaleString()} /></>}
-          icon={<TrendingUp className="w-4 h-4" />}
-          accentColor="#06b6d4"
-          delay={0.2}
+          icon={TrendingUp}
+          glowColor="cyan"
+          index={0}
         />
         <KPICard
           label="Settled Volume"
           value={<><span className="text-text-muted text-lg mr-0.5">₹</span><AnimatedNumber value={stats.completed} format={(n) => n.toLocaleString()} /></>}
-          icon={<CheckCircle2 className="w-4 h-4" />}
-          accentColor="#22c55e"
-          delay={0.28}
+          icon={CheckCircle2}
+          glowColor="gold"
+          index={1}
         />
         <KPICard
           label="In-Flight Volume"
           value={<><span className="text-text-muted text-lg mr-0.5">₹</span><AnimatedNumber value={stats.pending} format={(n) => n.toLocaleString()} /></>}
-          icon={<Hourglass className="w-4 h-4" />}
-          accentColor="#eab308"
-          delay={0.36}
+          icon={Hourglass}
+          glowColor="cyan"
+          index={2}
         />
         <KPICard
           label="Failed / Rejected"
           value={<AnimatedNumber value={stats.failed} format={(n) => n.toLocaleString()} />}
-          icon={<span className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor.failed }} />}
-          accentColor="#ef4444"
-          delay={0.44}
+          icon={XCircle}
+          glowColor="purple"
+          index={3}
         />
       </motion.div>
 

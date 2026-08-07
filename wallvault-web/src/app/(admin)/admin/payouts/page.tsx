@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Landmark, Check, X, AlertCircle, Banknote, Loader2, Hourglass, CircleDollarSign } from 'lucide-react';
+import { Landmark, Check, X, AlertCircle, Banknote, Loader2, Hourglass, CircleDollarSign, Wallet } from 'lucide-react';
 import { collection, onSnapshot, query, doc, updateDoc, getDoc, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { DataTable } from '@/components/DataTable';
@@ -252,30 +252,30 @@ export default function AdminPayouts() {
         <KPICard
           label="Pending Requests"
           value={<AnimatedNumber value={stats.pendingCount} format={(n) => n.toLocaleString()} />}
-          icon={<Hourglass className="w-4 h-4" />}
-          accentColor="#eab308"
-          delay={0.2}
+          icon={Hourglass}
+          glowColor="gold"
+          index={0}
         />
         <KPICard
           label="Pending Amount"
           value={<><span className="text-text-muted text-lg mr-0.5">₹</span><AnimatedNumber value={stats.pendingAmount} format={(n) => n.toLocaleString()} /></>}
-          icon={<Banknote className="w-4 h-4" />}
-          accentColor="#a855f7"
-          delay={0.28}
+          icon={Banknote}
+          glowColor="purple"
+          index={1}
         />
         <KPICard
           label="Settled Amount"
           value={<><span className="text-text-muted text-lg mr-0.5">₹</span><AnimatedNumber value={stats.settled} format={(n) => n.toLocaleString()} /></>}
-          icon={<CircleDollarSign className="w-4 h-4" />}
-          accentColor="#22c55e"
-          delay={0.36}
+          icon={CircleDollarSign}
+          glowColor="gold"
+          index={2}
         />
         <KPICard
           label="Total Volume"
           value={<><span className="text-text-muted text-lg mr-0.5">₹</span><AnimatedNumber value={stats.total} format={(n) => n.toLocaleString()} /></>}
-          icon={<Banknote className="w-4 h-4" />}
-          accentColor="#06b6d4"
-          delay={0.44}
+          icon={Wallet}
+          glowColor="cyan"
+          index={3}
         />
       </motion.div>
 
