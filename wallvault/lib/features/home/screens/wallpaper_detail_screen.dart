@@ -8,7 +8,6 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:dio/dio.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'dart:typed_data';
 import '../../../core/theme/app_typography.dart';
@@ -23,6 +22,8 @@ import '../../../data/models/review_model.dart';
 import '../../../data/services/razorpay_service.dart';
 import '../../../data/models/wallpaper_model.dart';
 import '../../../core/widgets/app_cached_image.dart';
+import '../../../core/widgets/effects/app_toast.dart';
+import '../../../core/widgets/effects/entrance.dart';
 
 /// S09 — Wallpaper detail with full-screen preview, spring animation overlays, and animated morphing download CTA.
 class WallpaperDetailScreen extends ConsumerStatefulWidget {
@@ -35,6 +36,14 @@ class WallpaperDetailScreen extends ConsumerStatefulWidget {
 
 class _WallpaperDetailScreenState extends ConsumerState<WallpaperDetailScreen> {
   bool _isFullView = false;
+
+  final TransformationController _zoomController = TransformationController();
+
+  @override
+  void dispose() {
+    _zoomController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -158,13 +167,10 @@ class _WallpaperDetailScreenState extends ConsumerState<WallpaperDetailScreen> {
                               }
 
                               // Immediate feedback Toast
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    willBeSaved ? 'Saved to collection ❤️' : 'Removed from Saved',
-                                  ),
-                                  duration: const Duration(seconds: 1),
-                                ),
+                              showAppToast(
+                                context,
+                                willBeSaved ? 'Saved to collection ❤️' : 'Removed from Saved',
+                                type: ToastType.success,
                               );
 
                               // Fire and forget asynchronous background updates
@@ -190,13 +196,23 @@ class _WallpaperDetailScreenState extends ConsumerState<WallpaperDetailScreen> {
                   Positioned.fill(
                     child: GestureDetector(
                       onTap: () {
+                        if (_zoomController.value.getMaxScaleOnAxis() > 1.01) return;
                         setState(() => _isFullView = !_isFullView);
                       },
-                      child: AppCachedImage(
-                        imageUrl: imagePath,
-                        fit: BoxFit.cover,
-                        memCacheWidth: 1080,
-                        memCacheHeight: 1920,
+                      child: Hero(
+                        tag: 'wallpaper-image-${widget.wallpaperId}',
+                        child: InteractiveViewer(
+                          transformationController: _zoomController,
+                          minScale: 1.0,
+                          maxScale: 3.0,
+                          clipBehavior: Clip.none,
+                          child: AppCachedImage(
+                            imageUrl: imagePath,
+                            fit: BoxFit.cover,
+                            memCacheWidth: 1080,
+                            memCacheHeight: 1920,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -238,12 +254,16 @@ class _WallpaperDetailScreenState extends ConsumerState<WallpaperDetailScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(wallpaper.name, style: AppTypography.h2),
+                                      Entrance.fadeUp(
+                                        Text(wallpaper.name, style: AppTypography.h2),
+                                        delayMs: 100,
+                                      ),
                                       const SizedBox(height: 4),
-                                      GestureDetector(
-                                        onTap: () {
-                                          context.push(AppRoutes.creatorProfilePath(wallpaper.creatorId));
-                                        },
+                                      Entrance.fadeUp(
+                                        GestureDetector(
+                                          onTap: () {
+                                            context.push(AppRoutes.creatorProfilePath(wallpaper.creatorId));
+                                          },
                                         child: Row(
                                           children: [
                                             CircleAvatar(
@@ -278,6 +298,7 @@ class _WallpaperDetailScreenState extends ConsumerState<WallpaperDetailScreen> {
                                           ],
                                         ),
                                       ),
+                                      ),
                                       const SizedBox(height: 12),
                                       Row(
                                         children: [
@@ -292,9 +313,7 @@ class _WallpaperDetailScreenState extends ConsumerState<WallpaperDetailScreen> {
                                               if (user != null) {
                                                 _showRatingDialog(context, ref, wallpaper);
                                               } else {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  const SnackBar(content: Text('Please log in to rate wallpapers')),
-                                                );
+                                                showAppToast(context, 'Please log in to rate wallpapers', type: ToastType.info);
                                               }
                                             },
                                             child: _InfoChip(Icons.star_rounded, '${wallpaper.rating.toStringAsFixed(1)} (${wallpaper.ratingCount})'),

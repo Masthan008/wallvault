@@ -9,6 +9,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/gradient_button.dart';
+import '../../../core/widgets/effects/app_toast.dart';
 import '../../../core/router/routes.dart';
 import '../../../providers/auth_provider.dart';
 
@@ -157,15 +158,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   await ref.read(authRepositoryProvider).currentUser?.updatePassword(newPass);
                   if (mounted) {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Password updated successfully.')),
-                    );
+                    showAppToast(context, 'Password updated successfully.', type: ToastType.success);
                   }
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $e')),
-                    );
+                    showAppToast(context, 'Error: $e', type: ToastType.error);
                   }
                 }
               }
@@ -225,9 +222,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   }
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to delete account: $e')),
-                    );
+                    showAppToast(context, 'Failed to delete account: $e', type: ToastType.error);
                   }
                 }
               },
@@ -398,9 +393,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed: $e')),
-                  );
+                  showAppToast(context, 'Failed: $e', type: ToastType.error);
                 }
               }
             },

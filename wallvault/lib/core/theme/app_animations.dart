@@ -13,6 +13,14 @@ class AppAnimations {
   static const Curve bounce = Cubic(0.68, -0.55, 0.265, 1.55);
   static const Curve decelerate = Curves.decelerate;
 
+  // ── Signature Easing (matches the web `[0.16, 1, 0.3, 1]`) ──
+  /// Fast start, slow long settle — used for entrances & hero motion.
+  static const Curve easeOutExpo = Cubic(0.16, 1, 0.3, 1);
+  static const Curve emphasizedDecelerate = Cubic(0.16, 1, 0.3, 1);
+  /// Slow start, fast finish — used for exits & dismissals.
+  static const Curve easeInExpo = Cubic(0.3, 0, 1, 1);
+  static const Curve emphasizedAccelerate = Cubic(0.3, 0, 1, 1);
+
   // ── Durations ────────────────────────────────────────────
   static const Duration micro = Duration(milliseconds: 150);
   static const Duration fast = Duration(milliseconds: 250);
@@ -24,6 +32,10 @@ class AppAnimations {
   static const Duration staggerSmall = Duration(milliseconds: 50);
   static const Duration staggerMedium = Duration(milliseconds: 100);
   static const Duration staggerLarge = Duration(milliseconds: 150);
+
+  /// Stagger delay for the n-th item in an entrance choreography.
+  static Duration staggerDelay(int index, {int stepMs = 60}) =>
+      Duration(milliseconds: stepMs * index);
 
   // ── Spring Physics ───────────────────────────────────────
   static const SpringDescription defaultSpring = SpringDescription(

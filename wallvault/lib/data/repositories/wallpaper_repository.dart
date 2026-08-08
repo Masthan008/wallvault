@@ -1,7 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/wallpaper_model.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 
 class WallpaperRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

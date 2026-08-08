@@ -10,6 +10,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../../../core/widgets/glow_input.dart';
+import '../../../core/widgets/effects/app_toast.dart';
 import '../../../core/router/routes.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../data/models/user_model.dart';
@@ -46,21 +47,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     final password = _passwordController.text.trim();
 
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your full name.')),
-      );
+      showAppToast(context, 'Please enter your full name.');
       return;
     }
     if (email.isEmpty || !email.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid email.')),
-      );
+      showAppToast(context, 'Please enter a valid email.');
       return;
     }
     if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 6 characters.')),
-      );
+      showAppToast(context, 'Password must be at least 6 characters.');
       return;
     }
 
@@ -93,16 +88,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Account creation failed.')),
-        );
+        showAppToast(context, e.message ?? 'Account creation failed.', type: ToastType.error);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        showAppToast(context, 'Error: $e', type: ToastType.error);
       }
     }
   }
@@ -116,17 +107,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         if (e.code != 'CANCELED') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.message ?? 'Google sign-in failed.')),
-          );
+          showAppToast(context, e.message ?? 'Google sign-in failed.', type: ToastType.error);
         }
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Google sign-in failed: $e')),
-        );
+        showAppToast(context, 'Google sign-in failed: $e', type: ToastType.error);
       }
     }
   }
@@ -140,17 +127,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         if (e.code != 'CANCELED') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.message ?? 'Apple sign-in failed.')),
-          );
+          showAppToast(context, e.message ?? 'Apple sign-in failed.', type: ToastType.error);
         }
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Apple sign-in failed: $e')),
-        );
+        showAppToast(context, 'Apple sign-in failed: $e', type: ToastType.error);
       }
     }
   }

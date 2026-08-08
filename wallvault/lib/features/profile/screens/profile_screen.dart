@@ -10,6 +10,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/router/routes.dart';
+import '../../../core/widgets/effects/app_toast.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../data/models/user_model.dart';
 
@@ -317,7 +318,7 @@ Future<void> _pickAndUploadAvatar(BuildContext context, WidgetRef ref, UserModel
     if (pickedFile == null) return;
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Uploading image...')));
+      showAppToast(context, 'Uploading image...');
     }
 
     final file = File(pickedFile.path);
@@ -330,11 +331,11 @@ Future<void> _pickAndUploadAvatar(BuildContext context, WidgetRef ref, UserModel
     ref.invalidate(userProfileProvider);
     
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Avatar updated!')));
+      showAppToast(context, 'Avatar updated!', type: ToastType.success);
     }
   } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update avatar: $e')));
+      showAppToast(context, 'Failed to update avatar: $e', type: ToastType.error);
     }
   }
 }

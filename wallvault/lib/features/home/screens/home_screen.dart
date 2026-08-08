@@ -10,7 +10,8 @@ import '../../../core/router/routes.dart';
 import '../../../providers/wallpaper_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../data/models/wallpaper_model.dart';
-import '../../../core/widgets/app_cached_image.dart';
+import '../../../core/widgets/wallpaper_card.dart';
+import '../../../core/widgets/shimmer_loading.dart';
 
 /// S08 — Home feed connected to real Firestore collection queries (exclusively prebuilt wallpapers).
 class HomeScreen extends ConsumerStatefulWidget {
@@ -21,8 +22,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _activeTab = 0;
-  final List<String> _tabs = ['Trending'];
   String _selectedCategory = 'All';
 
   @override
@@ -137,86 +136,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
                     itemCount: displayItems.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 16),
+                    separatorBuilder: (_, _) => const SizedBox(width: 16),
                     itemBuilder: (context, index) {
                       final item = displayItems[index];
-                      return GestureDetector(
-                        onTap: () => context.push(AppRoutes.wallpaperDetailPath(item.id)),
-                        child: Container(
-                          width: 200,
-                          decoration: BoxDecoration(
-                            color: AppColors.bgCard,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.4),
-                                blurRadius: 16,
-                                offset: const Offset(0, 8),
-                              )
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: Stack(
-                              children: [
-                                Positioned.fill(
-                                  child: AppCachedImage(
-                                    imageUrl: item.imageUrl,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                Positioned.fill(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(24),
-                                      gradient: const LinearGradient(
-                                        colors: [Colors.transparent, Colors.black87],
-                                        begin: Alignment.center,
-                                        end: Alignment.bottomCenter,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 12,
-                                  left: 12,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: item.isPremium ? AppColors.accentGold : AppColors.accentPurple,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      item.isPremium ? 'PREMIUM' : 'TRENDING',
-                                      style: const TextStyle(
-                                        fontSize: 9,
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: 16,
-                                  left: 16,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(item.name, style: AppTypography.h3),
-                                      Text('by ${item.creatorName}', style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                      return SizedBox(
+                        width: 200,
+                        child: WallpaperCard(
+                          wallpaper: item,
+                          height: 320 - AppSpacing.screenPadding,
+                          entranceDelayMs: (index % 4) * 30,
+                          onTap: () => context.push(AppRoutes.wallpaperDetailPath(item.id)),
                         ),
                       );
                     },
                   ),
                 );
               },
-              loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
+              loading: () => SizedBox(
+                height: 100,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.screenPadding,
+                  ),
+                  itemCount: 4,
+                  separatorBuilder: (_, _) => const SizedBox(width: 16),
+                  itemBuilder: (_, _) => const ShimmerBox(
+                    width: 200,
+                    height: 100,
+                    borderRadius: 24,
+                  ),
+                ),
+              ),
               error: (e, s) => const SizedBox.shrink(),
             ),
           ),
@@ -352,113 +303,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   itemBuilder: (context, index) {
                     final item = wallpapers[index];
                     final heights = [240.0, 290.0, 220.0, 270.0, 230.0, 280.0];
-                    return GestureDetector(
+                    return WallpaperCard(
+                      wallpaper: item,
+                      height: heights[index % heights.length],
+                      entranceDelayMs: (index % 8) * 30,
                       onTap: () => context.push(AppRoutes.wallpaperDetailPath(item.id)),
-                      child: Container(
-                        height: heights[index % heights.length],
-                        decoration: BoxDecoration(
-                          color: AppColors.bgCard,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-                          child: Stack(
-                            children: [
-                              Positioned.fill(
-                                child: AppCachedImage(
-                                  imageUrl: item.imageUrl,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              Positioned.fill(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusCard),
-                                    gradient: const LinearGradient(
-                                      colors: [Colors.transparent, Colors.black87],
-                                      begin: Alignment.center,
-                                      end: Alignment.bottomCenter,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                top: 10,
-                                right: 10,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: item.isPremium ? AppColors.accentGold : AppColors.accentSuccess,
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                                  ),
-                                  child: Text(
-                                    item.isPremium ? '₹${item.price.toInt()}' : 'FREE',
-                                    style: const TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                left: 12,
-                                right: 12,
-                                bottom: 12,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(item.name, style: AppTypography.h4),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 7,
-                                          backgroundColor: AppColors.bgElevated,
-                                          backgroundImage: item.creatorAvatarUrl.isNotEmpty
-                                              ? NetworkImage(item.creatorAvatarUrl)
-                                              : null,
-                                          child: item.creatorAvatarUrl.isEmpty
-                                              ? Text(
-                                                  item.creatorName.isNotEmpty ? item.creatorName[0].toUpperCase() : 'C',
-                                                  style: const TextStyle(fontSize: 8, color: Colors.white),
-                                                )
-                                              : null,
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Expanded(
-                                          child: Row(
-                                            children: [
-                                              Flexible(
-                                                child: Text(
-                                                  item.creatorName,
-                                                  style: AppTypography.creatorName.copyWith(fontSize: 10),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              if (item.isCreatorVerified) ...[
-                                                const SizedBox(width: 2),
-                                                const Icon(Icons.verified_rounded, color: AppColors.accentCyan, size: 10),
-                                              ],
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                     );
                   },
                 );
               },
               loading: () => const SliverToBoxAdapter(
-                child: SizedBox(height: 200, child: Center(child: CircularProgressIndicator(color: AppColors.accentPurple))),
+                child: WallpaperGridShimmer(),
               ),
               error: (e, s) => const SliverToBoxAdapter(child: SizedBox.shrink()),
             ),

@@ -11,7 +11,8 @@ import '../../../core/widgets/glow_input.dart';
 import '../../../core/router/routes.dart';
 import '../../../providers/wallpaper_provider.dart';
 
-import '../../../core/widgets/app_cached_image.dart';
+import '../../../core/widgets/shimmer_loading.dart';
+import '../../../core/widgets/wallpaper_card.dart';
 
 /// S11 — Search screen with real Firestore query filters.
 class SearchScreen extends ConsumerStatefulWidget {
@@ -199,65 +200,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           itemBuilder: (context, index) {
                             final w = filteredList[index];
                             final heights = [240.0, 290.0, 220.0, 270.0];
-                            return GestureDetector(
+                            return WallpaperCard(
+                              wallpaper: w,
+                              height: heights[index % heights.length],
+                              entranceDelayMs: (index % 8) * 30,
                               onTap: () => context.push(AppRoutes.wallpaperDetailPath(w.id)),
-                              child: Container(
-                                height: heights[index % heights.length],
-                                decoration: BoxDecoration(
-                                  color: AppColors.bgCard,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Stack(
-                                    children: [
-                                      Positioned.fill(
-                                        child: AppCachedImage(
-                                          imageUrl: w.imageUrl,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                      Positioned.fill(
-                                        child: Container(
-                                          decoration: const BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [Colors.transparent, Colors.black87],
-                                              begin: Alignment.center,
-                                              end: Alignment.bottomCenter,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Positioned(
-                                        bottom: 12,
-                                        left: 12,
-                                        right: 12,
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(w.name, style: AppTypography.h4),
-                                            Text('by ${w.creatorName}', style: AppTypography.creatorName.copyWith(fontSize: 10)),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
                             );
                           },
                         ),
                       );
                     },
                     loading: () => const SliverToBoxAdapter(
-                      child: Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(48.0),
-                          child: CircularProgressIndicator(
-                            color: AppColors.accentPurple,
-                          ),
-                        ),
-                      ),
+                      child: WallpaperGridShimmer(),
                     ),
                     error: (e, s) => const SliverToBoxAdapter(
                       child: Center(

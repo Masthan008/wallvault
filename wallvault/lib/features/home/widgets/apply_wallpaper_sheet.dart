@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/gradient_button.dart';
+import '../../../core/widgets/effects/app_toast.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:async_wallpaper/async_wallpaper.dart';
@@ -332,22 +333,12 @@ class _ApplyWallpaperSheetState extends ConsumerState<ApplyWallpaperSheet> {
 
                       if (context.mounted) {
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Wallpaper applied successfully!'),
-                            backgroundColor: AppColors.accentSuccess,
-                          ),
-                        );
+                        showAppToast(context, 'Wallpaper applied successfully!', type: ToastType.success);
                       }
                     } catch (e) {
                       if (context.mounted) {
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Failed to apply wallpaper: $e'),
-                            backgroundColor: Colors.redAccent,
-                          ),
-                        );
+                        showAppToast(context, 'Failed to apply wallpaper: $e', type: ToastType.error);
                       }
                     }
                   },

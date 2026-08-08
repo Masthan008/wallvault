@@ -1,15 +1,23 @@
-import 'dart:math';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
 import '../../../core/router/routes.dart';
+import '../../../core/theme/app_animations.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_gradients.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/effects/animated_text_gradient.dart';
+import '../../../core/widgets/effects/aurora_background.dart';
+import '../../../core/widgets/effects/entrance.dart';
 import '../../../providers/auth_provider.dart';
 
-/// S01 — Splash screen with custom animated W-stroke, typing tagline, and particle bursts.
+/// Splash screen with stroke-drawn logo, typewriter tagline and a
+/// particle burst. Tap anywhere to skip the animation.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -17,372 +25,341 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProviderStateMixin {
-  late AnimationController _drawController;
-  late AnimationController _fillController;
-  late AnimationController _textController;
-  late AnimationController _cursorController;
-  late AnimationController _pulseController;
-  
-  final List<Particle> _particles = [];
-  bool _burstTriggered = false;
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with TickerProviderStateMixin {
+  static const _tagline = 'Premium wallpapers, curated for you';
 
-  final String _tagline = "Your Walls, Your Story";
-  String _typedText = "";
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: AppAnimations.epic,
+  );
+
+  late final AnimationController _exit = AnimationController(
+    vsync: this,
+    duration: AppAnimations.medium,
+  );
+
+  late final AnimationController _cursor = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 620),
+  )..repeat();
+
+  bool _navigated = false;
+
+  // stroke draw: 0 → 1 (first 35% of timeline)
+  late final Animation<double> _draw = _interval(0, 0.35);
+
+  // gradient fill: 0 → 1 (35% → 55%)
+  late final Animation<double> _fill = _interval(0.35, 0.55);
+
+  // typewriter: 0 → 1 (55% → 80%)
+  late final Animation<double> _type = _interval(0.55, 0.80);
+
+  // particle burst: 0 → 1 (80% → 100%)
+  late final Animation<double> _burst = _interval(0.80, 1.0);
+
+  Animation<double> _interval(double start, double end) {
+    return CurvedAnimation(
+      parent: _controller,
+      curve: Interval(start, end, curve: AppAnimations.easeOutExpo),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-    
-    // 1. Draw W stroke over 1.2s
-    _drawController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-
-    // 2. Fill logo gradient over 600ms
-    _fillController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
-    // 3. Typing animation over 1s
-    _textController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-
-    // 4. Blinking cursor loop
-    _cursorController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    )..repeat(reverse: true);
-
-    // Background breathing pulse
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 4),
-    )..repeat(reverse: true);
-
-    _drawController.addListener(() {
-      setState(() {});
-    });
-
-    _fillController.addListener(() {
-      setState(() {});
-    });
-
-    _drawController.forward().then((_) {
-      _fillController.forward();
-      // Start typing tagline
-      _textController.forward();
-    });
-
-    _textController.addListener(() {
-      final index = (_textController.value * _tagline.length).round();
-      if (index <= _tagline.length) {
-        setState(() {
-          _typedText = _tagline.substring(0, index);
-        });
-      }
-    });
-
-    // Handle particle burst at 1.8 seconds and navigation at 2.8 seconds
-    Future.delayed(const Duration(milliseconds: 1800), () {
-      if (mounted) {
-        _triggerParticleBurst();
-      }
-    });
-
-    Future.delayed(const Duration(milliseconds: 2800), () async {
-      if (mounted) {
-        final prefs = await SharedPreferences.getInstance();
-        final seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
-        
-        final user = ref.read(authStateProvider).value;
-        final isLoggedIn = user != null;
-
-        if (isLoggedIn) {
-          context.go(AppRoutes.home);
-        } else if (seenOnboarding) {
-          context.go(AppRoutes.login);
-        } else {
-          context.go(AppRoutes.onboarding);
-        }
-      }
-    });
-  }
-
-
-  void _triggerParticleBurst() {
-    final rand = Random();
-    if (!mounted) return;
-    setState(() {
-      _burstTriggered = true;
-      for (int i = 0; i < 40; i++) {
-        _particles.add(
-          Particle(
-            angle: rand.nextDouble() * 2 * pi,
-            speed: rand.nextDouble() * 4 + 2,
-            size: rand.nextDouble() * 4 + 2,
-            color: rand.nextBool() ? AppColors.accentPurple : AppColors.accentCyan,
-          ),
-        );
-      }
-    });
-
-    // Particle update animation loop
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(milliseconds: 16));
-      if (!mounted || !_burstTriggered) return false;
-      setState(() {
-        for (var p in _particles) {
-          p.update();
-        }
-      });
-      return mounted && _burstTriggered;
-    });
+    _controller.forward().whenComplete(_goNext);
   }
 
   @override
   void dispose() {
-    _burstTriggered = false;
-    _drawController.dispose();
-    _fillController.dispose();
-    _textController.dispose();
-    _cursorController.dispose();
-    _pulseController.dispose();
+    _controller.dispose();
+    _exit.dispose();
+    _cursor.dispose();
     super.dispose();
+  }
+
+  Future<void> _goNext() async {
+    if (_navigated || !mounted) return;
+    _navigated = true;
+    HapticFeedback.lightImpact();
+    _exit.forward().whenComplete(_navigate);
+  }
+
+  Future<void> _navigate() async {
+    if (!mounted) return;
+    final user = ref.read(authStateProvider).value;
+    final prefs = await SharedPreferences.getInstance();
+    final seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
+    if (!mounted) return;
+    if (user != null) {
+      context.go(AppRoutes.home);
+    } else if (seenOnboarding) {
+      context.go(AppRoutes.login);
+    } else {
+      context.go(AppRoutes.onboarding);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final typed = (_tagline.length * _type.value).round();
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
-      body: Stack(
-        children: [
-          // Dynamic breathing background glow
-          AnimatedBuilder(
-            animation: _pulseController,
-            builder: (context, child) {
-              final scale = 1.0 + _pulseController.value * 0.15;
-              return Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment.center,
-                      radius: 0.8 * scale,
-                      colors: [
-                        AppColors.accentPurple.withValues(alpha: 0.12),
-                        AppColors.bgPrimary,
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _controller.isAnimating ? _goNext : null,
+        child: AuroraBackground(
+          intensity: 0.55,
+          child: SafeArea(
+            child: Stack(
+              children: [
+                Center(
+                  child: FadeTransition(
+                    opacity: _exit.drive(Tween(begin: 1.0, end: 0.0)),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _LogoMark(
+                          drawProgress: _draw.value,
+                          fillOpacity: _fill.value,
+                          burstProgress: _burst.value,
+                        ),
+                        const SizedBox(height: 28),
+                        AnimatedGradientText(
+                          'WallVault',
+                          style: const TextStyle(
+                            fontSize: 34,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          height: 22,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                _tagline.substring(0, typed),
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              AnimatedBuilder(
+                                animation: _cursor,
+                                builder: (context, _) => Text(
+                                  '|',
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: AppColors.accentCyan,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
-              );
-            },
-          ),
-          // Logo & Text Centered
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Logo paint slot with elastic scale
-                AnimatedBuilder(
-                  animation: _drawController,
-                  builder: (context, child) {
-                    final scale = Curves.elasticOut.transform((_drawController.value * 1.25).clamp(0.0, 1.0));
-                    return Transform.scale(
-                      scale: scale,
-                      child: child,
-                    );
-                  },
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      CustomPaint(
-                        size: const Size(120, 100),
-                        painter: LogoPainter(
-                          drawProgress: _drawController.value,
-                          fillOpacity: _fillController.value,
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 36,
+                  child: Entrance.fadeUp(
+                    Center(
+                      child: Text(
+                        'Tap anywhere to skip',
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.textMuted,
+                          fontSize: 12,
+                          letterSpacing: 0.4,
                         ),
                       ),
-                      // Optional burst particles
-                      if (_particles.isNotEmpty)
-                        ..._particles.map((p) => Positioned(
-                              left: 60 + p.x,
-                              top: 50 + p.y,
-                              child: Container(
-                                width: p.size,
-                                height: p.size,
-                                decoration: BoxDecoration(
-                                  color: p.color.withOpacity(p.alpha),
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: p.color,
-                                      blurRadius: 4,
-                                      spreadRadius: 1,
-                                    )
-                                  ],
-                                ),
-                              ),
-                            )),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 36),
-                
-                // Title
-                Text(
-                  'WallVault',
-                  style: AppTypography.h1.copyWith(
-                    fontSize: 38,
-                    letterSpacing: 1.5,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                // Typing Tagline with Cursor
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _typedText,
-                      style: AppTypography.caption.copyWith(
-                        letterSpacing: 2,
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
                     ),
-                    AnimatedBuilder(
-                      animation: _cursorController,
-                      builder: (context, child) {
-                        return Opacity(
-                          opacity: _cursorController.value > 0.5 ? 1.0 : 0.0,
-                          child: Container(
-                            width: 2,
-                            height: 14,
-                            color: AppColors.accentCyan,
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                    delayMs: 900,
+                  ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class Particle {
-  final double angle;
-  final double speed;
-  final double size;
-  final Color color;
-  
-  double x = 0;
-  double y = 0;
-  double alpha = 1.0;
-  late double currentSpeed;
+/// Stroke-drawn shield logo with gradient fill and particle burst.
+class _LogoMark extends StatelessWidget {
+  final double drawProgress;
+  final double fillOpacity;
+  final double burstProgress;
 
-  Particle({
-    required this.angle,
-    required this.speed,
-    required this.size,
-    required this.color,
-  }) {
-    currentSpeed = speed;
-  }
+  const _LogoMark({
+    required this.drawProgress,
+    required this.fillOpacity,
+    required this.burstProgress,
+  });
 
-  void update() {
-    x += cos(angle) * currentSpeed;
-    y += sin(angle) * currentSpeed;
-    currentSpeed *= 0.95;
-    alpha = (alpha - 0.015).clamp(0.0, 1.0);
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 148,
+      height: 148,
+      child: CustomPaint(
+        painter: _LogoPainter(
+          drawProgress: drawProgress,
+          fillOpacity: fillOpacity,
+          burstProgress: burstProgress,
+        ),
+      ),
+    );
   }
 }
 
-class LogoPainter extends CustomPainter {
+class _LogoPainter extends CustomPainter {
   final double drawProgress;
   final double fillOpacity;
-  LogoPainter({required this.drawProgress, required this.fillOpacity});
+  final double burstProgress;
+
+  _LogoPainter({
+    required this.drawProgress,
+    required this.fillOpacity,
+    required this.burstProgress,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final shieldPaint = Paint()
-      ..color = AppColors.accentPurple.withOpacity(0.8)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4.0
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+    final center = size.center(Offset.zero);
+    final radius = math.min(size.width, size.height) / 2 - 10;
 
-    final wPaint = Paint()
-      ..color = AppColors.accentCyan
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 5.0
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+    final shield = _shieldPath(center, radius);
 
-    final shieldPath = Path()
-      ..moveTo(size.width * 0.5, size.height * 0.05)
-      ..quadraticBezierTo(size.width * 0.8, size.height * 0.05, size.width * 0.85, size.height * 0.15)
-      ..lineTo(size.width * 0.85, size.height * 0.5)
-      ..quadraticBezierTo(size.width * 0.85, size.height * 0.8, size.width * 0.5, size.height * 0.95)
-      ..quadraticBezierTo(size.width * 0.15, size.height * 0.8, size.width * 0.15, size.height * 0.5)
-      ..lineTo(size.width * 0.15, size.height * 0.15)
-      ..quadraticBezierTo(size.width * 0.2, size.height * 0.05, size.width * 0.5, size.height * 0.05);
-
-    final wPath = Path()
-      ..moveTo(size.width * 0.3, size.height * 0.32)
-      ..lineTo(size.width * 0.42, size.height * 0.68)
-      ..lineTo(size.width * 0.5, size.height * 0.48)
-      ..lineTo(size.width * 0.58, size.height * 0.68)
-      ..lineTo(size.width * 0.7, size.height * 0.32);
-
-    // Let's divide drawProgress:
-    // First 60% of progress animates the shield outline.
-    // Last 40% of progress animates the inner "W".
-    double shieldProgress = (drawProgress / 0.6).clamp(0.0, 1.0);
-    double wProgress = ((drawProgress - 0.6) / 0.4).clamp(0.0, 1.0);
-
-    for (final metric in shieldPath.computeMetrics()) {
-      final extractPath = metric.extractPath(0.0, metric.length * shieldProgress);
-      canvas.drawPath(extractPath, shieldPaint);
+    // gradient fill, revealed after stroke
+    if (fillOpacity > 0) {
+      final fill = Paint()
+        ..style = PaintingStyle.fill
+        ..shader = AppColors.gradientHero.createShader(
+          Rect.fromCircle(center: center, radius: radius),
+        );
+      canvas.saveLayer(
+        Rect.fromCircle(center: center, radius: radius),
+        Paint()..color = Colors.white.withValues(alpha: fillOpacity),
+      );
+      canvas.drawPath(shield, fill);
+      canvas.restore();
     }
 
-    if (wProgress > 0) {
-      for (final metric in wPath.computeMetrics()) {
-        final extractPath = metric.extractPath(0.0, metric.length * wProgress);
-        canvas.drawPath(extractPath, wPaint);
+    // stroke draw
+    final stroke = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = Colors.white;
+    if (drawProgress > 0) {
+      final metrics = shield.computeMetrics();
+      for (final m in metrics) {
+        canvas.drawPath(
+          m.extractPath(0, m.length * drawProgress),
+          stroke,
+        );
       }
     }
 
-    // Paint full-gradient fill once stroke completes
-    if (fillOpacity > 0.0) {
-      final rect = Offset.zero & size;
-      final fillPaint = Paint()
-        ..shader = const LinearGradient(
-          colors: [AppColors.accentPurple, AppColors.accentCyan],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(rect)
-        ..style = PaintingStyle.fill;
-      
-      canvas.saveLayer(rect, Paint()..color = Colors.white.withOpacity(fillOpacity * 0.15));
-      canvas.drawPath(shieldPath, fillPaint);
-      canvas.restore();
+    // inner "V" stroke, drawn slightly after the shield
+    final v = _letterVPath(center, radius);
+    final vProgress =
+        ((drawProgress - 0.35) / 0.30).clamp(0.0, 1.0).toDouble();
+    if (vProgress > 0) {
+      final vStroke = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.2
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..shader = AppGradients.glassHairline.createShader(
+          Rect.fromCircle(center: center, radius: radius),
+        );
+      final vMetrics = v.computeMetrics();
+      for (final m in vMetrics) {
+        canvas.drawPath(
+          m.extractPath(0, m.length * vProgress),
+          vStroke,
+        );
+      }
+    }
+
+    // particle burst
+    if (burstProgress > 0) {
+      _paintBurst(canvas, center, radius);
     }
   }
 
-  @override
-  bool shouldRepaint(covariant LogoPainter oldDelegate) {
-    return oldDelegate.drawProgress != drawProgress || oldDelegate.fillOpacity != fillOpacity;
+  Path _shieldPath(Offset center, double radius) {
+    final w = radius * 2;
+    return Path()
+      ..moveTo(center.dx, center.dy - radius)
+      ..lineTo(center.dx + w * 0.62, center.dy - radius * 0.45)
+      ..lineTo(center.dx + w * 0.62, center.dy + radius * 0.10)
+      ..quadraticBezierTo(
+        center.dx + w * 0.62,
+        center.dy + radius * 0.62,
+        center.dx,
+        center.dy + radius,
+      )
+      ..quadraticBezierTo(
+        center.dx - w * 0.62,
+        center.dy + radius * 0.62,
+        center.dx - w * 0.62,
+        center.dy + radius * 0.10,
+      )
+      ..lineTo(center.dx - w * 0.62, center.dy - radius * 0.45)
+      ..close();
   }
-}
 
+  Path _letterVPath(Offset center, double radius) {
+    return Path()
+      ..moveTo(center.dx - radius * 0.36, center.dy - radius * 0.32)
+      ..lineTo(center.dx, center.dy + radius * 0.36)
+      ..lineTo(center.dx + radius * 0.36, center.dy - radius * 0.32);
+  }
+
+  void _paintBurst(Canvas canvas, Offset center, double radius) {
+    final rnd = math.Random(7);
+    for (var i = 0; i < 26; i++) {
+      final angle = rnd.nextDouble() * math.pi * 2;
+      final speed = 90 + rnd.nextDouble() * 260;
+      final progress = Curves.easeOutCubic.transform(burstProgress);
+      final distance = speed * progress;
+      final px = center.dx + math.cos(angle) * distance;
+      final py = center.dy + math.sin(angle) * distance;
+      final alpha = (1 - progress).clamp(0.0, 1.0);
+      final color = i.isEven ? AppColors.accentPurple : AppColors.accentCyan;
+      canvas.drawCircle(
+        Offset(px, py),
+        1.6 + rnd.nextDouble() * 1.8,
+        Paint()..color = color.withValues(alpha: alpha),
+      );
+    }
+    // soft ring shockwave
+    final ringProgress = Curves.easeOutCubic.transform(burstProgress);
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = AppColors.accentCyan.withValues(
+        alpha: (1 - ringProgress) * 0.7,
+      );
+    canvas.drawCircle(center, radius + ringProgress * 90, ringPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _LogoPainter oldDelegate) =>
+      oldDelegate.drawProgress != drawProgress ||
+      oldDelegate.fillOpacity != fillOpacity ||
+      oldDelegate.burstProgress != burstProgress;
+}

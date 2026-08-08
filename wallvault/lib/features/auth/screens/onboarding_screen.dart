@@ -4,9 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../core/theme/app_spacing.dart';
 import '../../../core/router/routes.dart';
 
 /// S02-S04 — Next-Gen Onboarding Screen matching attached specifications & animated prompts.

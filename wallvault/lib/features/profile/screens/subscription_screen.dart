@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/gradient_button.dart';
+import '../../../core/widgets/effects/app_toast.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../data/services/razorpay_service.dart';
 
@@ -88,35 +89,27 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update subscription in database: $e')),
-        );
+        showAppToast(context, 'Failed to update subscription in database: $e', type: ToastType.error);
       }
     }
   }
 
   void _onPaymentError(PaymentFailureResponse response) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Payment Failed: [${response.code}] ${response.message}')),
-      );
+      showAppToast(context, 'Payment Failed: [${response.code}] ${response.message}', type: ToastType.error);
     }
   }
 
   void _onExternalWallet(ExternalWalletResponse response) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('External Wallet: ${response.walletName}')),
-      );
+      showAppToast(context, 'External Wallet: ${response.walletName}');
     }
   }
 
   void _handleSubscription(String title, String price) {
     final user = ref.read(userProfileProvider).value;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please log in first.')),
-      );
+      showAppToast(context, 'Please log in first.');
       return;
     }
 
